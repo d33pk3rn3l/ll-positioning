@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LunarLeaper — Trajectory Error Explorer</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#06070a;font-family:ui-monospace,Menlo,Consolas,monospace;color:#cfd6e0}
+  #hud{position:absolute;top:12px;left:12px;width:292px;background:rgba(10,14,20,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #2a3442;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.5;user-select:none;box-shadow:0 4px 24px rgba(0,0,0,.5)}
+  #hud h1{font-size:13px;margin:0 0 8px;color:#f0b429;letter-spacing:.5px}
+  #hud h2{font-size:10px;margin:10px 0 4px;color:#7fd1ff;text-transform:uppercase;letter-spacing:1.5px}
+  label{display:flex;align-items:center;gap:6px;cursor:pointer;margin:2px 0}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:3px 0}
+  .row input[type=range]{width:118px}
+  input[type=range],input[type=checkbox]{accent-color:#f0b429}
+  .val{color:#f0b429;min-width:58px;text-align:right}
+  select{width:100%;background:#141b26;color:#cfd6e0;border:1px solid #2a3442;border-radius:4px;padding:3px}
+  #readout{margin-top:10px;padding-top:8px;border-top:1px solid #2a3442;color:#9fe8a0;white-space:pre;font-size:11.5px}
+  #footer{position:absolute;bottom:10px;left:12px;display:flex;gap:14px;align-items:center;font-size:11px;color:#5a6678}
+  #mathBtn{cursor:pointer;color:#7fd1ff;border:1px solid #2a3442;border-radius:6px;padding:2px 10px;background:rgba(10,14,20,.72)}
+  #mathBtn:hover{color:#fff;border-color:#7fd1ff}
+  #mathPanel{position:absolute;bottom:44px;left:12px;width:430px;max-height:70vh;overflow:auto;display:none;background:rgba(10,14,20,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #2a3442;border-radius:10px;padding:14px 16px;font-size:11.5px;line-height:1.65}
+  #mathPanel h3{font-size:12px;color:#f0b429;margin:0 0 6px}
+  #mathPanel h4{font-size:11px;color:#7fd1ff;margin:10px 0 2px}
+  #mathPanel .f{color:#e8edf4;background:#141b26;border-radius:4px;padding:1px 6px;display:inline-block;margin:2px 0}
+  #mathPanel p{margin:2px 0;color:#9aa5b4}
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>LUNARLEAPER · ERROR EXPLORER</h1>
+  <h2>Scenario</h2>
+  <select id="preset">
+    <option value="raw">Free dead reckoning (DR)</option>
+    <option value="tie">DR + control points (NAC landmarks)</option>
+    <option value="loop" selected>DR + closed traverse (loop closure)</option>
+    <option value="best">Closed traverse + control points</option>
+  </select>
+  <h2>Error model (1σ)</h2>
+  <div class="row"><span>odometer SF error</span><input type="range" id="sf" min="0.1" max="5" step="0.1" value="1"><span class="val" id="sfV"></span></div>
+  <div class="row"><span>azimuth error</span><input type="range" id="az" min="1" max="40" step="1" value="12"><span class="val" id="azV"></span></div>
+  <div class="row"><span>height-transfer err.</span><input type="range" id="vsf" min="0.05" max="2" step="0.05" value="0.5"><span class="val" id="vsfV"></span></div>
+  <div class="row"><span>control point σ</span><input type="range" id="tieAcc" min="0.5" max="10" step="0.5" value="3"><span class="val" id="tieAccV"></span></div>
+  <div class="row"><span>control spacing</span><input type="range" id="tieSpacing" min="2" max="12" step="1" value="5"><span class="val" id="tieSpacingV"></span></div>
+  <label><input type="checkbox" id="tiePoints"> control points (orbital landmarks)</label>
+  <label><input type="checkbox" id="loopClosure" checked> traverse closure at lander</label>
+  <label><input type="checkbox" id="globalTie"> datum tie σ (lander georef. in ME frame)</label>
+  <h2>Display</h2>
+  <div class="row"><span>σ exaggeration</span><input type="range" id="exag" min="1" max="60" step="1" value="15"><span class="val" id="exagV"></span></div>
+  <div class="row"><span>rover position</span><input type="range" id="roverPos" min="0" max="100" step="1" value="35"><span class="val" id="roverPosV"></span></div>
+  <label><input type="checkbox" id="showEll" checked> confidence ellipsoids (1σ)</label>
+  <label><input type="checkbox" id="showTube" checked> lava tube hypothesis</label>
+  <div id="readout"></div>
+</div>
+
+<div id="mathPanel">
+  <h3>BACK-OF-ENVELOPE PRINCIPLES</h3>
+  <h4>Anchored dead reckoning (Brownian bridge)</h4>
+  <p>Between two control fixes at distances d₁ behind and d₂ ahead:</p>
+  <p class="f">d_eff = d₁·d₂ / (d₁+d₂) &nbsp;&nbsp; (d₂→∞ ⇒ d_eff = d₁)</p>
+  <p class="f">σ = √( (k·d_eff)² + σ²_ctrl )</p>
+  <p>k per axis: along-track = odometer scale-factor error [%·d];
+     cross-track = azimuth error ψ [rad]·d; up = height-transfer error [%·d].</p>
+  <h4>Datum tie (local → ME frame)</h4>
+  <p class="f">σ_ME = √( σ²_local + σ²_datum )</p>
+  <p>σ_datum ≈ 10 m horiz / 2 m vert (lander located in LRO NAC).</p>
+  <h4>Free-air sensitivity (the requirement driver)</h4>
+  <p class="f">∂g/∂h = 2g/R = 187 µGal/m</p>
+  <p>50 µGal ⇒ σ_U ≤ 0.27 m; budget allocation ⇒ σ_U ≈ 0.10 m (19 µGal).</p>
+  <h4>Lava tube signal (∞ horizontal cylinder)</h4>
+  <p class="f">Δg = 2πG·Δρ·r² / z</p>
+  <p>r=30 m, z=60 m, Δρ=−3000 kg/m³ ⇒ ≈ −1.9 mGal peak (S/N ≳ 40).</p>
+  <p>Max horizontal gradient (3√3/8)·Δg/z ≈ 16 µGal/m ⇒ σ_horiz ~1–2 m suffices.</p>
+  <h4>Other budget terms</h4>
+  <p class="f">tilt: δg = g(1−cos θ) → 10 µGal @ 72″</p>
+  <p class="f">Earth tide: ±400 µGal/month → modelled, ~5 µGal residual</p>
+  <p class="f">budget: RSS of terms ≈ 41 µGal &lt; 50 µGal ✓</p>
+</div>
+
+<div id="footer">
+  <span id="mathBtn">ℹ math</span>
+  <span>drag: orbit · scroll: zoom · right-drag: pan</span>
+</div>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============================================================
+   LunarLeaper trajectory error-propagation explorer
+   Units: 1 scene unit = 1 m. Extend via CONFIG + errorModel().
+   ============================================================ */
+
+const CONFIG = {
+  terrain: { size: 700, seg: 160, pit: { x: 180, z: -60, r: 33, depth: 25 } },
+  lander:  { x: -220, z: 120 },
+  stationSpacing: 25,                       // m between gravity stations
+  tube: { r: 30, depth: 48, dirDeg: 5 },    // axis passes through the pit centre
+  datum: { sh: 10, sv: 2 },                 // lander georeferencing in ME frame (LRO NAC)
+};
+
+/* ---------- error model ------------------------------------
+   Anchors (lander start, optional control points, optional
+   traverse closure at the lander) bound the DR drift.
+   Between anchors a Brownian-bridge form is used:
+     d_eff = d1*d2/(d1+d2)     (d2 = ∞ without forward anchor)
+     σ_axis = sqrt( (k_axis * d_eff)^2 + σ_ctrl^2 )
+   k: along = odometer scale factor, cross = azimuth error [rad],
+      up = height-transfer error.
+------------------------------------------------------------- */
+function errorModel(stations, p) {
+  const L = stations[stations.length - 1].s;
+  const anchors = [{ s: 0, sh: 0.05, sv: 0.05 }];               // lander = local origin
+  if (p.tiePoints) {
+    for (let i = p.tieSpacing; i < stations.length; i += p.tieSpacing)
+      anchors.push({ s: stations[i].s, sh: p.tieAcc, sv: p.tieAcc / 2 });
+  }
+  if (p.loopClosure) anchors.push({ s: L, sh: 0.05, sv: 0.05 }); // closes at lander
+  anchors.sort((a, b) => a.s - b.s);
+
+  return stations.map(st => {
+    let prev = anchors[0], next = null;
+    for (const a of anchors) { if (a.s <= st.s) prev = a; else { next = a; break; } }
+    const d1 = st.s - prev.s;
+    const d2 = next ? next.s - st.s : Infinity;
+    const dEff = isFinite(d2) ? (d1 * d2) / (d1 + d2 || 1) : d1;
+    const aSig  = next ? Math.min(prev.sh, next.sh) : prev.sh;
+    const aSigV = next ? Math.min(prev.sv, next.sv) : prev.sv;
+    let sAlong = Math.hypot((p.sf / 100) * dEff, aSig);
+    let sCross = Math.hypot((p.az / 1000) * dEff, aSig);
+    let sVert  = Math.hypot((p.vsf / 100) * dEff, aSigV);
+    if (p.globalTie) {   // express in ME frame: RSS with datum-tie sigma
+      sAlong = Math.hypot(sAlong, CONFIG.datum.sh);
+      sCross = Math.hypot(sCross, CONFIG.datum.sh);
+      sVert  = Math.hypot(sVert,  CONFIG.datum.sv);
+    }
+    return { sAlong, sCross, sVert };
+  });
+}
+
+/* ---------- scene ------------------------------------------ */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06070a);
+scene.fog = new THREE.Fog(0x06070a, 700, 1400);
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 4000);
+camera.position.set(-380, 260, 420);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight(0x39445a, 0x1a1510, .55));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.25);
+sun.position.set(-300, 400, -200);
+scene.add(sun);
+
+// stars + Earth in the sky
+{
+  const g = new THREE.BufferGeometry(), v = [];
+  for (let i = 0; i < 900; i++) {
+    const t = Math.random() * Math.PI * 2, u = Math.random() * .5 + .1, r = 1800;
+    v.push(r * Math.cos(t) * Math.cos(u), r * Math.sin(u) + 100, r * Math.sin(t) * Math.cos(u));
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, fog: false })));
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(28, 24, 16),
+    new THREE.MeshBasicMaterial({ color: 0x4a86c8, fog: false }));
+  earth.position.set(600, 900, -1200);
+  scene.add(earth);
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(34, 24, 16),
+    new THREE.MeshBasicMaterial({ color: 0x4a86c8, transparent: true, opacity: .2, fog: false }));
+  glow.position.copy(earth.position);
+  scene.add(glow);
+}
+
+/* terrain: gentle rolling + pit depression */
+function terrainH(x, z) {
+  let h = 2.2 * Math.sin(x * .012) * Math.cos(z * .017) + 1.4 * Math.sin(x * .05 + 2) * Math.sin(z * .04) + .5 * Math.sin(x * .13) * Math.cos(z * .11);
+  const p = CONFIG.terrain.pit, d = Math.hypot(x - p.x, z - p.z);
+  if (d < p.r) h -= p.depth * (0.5 + 0.5 * Math.cos(Math.PI * d / p.r));       // pit
+  else if (d < p.r * 1.6) h += 1.5 * (1 - (d - p.r) / (p.r * .6));             // rim
+  return h;
+}
+{
+  const t = CONFIG.terrain;
+  const geo = new THREE.PlaneGeometry(t.size, t.size, t.seg, t.seg);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, terrainH(pos.getX(i), pos.getZ(i)));
+  geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x8d8c90, roughness: 1, flatShading: true })));
+}
+
+/* lander: body + 4 legs */
+const lander = new THREE.Group();
+{
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 6, 8), new THREE.MeshStandardMaterial({ color: 0xd8c98a, roughness: .55, metalness: .3 }));
+  body.position.y = 6; lander.add(body);
+  const legM = new THREE.MeshStandardMaterial({ color: 0x666a70 });
+  for (let i = 0; i < 4; i++) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 9), legM);
+    const a = i * Math.PI / 2 + Math.PI / 4;
+    leg.position.set(8 * Math.cos(a), 3.5, 8 * Math.sin(a));
+    leg.rotation.z = -Math.cos(a) * .5; leg.rotation.x = Math.sin(a) * .5;
+    lander.add(leg);
+  }
+  lander.position.set(CONFIG.lander.x, terrainH(CONFIG.lander.x, CONFIG.lander.z), CONFIG.lander.z);
+  scene.add(lander);
+}
+
+/* rover: the box */
+const rover = new THREE.Group();
+{
+  const box = new THREE.Mesh(new THREE.BoxGeometry(7, 4, 5), new THREE.MeshStandardMaterial({ color: 0xe06a2b, roughness: .45, metalness: .2, emissive: 0x30170a }));
+  box.position.y = 4; rover.add(box);
+  scene.add(rover);
+}
+
+/* traverse: lander → across tube → pit rim → across tube → back (closed) */
+const pathPts = (() => {
+  const P = CONFIG.terrain.pit, L = CONFIG.lander;
+  const ctrl = [
+    [L.x, L.z], [-160, 40], [-80, -30], [0, -70], [90, -90],       // outbound, 1st tube crossing
+    [P.x - 45, P.z - 20],                                          // pit approach (stops at rim)
+    [120, 10], [30, 40], [-60, 90], [-140, 110], [L.x, L.z]        // return, 2nd tube crossing
+  ].map(([x, z]) => new THREE.Vector3(x, 0, z));
+  const curve = new THREE.CatmullRomCurve3(ctrl);
+  const pts = curve.getSpacedPoints(400);
+  pts.forEach(p => p.y = terrainH(p.x, p.z) + .3);
+  return pts;
+})();
+scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pathPts),
+  new THREE.LineBasicMaterial({ color: 0xf0b429 })));
+
+/* stations along path (every CONFIG.stationSpacing m) */
+const stations = (() => {
+  const out = [{ p: pathPts[0], s: 0, i: 0 }];
+  let s = 0, acc = 0;
+  for (let i = 1; i < pathPts.length; i++) {
+    const d = pathPts[i].distanceTo(pathPts[i - 1]); s += d; acc += d;
+    if (acc >= CONFIG.stationSpacing) { out.push({ p: pathPts[i], s, i }); acc = 0; }
+  }
+  out.forEach(st => {
+    const n = pathPts[Math.min(st.i + 1, pathPts.length - 1)].clone().sub(pathPts[Math.max(st.i - 1, 0)]);
+    st.heading = Math.atan2(n.x, n.z);
+  });
+  return out;
+})();
+const totalLen = stations[stations.length - 1].s;
+
+/* station dots */
+{
+  const g = new THREE.BufferGeometry().setFromPoints(stations.map(st => st.p.clone().setY(st.p.y + .8)));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffe9a8, size: 3, sizeAttenuation: false })));
+}
+
+/* lava tube (hypothesis) — axis passes through the pit centre,
+   top of the tube (depth − r) reaches above the pit floor so they connect */
+const tube = (() => {
+  const t = CONFIG.tube, P = CONFIG.terrain.pit;
+  const yaw = THREE.MathUtils.degToRad(t.dirDeg);
+  const axisDir = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));   // rotation.y maps +x → this
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(t.r, t.r, 620, 24, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xff5560, transparent: true, opacity: .14, side: THREE.DoubleSide, depthWrite: false }));
+  m.rotation.z = Math.PI / 2; m.rotation.y = yaw;
+  // centre shifted 120 m west along the axis so the tube stays on the terrain tile
+  m.position.set(P.x, -t.depth, P.z).addScaledVector(axisDir, -120);
+  g.add(m);
+  const edge = m.clone();
+  edge.material = new THREE.MeshBasicMaterial({ color: 0xff5560, wireframe: true, transparent: true, opacity: .08 });
+  g.add(edge);
+  scene.add(g);
+  return g;
+})();
+
+/* ellipsoids + control-point markers (rebuilt on every UI change) */
+const ellGroup = new THREE.Group(); scene.add(ellGroup);
+const unitSphere = new THREE.SphereGeometry(1, 18, 12);
+const ellMat  = new THREE.MeshBasicMaterial({ color: 0x39c2ff, transparent: true, opacity: .22, depthWrite: false });
+const ellWire = new THREE.MeshBasicMaterial({ color: 0x8fdcff, wireframe: true, transparent: true, opacity: .25 });
+const tieMat  = new THREE.MeshBasicMaterial({ color: 0x9fe8a0 });
+
+/* ---------- UI ------------------------------------------- */
+const ui = {};
+['preset','sf','az','vsf','tieAcc','tieSpacing','tiePoints','loopClosure','globalTie','exag','roverPos','showEll','showTube']
+  .forEach(id => ui[id] = document.getElementById(id));
+const readout = document.getElementById('readout');
+document.getElementById('mathBtn').addEventListener('click', () => {
+  const p = document.getElementById('mathPanel');
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+});
+
+const PRESETS = {
+  raw:  { tiePoints: false, loopClosure: false },
+  tie:  { tiePoints: true,  loopClosure: false },
+  loop: { tiePoints: false, loopClosure: true  },
+  best: { tiePoints: true,  loopClosure: true  },
+};
+ui.preset.addEventListener('change', () => {
+  const p = PRESETS[ui.preset.value];
+  ui.tiePoints.checked = p.tiePoints; ui.loopClosure.checked = p.loopClosure;
+  rebuild();
+});
+Object.values(ui).forEach(el => el.addEventListener('input', rebuild));
+
+function params() {
+  return {
+    sf: +ui.sf.value, az: +ui.az.value, vsf: +ui.vsf.value,
+    tieAcc: +ui.tieAcc.value, tieSpacing: +ui.tieSpacing.value,
+    tiePoints: ui.tiePoints.checked, loopClosure: ui.loopClosure.checked,
+    globalTie: ui.globalTie.checked, exag: +ui.exag.value,
+  };
+}
+
+function rebuild() {
+  const p = params();
+  document.getElementById('sfV').textContent = p.sf.toFixed(1) + ' %·d';
+  document.getElementById('azV').textContent = p.az + ' mrad';
+  document.getElementById('vsfV').textContent = p.vsf.toFixed(2) + ' %·d';
+  document.getElementById('tieAccV').textContent = p.tieAcc.toFixed(1) + ' m';
+  document.getElementById('tieSpacingV').textContent = 'every ' + p.tieSpacing;
+  document.getElementById('exagV').textContent = p.exag + '×';
+  tube.visible = ui.showTube.checked;
+
+  const sig = errorModel(stations, p);
+
+  ellGroup.clear();
+  if (ui.showEll.checked) stations.forEach((st, i) => {
+    const s = sig[i];
+    const mesh = new THREE.Mesh(unitSphere, ellMat);
+    mesh.scale.set(Math.max(s.sCross * p.exag, .3), Math.max(s.sVert * p.exag, .3), Math.max(s.sAlong * p.exag, .3));
+    mesh.rotation.y = st.heading;
+    mesh.position.copy(st.p).y += s.sVert * p.exag * .2 + 1;
+    ellGroup.add(mesh);
+    const w = new THREE.Mesh(unitSphere, ellWire);
+    w.scale.copy(mesh.scale); w.rotation.copy(mesh.rotation); w.position.copy(mesh.position);
+    ellGroup.add(w);
+  });
+  if (p.tiePoints) for (let i = p.tieSpacing; i < stations.length; i += p.tieSpacing) {
+    const m = new THREE.Mesh(new THREE.OctahedronGeometry(2.2), tieMat);
+    m.position.copy(stations[i].p).y += 6;
+    ellGroup.add(m);
+  }
+
+  // rover placement + readout
+  const idx = Math.round(+ui.roverPos.value / 100 * (stations.length - 1));
+  const st = stations[idx], s = sig[idx];
+  rover.position.copy(st.p); rover.rotation.y = st.heading;
+  document.getElementById('roverPosV').textContent = st.s.toFixed(0) + ' m';
+  const drms = Math.hypot(s.sAlong, s.sCross);          // horizontal DRMS
+  const worst = Math.max(...sig.map(x => x.sVert));
+  readout.textContent =
+    `station ${idx}/${stations.length - 1}   s = ${st.s.toFixed(0)} / ${totalLen.toFixed(0)} m\n` +
+    `σ_AT (along-track) : ${s.sAlong.toFixed(2)} m\n` +
+    `σ_XT (cross-track) : ${s.sCross.toFixed(2)} m\n` +
+    `σ_U  (up)          : ${s.sVert.toFixed(2)} m\n` +
+    `DRMS horizontal    : ${drms.toFixed(2)} m\n` +
+    `free-air error     : ${(s.sVert * 187).toFixed(0)} µGal\n` +
+    `worst σ_U on trav. : ${worst.toFixed(2)} m  (req ≈ 0.10 m rel.)`;
+}
+rebuild();
+
+/* ---------- loop ------------------------------------------ */
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+(function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
