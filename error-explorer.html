@@ -2,31 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LunarLeaper — Trajectory Error Explorer</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#06070a;font-family:ui-monospace,Menlo,Consolas,monospace;color:#cfd6e0}
-  #hud{position:absolute;top:12px;left:12px;width:292px;background:rgba(10,14,20,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #2a3442;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.5;user-select:none;box-shadow:0 4px 24px rgba(0,0,0,.5)}
-  #hud h1{font-size:13px;margin:0 0 8px;color:#f0b429;letter-spacing:.5px}
-  #hud h2{font-size:10px;margin:10px 0 4px;color:#7fd1ff;text-transform:uppercase;letter-spacing:1.5px}
+  :root{--bg:rgba(10,14,20,.72);--line:#2a3442;--amber:#f0b429;--cyan:#7fd1ff;--green:#9fe8a0;--red:#ff7a7a;--txt:#cfd6e0;--dim:#9aa5b4}
+  html,body{margin:0;height:100%;overflow:hidden;background:#06070a;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--txt)}
+  .panel{background:var(--bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.5)}
+  #hud{position:absolute;top:12px;left:12px;width:280px;max-height:calc(100vh - 70px);overflow-y:auto;padding:12px 14px;font-size:12px;line-height:1.5;user-select:none}
+  #hud::-webkit-scrollbar{width:6px}#hud::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  #hud h1{font-size:12px;margin:0 0 8px;color:var(--amber);letter-spacing:.5px}
+  #hud h2{font-size:10px;margin:10px 0 4px;color:var(--cyan);text-transform:uppercase;letter-spacing:1.5px}
   label{display:flex;align-items:center;gap:6px;cursor:pointer;margin:2px 0}
-  .row{display:flex;align-items:center;justify-content:space-between;margin:3px 0}
-  .row input[type=range]{width:118px}
-  input[type=range],input[type=checkbox]{accent-color:#f0b429}
-  .val{color:#f0b429;min-width:58px;text-align:right}
-  select{width:100%;background:#141b26;color:#cfd6e0;border:1px solid #2a3442;border-radius:4px;padding:3px}
-  #readout{margin-top:10px;padding-top:8px;border-top:1px solid #2a3442;color:#9fe8a0;white-space:pre;font-size:11.5px}
-  #footer{position:absolute;bottom:10px;left:12px;display:flex;gap:14px;align-items:center;font-size:11px;color:#5a6678}
-  #mathBtn{cursor:pointer;color:#7fd1ff;border:1px solid #2a3442;border-radius:6px;padding:2px 10px;background:rgba(10,14,20,.72)}
-  #mathBtn:hover{color:#fff;border-color:#7fd1ff}
-  #mathPanel{position:absolute;bottom:44px;left:12px;width:430px;max-height:70vh;overflow:auto;display:none;background:rgba(10,14,20,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #2a3442;border-radius:10px;padding:14px 16px;font-size:11.5px;line-height:1.65}
-  #mathPanel h3{font-size:12px;color:#f0b429;margin:0 0 6px}
-  #mathPanel h4{font-size:11px;color:#7fd1ff;margin:10px 0 2px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:3px 0}
+  .row>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row input[type=range]{width:104px;flex:none}
+  input[type=range],input[type=checkbox]{accent-color:var(--amber)}
+  .val{color:var(--amber);min-width:56px;text-align:right;flex:none;font-size:11px}
+  .off{opacity:.35;pointer-events:none}
+  select{width:100%;background:#141b26;color:var(--txt);border:1px solid var(--line);border-radius:4px;padding:3px}
+  #readout{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:1px 10px;font-size:11.5px}
+  #readout .k{color:var(--dim)}#readout .v{text-align:right;color:var(--green)}
+  #readout .sep{grid-column:1/3;border-top:1px dashed var(--line);margin:4px 0}
+  .ok{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+  #footer{position:absolute;bottom:10px;left:12px;right:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:11px;color:#5a6678}
+  #mathBtn{cursor:pointer;color:var(--cyan);border:1px solid var(--line);border-radius:6px;padding:2px 10px;background:var(--bg)}
+  #mathBtn:hover{color:#fff;border-color:var(--cyan)}
+  .lg{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  #mathPanel{position:absolute;bottom:44px;left:12px;width:min(440px,calc(100vw - 24px));max-height:70vh;overflow-y:auto;display:none;padding:14px 16px;font-size:11.5px;line-height:1.65}
+  #mathPanel h3{font-size:12px;color:var(--amber);margin:0 0 6px}
+  #mathPanel h4{font-size:11px;color:var(--cyan);margin:10px 0 2px}
   #mathPanel .f{color:#e8edf4;background:#141b26;border-radius:4px;padding:1px 6px;display:inline-block;margin:2px 0}
-  #mathPanel p{margin:2px 0;color:#9aa5b4}
+  #mathPanel p{margin:2px 0;color:var(--dim)}
 </style>
 </head>
 <body>
-<div id="hud">
+<div id="hud" class="panel">
   <h1>LUNARLEAPER · ERROR EXPLORER</h1>
   <h2>Scenario</h2>
   <select id="preset">
@@ -39,11 +50,11 @@
   <div class="row"><span>odometer SF error</span><input type="range" id="sf" min="0.1" max="5" step="0.1" value="1"><span class="val" id="sfV"></span></div>
   <div class="row"><span>azimuth error</span><input type="range" id="az" min="1" max="40" step="1" value="12"><span class="val" id="azV"></span></div>
   <div class="row"><span>height-transfer err.</span><input type="range" id="vsf" min="0.05" max="2" step="0.05" value="0.5"><span class="val" id="vsfV"></span></div>
-  <div class="row"><span>control point σ</span><input type="range" id="tieAcc" min="0.5" max="10" step="0.5" value="3"><span class="val" id="tieAccV"></span></div>
-  <div class="row"><span>control spacing</span><input type="range" id="tieSpacing" min="2" max="12" step="1" value="5"><span class="val" id="tieSpacingV"></span></div>
   <label><input type="checkbox" id="tiePoints"> control points (orbital landmarks)</label>
+  <div class="row" id="tieAccRow"><span>control point σ</span><input type="range" id="tieAcc" min="0.5" max="10" step="0.5" value="3"><span class="val" id="tieAccV"></span></div>
+  <div class="row" id="tieSpacingRow"><span>control spacing</span><input type="range" id="tieSpacing" min="2" max="12" step="1" value="5"><span class="val" id="tieSpacingV"></span></div>
   <label><input type="checkbox" id="loopClosure" checked> traverse closure at lander</label>
-  <label><input type="checkbox" id="globalTie"> datum tie σ (lander georef. in ME frame)</label>
+  <label><input type="checkbox" id="globalTie"> datum tie (lander georef. in ME frame)</label>
   <h2>Display</h2>
   <div class="row"><span>σ exaggeration</span><input type="range" id="exag" min="1" max="60" step="1" value="15"><span class="val" id="exagV"></span></div>
   <div class="row"><span>rover position</span><input type="range" id="roverPos" min="0" max="100" step="1" value="35"><span class="val" id="roverPosV"></span></div>
@@ -52,20 +63,24 @@
   <div id="readout"></div>
 </div>
 
-<div id="mathPanel">
+<div id="mathPanel" class="panel">
   <h3>BACK-OF-ENVELOPE PRINCIPLES</h3>
-  <h4>Anchored dead reckoning (Brownian bridge)</h4>
-  <p>Between two control fixes at distances d₁ behind and d₂ ahead:</p>
-  <p class="f">d_eff = d₁·d₂ / (d₁+d₂) &nbsp;&nbsp; (d₂→∞ ⇒ d_eff = d₁)</p>
-  <p class="f">σ = √( (k·d_eff)² + σ²_ctrl )</p>
-  <p>k per axis: along-track = odometer scale-factor error [%·d];
+  <h4>Anchored dead reckoning (two-filter smoother)</h4>
+  <p>Forward filter chains all past fixes: propagate DR variance between
+     anchors, fuse at each anchor; backward filter does the same over
+     future fixes. The two use disjoint DR segments → independent:</p>
+  <p class="f">propagate: v ← v + (k·Δd)² &nbsp; fuse: 1/v ← 1/v + 1/σ²_ctrl</p>
+  <p class="f">σ²(s) = v_f·v_b / (v_f + v_b)</p>
+  <p>No forward anchor ⇒ σ = σ_f (open traverse). k per axis:
+     along-track = odometer scale-factor error [%·d];
      cross-track = azimuth error ψ [rad]·d; up = height-transfer error [%·d].</p>
   <h4>Datum tie (local → ME frame)</h4>
   <p class="f">σ_ME = √( σ²_local + σ²_datum )</p>
-  <p>σ_datum ≈ 10 m horiz / 2 m vert (lander located in LRO NAC).</p>
+  <p>σ_datum ≈ 10 m horiz / 2 m vert (lander located in LRO NAC).
+     Affects georeferencing only — gravimetry uses <i>relative</i> σ_U.</p>
   <h4>Free-air sensitivity (the requirement driver)</h4>
   <p class="f">∂g/∂h = 2g/R = 187 µGal/m</p>
-  <p>50 µGal ⇒ σ_U ≤ 0.27 m; budget allocation ⇒ σ_U ≈ 0.10 m (19 µGal).</p>
+  <p>50 µGal ⇒ σ_U ≤ 0.27 m; error-budget allocation ⇒ σ_U ≈ 0.10 m (19 µGal).</p>
   <h4>Lava tube signal (∞ horizontal cylinder)</h4>
   <p class="f">Δg = 2πG·Δρ·r² / z</p>
   <p>r=30 m, z=60 m, Δρ=−3000 kg/m³ ⇒ ≈ −1.9 mGal peak (S/N ≳ 40).</p>
@@ -78,6 +93,10 @@
 
 <div id="footer">
   <span id="mathBtn">ℹ math</span>
+  <span class="lg"><span class="dot" style="background:#f0b429"></span>traverse</span>
+  <span class="lg"><span class="dot" style="background:#39c2ff"></span>1σ ellipsoid</span>
+  <span class="lg"><span class="dot" style="background:#9fe8a0"></span>control point</span>
+  <span class="lg"><span class="dot" style="background:#ff5560"></span>tube hypothesis</span>
   <span>drag: orbit · scroll: zoom · right-drag: pan</span>
 </div>
 
@@ -95,16 +114,23 @@ const CONFIG = {
   stationSpacing: 25,                       // m between gravity stations
   tube: { r: 30, depth: 48, dirDeg: 5 },    // axis passes through the pit centre
   datum: { sh: 10, sv: 2 },                 // lander georeferencing in ME frame (LRO NAC)
+  freeAir: 187,                             // µGal per m (2g/R)
+  reqAlloc: 0.10, reqTotal: 50,             // σ_U allocation [m], total budget [µGal]
 };
 
 /* ---------- error model ------------------------------------
    Anchors (lander start, optional control points, optional
    traverse closure at the lander) bound the DR drift.
-   Between anchors a Brownian-bridge form is used:
-     d_eff = d1*d2/(d1+d2)     (d2 = ∞ without forward anchor)
-     σ_axis = sqrt( (k_axis * d_eff)^2 + σ_ctrl^2 )
-   k: along = odometer scale factor, cross = azimuth error [rad],
-      up = height-transfer error.
+   Two-filter smoother per axis:
+     forward pass  — chain all PAST anchors: propagate variance
+                     between anchors, fuse (1/v = 1/v1 + 1/v2)
+                     with each anchor's own variance;
+     backward pass — same over all FUTURE anchors.
+   Forward and backward estimates use disjoint DR segments
+   ([0,s] vs [s,L]) → independent → fused by inverse variance.
+   Continuous and symmetric by construction.
+   Returns per station: local (relative-frame) sigmas + framed
+   sigmas (datum tie RSS'd in when expressing in the ME frame).
 ------------------------------------------------------------- */
 function errorModel(stations, p) {
   const L = stations[stations.length - 1].s;
@@ -115,24 +141,42 @@ function errorModel(stations, p) {
   }
   if (p.loopClosure) anchors.push({ s: L, sh: 0.05, sv: 0.05 }); // closes at lander
   anchors.sort((a, b) => a.s - b.s);
+  const n = anchors.length;
+  const fuse = (v1, v2) => (v1 * v2) / (v1 + v2);
+
+  // one smoothed channel: k = error growth rate, sig(a) = anchor sigma
+  const channel = (k, sig) => {
+    const vf = [], vb = [];
+    for (let m = 0; m < n; m++) {                                // forward filter
+      const va = sig(anchors[m]) ** 2;
+      vf[m] = m === 0 ? va :
+        fuse(vf[m - 1] + (k * (anchors[m].s - anchors[m - 1].s)) ** 2, va);
+    }
+    for (let m = n - 1; m >= 0; m--) {                           // backward filter
+      const va = sig(anchors[m]) ** 2;
+      vb[m] = m === n - 1 ? va :
+        fuse(vb[m + 1] + (k * (anchors[m + 1].s - anchors[m].s)) ** 2, va);
+    }
+    return s => {
+      let m = 0; while (m + 1 < n && anchors[m + 1].s <= s) m++;
+      const vF = vf[m] + (k * (s - anchors[m].s)) ** 2;
+      if (m + 1 >= n) return Math.sqrt(vF);                      // open traverse end
+      const vB = vb[m + 1] + (k * (anchors[m + 1].s - s)) ** 2;
+      return Math.sqrt(fuse(vF, vB));
+    };
+  };
+  const chAlong = channel(p.sf  / 100,  a => a.sh);
+  const chCross = channel(p.az  / 1000, a => a.sh);
+  const chVert  = channel(p.vsf / 100,  a => a.sv);
 
   return stations.map(st => {
-    let prev = anchors[0], next = null;
-    for (const a of anchors) { if (a.s <= st.s) prev = a; else { next = a; break; } }
-    const d1 = st.s - prev.s;
-    const d2 = next ? next.s - st.s : Infinity;
-    const dEff = isFinite(d2) ? (d1 * d2) / (d1 + d2 || 1) : d1;
-    const aSig  = next ? Math.min(prev.sh, next.sh) : prev.sh;
-    const aSigV = next ? Math.min(prev.sv, next.sv) : prev.sv;
-    let sAlong = Math.hypot((p.sf / 100) * dEff, aSig);
-    let sCross = Math.hypot((p.az / 1000) * dEff, aSig);
-    let sVert  = Math.hypot((p.vsf / 100) * dEff, aSigV);
-    if (p.globalTie) {   // express in ME frame: RSS with datum-tie sigma
-      sAlong = Math.hypot(sAlong, CONFIG.datum.sh);
-      sCross = Math.hypot(sCross, CONFIG.datum.sh);
-      sVert  = Math.hypot(sVert,  CONFIG.datum.sv);
-    }
-    return { sAlong, sCross, sVert };
+    const loc = { sAlong: chAlong(st.s), sCross: chCross(st.s), sVert: chVert(st.s) };
+    const frm = p.globalTie ? {
+      sAlong: Math.hypot(loc.sAlong, CONFIG.datum.sh),
+      sCross: Math.hypot(loc.sCross, CONFIG.datum.sh),
+      sVert:  Math.hypot(loc.sVert,  CONFIG.datum.sv),
+    } : loc;
+    return { loc, frm };
   });
 }
 
@@ -144,10 +188,12 @@ const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 40
 camera.position.set(-380, 260, 420);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(devicePixelRatio);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2 - .02;   // keep camera above the horizon
+controls.maxDistance = 1200;
 
 scene.add(new THREE.HemisphereLight(0x39445a, 0x1a1510, .55));
 const sun = new THREE.DirectionalLight(0xfff4e0, 1.25);
@@ -240,6 +286,9 @@ const stations = (() => {
     const d = pathPts[i].distanceTo(pathPts[i - 1]); s += d; acc += d;
     if (acc >= CONFIG.stationSpacing) { out.push({ p: pathPts[i], s, i }); acc = 0; }
   }
+  // ensure the traverse ends exactly at the lander (closure anchor location)
+  if (out[out.length - 1].i !== pathPts.length - 1)
+    out.push({ p: pathPts[pathPts.length - 1], s, i: pathPts.length - 1 });
   out.forEach(st => {
     const n = pathPts[Math.min(st.i + 1, pathPts.length - 1)].clone().sub(pathPts[Math.max(st.i - 1, 0)]);
     st.heading = Math.atan2(n.x, n.z);
@@ -274,9 +323,10 @@ const tube = (() => {
   return g;
 })();
 
-/* ellipsoids + control-point markers (rebuilt on every UI change) */
+/* ellipsoids + control-point markers (shared geometries — no per-rebuild allocation) */
 const ellGroup = new THREE.Group(); scene.add(ellGroup);
 const unitSphere = new THREE.SphereGeometry(1, 18, 12);
+const tieGeo  = new THREE.OctahedronGeometry(2.2);
 const ellMat  = new THREE.MeshBasicMaterial({ color: 0x39c2ff, transparent: true, opacity: .22, depthWrite: false });
 const ellWire = new THREE.MeshBasicMaterial({ color: 0x8fdcff, wireframe: true, transparent: true, opacity: .25 });
 const tieMat  = new THREE.MeshBasicMaterial({ color: 0x9fe8a0 });
@@ -302,7 +352,7 @@ ui.preset.addEventListener('change', () => {
   ui.tiePoints.checked = p.tiePoints; ui.loopClosure.checked = p.loopClosure;
   rebuild();
 });
-Object.values(ui).forEach(el => el.addEventListener('input', rebuild));
+Object.entries(ui).forEach(([id, el]) => { if (id !== 'preset') el.addEventListener('input', rebuild); });
 
 function params() {
   return {
@@ -312,6 +362,8 @@ function params() {
     globalTie: ui.globalTie.checked, exag: +ui.exag.value,
   };
 }
+const fmt = (v, u = ' m') => (v >= 100 ? v.toFixed(0) : v.toFixed(2)) + u;
+const roRow = (k, v, cls = 'v') => `<span class="k">${k}</span><span class="v ${cls}">${v}</span>`;
 
 function rebuild() {
   const p = params();
@@ -319,45 +371,55 @@ function rebuild() {
   document.getElementById('azV').textContent = p.az + ' mrad';
   document.getElementById('vsfV').textContent = p.vsf.toFixed(2) + ' %·d';
   document.getElementById('tieAccV').textContent = p.tieAcc.toFixed(1) + ' m';
-  document.getElementById('tieSpacingV').textContent = 'every ' + p.tieSpacing;
+  document.getElementById('tieSpacingV').textContent = (p.tieSpacing * CONFIG.stationSpacing) + ' m';
   document.getElementById('exagV').textContent = p.exag + '×';
+  document.getElementById('tieAccRow').classList.toggle('off', !p.tiePoints);
+  document.getElementById('tieSpacingRow').classList.toggle('off', !p.tiePoints);
   tube.visible = ui.showTube.checked;
 
   const sig = errorModel(stations, p);
 
   ellGroup.clear();
   if (ui.showEll.checked) stations.forEach((st, i) => {
-    const s = sig[i];
+    const s = sig[i].frm;
     const mesh = new THREE.Mesh(unitSphere, ellMat);
     mesh.scale.set(Math.max(s.sCross * p.exag, .3), Math.max(s.sVert * p.exag, .3), Math.max(s.sAlong * p.exag, .3));
     mesh.rotation.y = st.heading;
-    mesh.position.copy(st.p).y += s.sVert * p.exag * .2 + 1;
+    mesh.position.copy(st.p).y += .5;              // centred on the station (1σ volume)
     ellGroup.add(mesh);
     const w = new THREE.Mesh(unitSphere, ellWire);
     w.scale.copy(mesh.scale); w.rotation.copy(mesh.rotation); w.position.copy(mesh.position);
     ellGroup.add(w);
   });
   if (p.tiePoints) for (let i = p.tieSpacing; i < stations.length; i += p.tieSpacing) {
-    const m = new THREE.Mesh(new THREE.OctahedronGeometry(2.2), tieMat);
+    const m = new THREE.Mesh(tieGeo, tieMat);
     m.position.copy(stations[i].p).y += 6;
     ellGroup.add(m);
   }
 
   // rover placement + readout
   const idx = Math.round(+ui.roverPos.value / 100 * (stations.length - 1));
-  const st = stations[idx], s = sig[idx];
+  const st = stations[idx], s = sig[idx].frm, sl = sig[idx].loc;
   rover.position.copy(st.p); rover.rotation.y = st.heading;
   document.getElementById('roverPosV').textContent = st.s.toFixed(0) + ' m';
-  const drms = Math.hypot(s.sAlong, s.sCross);          // horizontal DRMS
-  const worst = Math.max(...sig.map(x => x.sVert));
-  readout.textContent =
-    `station ${idx}/${stations.length - 1}   s = ${st.s.toFixed(0)} / ${totalLen.toFixed(0)} m\n` +
-    `σ_AT (along-track) : ${s.sAlong.toFixed(2)} m\n` +
-    `σ_XT (cross-track) : ${s.sCross.toFixed(2)} m\n` +
-    `σ_U  (up)          : ${s.sVert.toFixed(2)} m\n` +
-    `DRMS horizontal    : ${drms.toFixed(2)} m\n` +
-    `free-air error     : ${(s.sVert * 187).toFixed(0)} µGal\n` +
-    `worst σ_U on trav. : ${worst.toFixed(2)} m  (req ≈ 0.10 m rel.)`;
+
+  const drms = Math.hypot(s.sAlong, s.sCross);                       // horizontal DRMS
+  const worstU = Math.max(...sig.map(x => x.loc.sVert));             // relative frame
+  const fa = sl.sVert * CONFIG.freeAir;                              // µGal, from relative σ_U
+  const faWorst = worstU * CONFIG.freeAir;
+  const cls = v => v <= CONFIG.reqAlloc * CONFIG.freeAir ? 'ok' : v <= CONFIG.reqTotal ? 'warn' : 'bad';
+  readout.innerHTML =
+    roRow('station', `${idx} / ${stations.length - 1}`) +
+    roRow('distance', `${st.s.toFixed(0)} / ${totalLen.toFixed(0)} m`) +
+    '<span class="sep"></span>' +
+    roRow('σ along-track', fmt(s.sAlong)) +
+    roRow('σ cross-track', fmt(s.sCross)) +
+    roRow('σ up', fmt(s.sVert)) +
+    roRow('DRMS horiz.', fmt(drms)) +
+    '<span class="sep"></span>' +
+    roRow('free-air err. here', fmt(fa, ' µGal'), cls(fa)) +
+    roRow('worst on traverse', fmt(faWorst, ' µGal'), cls(faWorst)) +
+    roRow('budget', `alloc 19 · total ${CONFIG.reqTotal} µGal`, 'k');
 }
 rebuild();
 
