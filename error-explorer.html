@@ -46,7 +46,7 @@
   #logHead button{background:#141b26;color:var(--txt);border:1px solid var(--line);border-radius:4px;cursor:pointer;font:inherit;font-size:11px;padding:1px 8px}
   #logHead button:hover{border-color:var(--cyan)}
   #logHead .warn-note{color:#5a6678;font-size:10px}
-  #logCanvas{width:100%;height:150px;display:block}
+  #logCanvas{width:100%;height:196px;display:block}
 </style>
 </head>
 <body>
@@ -104,6 +104,10 @@
   <p>Trace = one seeded correlated realization: field evaluated at the
      DR-erroneous position, + 187·δh, + tide-like residual, + white noise.
      Illustrative sampling, not real data.</p>
+  <p>The 50 µGal requirement bounds σ_g — the band <i>half-width</i> —
+     so it appears as a line in the σ-track below the chart, not as a
+     corridor in anomaly-space (that would conflate signal amplitude
+     with measurement uncertainty).</p>
   <h4>Other budget terms</h4>
   <p class="f">tilt: δg = g(1−cos θ) → 10 µGal @ 72″</p>
   <p class="f">Earth tide: ±400 µGal/month → modelled, ~5 µGal residual</p>
@@ -557,7 +561,10 @@ function drawLog(rows, anchors, p) {
   const W = logCanvas.clientWidth, H = logCanvas.clientHeight;
   logCanvas.width = W * dpr; logCanvas.height = H * dpr;
   const c = logCanvas.getContext('2d'); c.scale(dpr, dpr);
-  const mL = 58, mR = 10, mT = 8, mB = 18;
+  /* layout: main chart (data space) + compliance track (σ space).
+     The 50 µGal requirement constrains σ_g — the band HALF-WIDTH —
+     so it is drawn as a line in σ-space, not in anomaly-space. */
+  const subH = 36, mL = 58, mR = 10, mT = 8, mB = 16 + subH + 4;
   const zoom = logUi.zoom.checked;
   const yMaxData = Math.max(...rows.map(r => Math.abs(r.truth) + r.sg));
   const yLim = zoom ? 160 : Math.max(250, Math.ceil(yMaxData / 500) * 500);
@@ -575,13 +582,28 @@ function drawLog(rows, anchors, p) {
   }
   c.fillText('µGal', mL - 5, mT + 4);
   c.textAlign = 'center';
-  for (let s = 0; s <= totalLen; s += 250) c.fillText(s.toFixed(0) + ' m', sx(s), H - 5);
+  for (let s = 0; s <= totalLen; s += 250) c.fillText(s.toFixed(0) + ' m', sx(s), H - mB + 11);
 
-  // ±50 µGal requirement corridor
-  c.strokeStyle = '#4a4030'; c.setLineDash([4, 4]);
-  [-CONFIG.reqTotal, CONFIG.reqTotal].forEach(g => { c.beginPath(); c.moveTo(mL, sy(g)); c.lineTo(W - mR, sy(g)); c.stroke(); });
-  c.setLineDash([]);
-  c.fillStyle = '#7a6a45'; c.textAlign = 'left'; c.fillText('±50 µGal req', mL + 4, sy(CONFIG.reqTotal) - 3);
+  // compliance track: σ_g(s) vs the 50 µGal requirement (σ-space)
+  {
+    const y0 = H - subH, hT = subH - 8;
+    const sMax = Math.max(120, Math.ceil(Math.max(...rows.map(r => r.sg)) / 50) * 50);
+    const syS = v => y0 + hT - (v / sMax) * hT;
+    c.fillStyle = 'rgba(20,27,38,.6)'; c.fillRect(mL, y0 - 2, W - mL - mR, hT + 6);
+    for (let i = 0; i < rows.length; i++) {                       // σ_g bars, pass/fail colored
+      const x0 = i ? (sx(rows[i - 1].s) + sx(rows[i].s)) / 2 : sx(0);
+      const x1 = i < rows.length - 1 ? (sx(rows[i].s) + sx(rows[i + 1].s)) / 2 : sx(totalLen);
+      c.fillStyle = rows[i].sg <= CONFIG.reqTotal ? 'rgba(159,232,160,.45)' : 'rgba(255,122,122,.5)';
+      c.fillRect(x0, syS(rows[i].sg), x1 - x0, y0 + hT - syS(rows[i].sg));
+    }
+    c.strokeStyle = '#f0b429'; c.setLineDash([4, 4]); c.beginPath();  // the requirement IS a line here
+    c.moveTo(mL, syS(CONFIG.reqTotal)); c.lineTo(W - mR, syS(CONFIG.reqTotal)); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = '#7a6a45'; c.textAlign = 'left';
+    c.fillText('σ_g(s) vs 50 µGal requirement (band half-width)', mL + 4, y0 + 8);
+    c.fillStyle = '#5a6678'; c.textAlign = 'right';
+    c.fillText(sMax.toFixed(0), mL - 5, syS(sMax) + 8); c.fillText('0', mL - 5, syS(0));
+  }
 
   // 1σ band around truth (rigorous propagation)
   c.beginPath();
