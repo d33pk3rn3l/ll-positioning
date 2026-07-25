@@ -1,12 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Error Explorer</title>
-    <meta http-equiv="refresh" content="0; url=./error-explorer.html" />
-  </head>
-  <body>
-    <p>Redirecting to <a href="./error-explorer.html">error-explorer.html</a>...</p>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LunarLeaper — Navigation × Science Assessment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>LUNARLEAPER · NAVIGATION × SCIENCE ASSESSMENT</h1>
+    <p>
+      First-order MBSE for a walking quadruped: cross navigation / geodetic ConOps with payload survey design,
+      separate local · map-relative · cartographic · inertial knowledge, and propagate into detectability and 14-day coverage.
+      Defaults are evidence-graded priors — not flight requirements.
+    </p>
+  </header>
+
+  <div class="layout">
+    <aside class="panel controls">
+      <div class="block">
+        <h2>Instrument & ConOps</h2>
+        <label for="instrument">Instrument</label>
+        <select id="instrument"></select>
+        <label for="navConops">Navigation ConOps</label>
+        <select id="navConops"></select>
+        <label for="surveyConops">Survey / acquisition ConOps</label>
+        <select id="surveyConops"></select>
+      </div>
+
+      <div class="block">
+        <h2>Navigation uncertainty</h2>
+        <label class="row"><span>legged odometry prior</span><span class="val" id="odometryPctV"></span></label>
+        <input type="range" id="odometryPct" min="0.5" max="8" step="0.1" value="2" />
+        <label class="row"><span>map-tie σ</span><span class="val" id="mapTieSigmaV"></span></label>
+        <input type="range" id="mapTieSigma_m" min="1" max="30" step="0.5" value="10" />
+        <label class="row"><span>cartographic σ (H)</span><span class="val" id="cartographicSigmaV"></span></label>
+        <input type="range" id="cartographicSigma_m" min="2" max="40" step="1" value="12" />
+        <label class="check"><input type="checkbox" id="frameMistag" /> ME↔PA frame mistag (~875 m fault)</label>
+      </div>
+
+      <div class="block">
+        <h2>Gravity survey design</h2>
+        <label class="row"><span>station spacing</span><span class="val" id="stationSpacingV"></span></label>
+        <input type="range" id="stationSpacing_m" min="5" max="50" step="1" value="25" />
+        <label class="row"><span>settle time</span><span class="val" id="settleV"></span></label>
+        <input type="range" id="settle_s" min="60" max="1200" step="30" value="600" />
+        <label class="row"><span>integration</span><span class="val" id="integrationV"></span></label>
+        <input type="range" id="integration_s" min="60" max="1200" step="30" value="600" />
+        <label class="row"><span>reoccupation cadence</span><span class="val" id="reoccupationV"></span></label>
+        <input type="range" id="reoccupationCadence_h" min="1" max="24" step="0.5" value="6" />
+        <label class="row"><span>MEMS drift prior</span><span class="val" id="driftV"></span></label>
+        <input type="range" id="drift_uGal_per_day" min="50" max="400" step="10" value="200" />
+        <label class="row"><span>DEM differential σ</span><span class="val" id="demV"></span></label>
+        <input type="range" id="demDifferential_m" min="0.2" max="5" step="0.1" value="2" />
+        <label class="row"><span>tube depth (axis)</span><span class="val" id="tubeDepthV"></span></label>
+        <input type="range" id="tubeDepth_m" min="20" max="80" step="1" value="48" />
+        <label class="row"><span>tube radius</span><span class="val" id="tubeRadiusV"></span></label>
+        <input type="range" id="tubeRadius_m" min="10" max="50" step="1" value="30" />
+        <label class="check"><input type="checkbox" id="useBouguerSensitivity" checked /> elev. sens. after simple Bouguer</label>
+        <label class="check"><input type="checkbox" id="activeLeveling" checked /> active body leveling</label>
+        <label class="check"><input type="checkbox" id="lockedStance" checked /> locked gravity stance</label>
+      </div>
+
+      <div class="block">
+        <h2>GPR / spectrometer</h2>
+        <label class="check"><input type="checkbox" id="fixedBellyHeight" checked /> fixed belly-height gait</label>
+        <label class="check"><input type="checkbox" id="gprMode3d" /> force GPR 3D sampling needs</label>
+        <label class="row"><span>spectrometer footprint σ</span><span class="val" id="footV"></span></label>
+        <input type="range" id="footSigma_m" min="0.005" max="0.1" step="0.001" value="0.05" />
+      </div>
+
+      <p class="note" id="assumptions"></p>
+    </aside>
+
+    <main class="results">
+      <div class="kpis">
+        <div class="kpi" id="kpiScience"></div>
+        <div class="kpi" id="kpiCoverage"></div>
+        <div class="kpi" id="kpiLocal"></div>
+        <div class="kpi" id="kpiMap"></div>
+      </div>
+
+      <div class="grid2">
+        <section class="panel">
+          <h2>Knowledge layers</h2>
+          <table>
+            <thead><tr><th>Layer</th><th>1σ</th><th>What it drives</th></tr></thead>
+            <tbody id="layersBody"></tbody>
+          </table>
+          <div id="scienceNote"></div>
+        </section>
+        <section class="panel">
+          <h2>Dominant error sources</h2>
+          <div class="bars" id="errorBars"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section class="panel">
+          <h2>Traverse envelopes</h2>
+          <canvas class="chart" id="traverseChart"></canvas>
+          <p class="note">Local (amber), map-relative (cyan), cartographic (red). Green ticks = anchors.</p>
+        </section>
+        <section class="panel">
+          <h2>Gravity anomaly vs budget</h2>
+          <canvas class="chart" id="gravityChart"></canvas>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h2>Navigation ConOps comparison (same survey)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ConOps</th>
+              <th>Local H</th>
+              <th>Map H</th>
+              <th>Cart. H</th>
+              <th>Science</th>
+              <th>Dominant term</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Geodetic information sources (PDF)</h2>
+        <table>
+          <thead><tr><th>Source</th><th>Assessment</th><th>Usable</th></tr></thead>
+          <tbody id="sourcesBody"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>PDF question trace</h2>
+        <table>
+          <thead><tr><th>ID</th><th>Question</th><th>Addressed by</th></tr></thead>
+          <tbody id="pdfBody"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    First-order assessment · not a flight estimator ·
+    <a href="./error-explorer.html">legacy 3D error explorer</a> ·
+    <a href="https://github.com/d33pk3rn3l/ll-positioning">source</a>
+  </footer>
+
+  <script type="module" src="./src/app.mjs"></script>
+</body>
 </html>
