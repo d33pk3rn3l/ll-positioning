@@ -11,7 +11,7 @@ import {
   DEFAULT_SCENARIO,
   PRESETS,
   freeAirGradient,
-} from "./src/assessment.mjs";
+} from "./assessment.mjs";
 
 const $ = (id) => document.getElementById(id);
 
