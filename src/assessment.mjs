@@ -437,7 +437,9 @@ export function gravityAssessment(scenario, navResult, survey) {
   // This term should use the mean Earth to principal axes uncertainty.
   // This term should not use the map offset.
   // The 0.01 µGal/m gradient has no source (see issue #19).
-  // The formula below is unchanged (D-005).
+  // The formula below is unchanged.
+  // Decision 5: the baseline navigation core will be replaced, not tuned.
+  // No new navigation model before G1.
   const grailGradient_uGal_per_m = 0.01; // ~ tens of µGal over km → ~0.01 µGal/m
   const grailTerm = grailGradient_uGal_per_m * navResult.summary.midCartHoriz_m;
 

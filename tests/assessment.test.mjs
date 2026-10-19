@@ -392,7 +392,7 @@ function oneSigmaValues(r) {
   return values;
 }
 
-describe("mean Earth to principal axes offset is outside the 1-sigma (D-007)", () => {
+describe("mean Earth to principal axes offset is outside the 1-sigma (decision 7: apply mean Earth to principal axes as a transform and remove it from every 1-sigma)", () => {
   it("no 1-sigma value contains the 875 m mean Earth to principal axes offset", () => {
     const offset = PRESETS.control.me_pa_offset_m;
     assert.equal(offset, 875);
