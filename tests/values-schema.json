@@ -32,7 +32,7 @@
       "required": true,
       "numeric": false,
       "vocabulary": "statistic",
-      "ruleText": "Store the statistic as the source gives it. Do not convert the statistic in the file."
+      "ruleText": "Store the statistic as the source gives it. Do not convert the statistic in the file. When the value is itself an error or a noise, the statistic describes the value. Otherwise the statistic describes the uncertainty."
     },
     {
       "name": "unit",

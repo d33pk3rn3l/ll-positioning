@@ -255,7 +255,7 @@ describe("format rules file", () => {
     const statistic = formatRules.columns.find((column) => column.name === "statistic");
     assert.equal(
       statistic.ruleText,
-      "Store the statistic as the source gives it. Do not convert the statistic in the file.",
+      "Store the statistic as the source gives it. Do not convert the statistic in the file. When the value is itself an error or a noise, the statistic describes the value. Otherwise the statistic describes the uncertainty.",
     );
     const unit = formatRules.columns.find((column) => column.name === "unit");
     assert.equal(
