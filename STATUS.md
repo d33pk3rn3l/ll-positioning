@@ -50,3 +50,36 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 - Gate dates (Q3) still TBD.
 - D-011 spectrometer scope still proposed.
 - IMU or inclinometer bias spec TBD. The 33 µg bias is derived from the 0.2 mrad levelling residual assumption [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad]. IMU north-finding is excluded on the Moon (gyro bias would need to be below 0.0005 deg/h [derived]).
+
+## Source notes not yet reviewed
+
+These notes are in the repo. No value from them may go into any budget until the named professor has reviewed them.
+
+Not yet reviewed by prof-geodesy:
+
+- archinal2018wgccre
+- fienga2024lunarframes
+- barker2025lolalra
+- henriksen2016nac
+- collins2026nacmosaics
+- ashby2024clock
+- wagner2017anthro
+
+Not yet reviewed by prof-payload:
+
+- li2020ce4lpr
+- mittelholz2026ll
+- kolvenbach2026ll
+- noeker2022wpm
+- urbancic2017a17
+- eisenman2001mercam
+
+Pull request #18 is merged. The mean Earth to principal axes transform is applied. Its size is not a 1-sigma value. A frame mistag is a fault flag.
+
+Pull request #20 is merged. It is the platform motion audit.
+
+Issue #22 is open. It covers the format of source values and the continuous integration check. The owner is ll-engineer.
+
+The PI set the scope for this iteration on 2026-10-19. See decision D-015, Simple standard interfaces for this iteration. The robot interface, the science interface, and the tie-source interface are short input sheets. Each value has a 1-sigma value or a bound. Each value has a growth type. The growth type is fixed, grows with the distance walked, or is random at each point. Each value has a source label, or the value is TBD. This iteration has no foot-slip model. It has no leg model. It has no model of the inside of an instrument. Extend a sheet only when a verdict needs the extra detail.
+
+See also decision D-014, Uncertainty of the mean Earth to principal axes transform.
