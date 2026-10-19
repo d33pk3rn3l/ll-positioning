@@ -37,9 +37,9 @@
         <input type="range" id="odometryPct" min="0.5" max="8" step="0.1" value="2" />
         <label class="row"><span>map-tie σ</span><span class="val" id="mapTieSigmaV"></span></label>
         <input type="range" id="mapTieSigma_m" min="1" max="30" step="0.5" value="10" />
-        <label class="row"><span>cartographic σ (H)</span><span class="val" id="cartographicSigmaV"></span></label>
+        <label class="row"><span id="cartographicSigmaLabel">cartographic σ (H)</span><span class="val" id="cartographicSigmaV"></span></label>
         <input type="range" id="cartographicSigma_m" min="2" max="40" step="1" value="12" />
-        <label class="check"><input type="checkbox" id="frameMistag" /> ME↔PA frame mistag (~875 m fault)</label>
+        <label class="check"><input type="checkbox" id="frameMistag" /> Frame mistag: a principal axes (PA) product used as mean Earth (ME), or the transform skipped (fault, about 875 m)</label>
       </div>
 
       <div class="block">
@@ -103,7 +103,7 @@
         <section class="panel">
           <h2>Traverse envelopes</h2>
           <canvas class="chart" id="traverseChart"></canvas>
-          <p class="note">Local (amber), map-relative (cyan), cartographic (red). Green ticks = anchors.</p>
+          <p class="note" id="traverseNote">Local (amber), map-relative (cyan), cartographic (red). Green ticks = anchors.</p>
         </section>
         <section class="panel">
           <h2>Gravity anomaly vs budget</h2>

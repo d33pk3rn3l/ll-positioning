@@ -37,7 +37,7 @@ export const PDF_QUESTIONS = [
 export const FRAMES = {
   me_de440_me421: {
     id: "me_de440_me421",
-    name: "ME / DE440 dynamics, DE421-aligned cartographic realization",
+    name: "Mean Earth (ME) / DE440 dynamics, DE421-aligned cartographic realization",
     layer: "cartographic",
     notes: "Default for new products (USGS / NAIF).",
   },
@@ -170,11 +170,12 @@ export const ERROR_SOURCES = [
   },
   {
     id: "frame_mistag",
-    name: "ME↔PA frame mis-tag",
+    name: "Mean Earth to principal axes frame mistag",
     units: "m",
     correlation: "deterministic_fault",
     affects: ["cartographic_absolute"],
-    mitigation: "explicit frame kernel tags; fault flag ~875 m",
+    mitigation:
+      "Fault flag. A principal axes product is used as mean Earth, or the transform is skipped. Fault size is about 875 m. The fault stays out of every 1-sigma. The fault stays out of every bias.",
   },
   {
     id: "timing",

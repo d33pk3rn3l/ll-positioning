@@ -11,6 +11,8 @@ import {
   DEFAULT_SCENARIO,
   PRESETS,
   freeAirGradient,
+  formatCartographicSigmaText,
+  CARTOGRAPHIC_SIGMA_EXCLUSION,
 } from "./assessment.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -97,6 +99,7 @@ function readScenario() {
 function syncLabels(s) {
   $("odometryPctV").textContent = `${s.odometryPct.toFixed(1)} %`;
   $("mapTieSigmaV").textContent = `${s.mapTieSigma_m.toFixed(1)} m`;
+  $("cartographicSigmaLabel").textContent = `cartographic σ (H), ${CARTOGRAPHIC_SIGMA_EXCLUSION}`;
   $("cartographicSigmaV").textContent = `${s.cartographicSigma_m.toFixed(0)} m`;
   $("stationSpacingV").textContent = `${s.stationSpacing_m.toFixed(0)} m`;
   $("settleV").textContent = `${s.settle_s.toFixed(0)} s`;
@@ -159,17 +162,28 @@ function renderKpis(r) {
     <div class="value">${fmt(r.layers.local.horiz_m, 2)} m</div>
     <div class="sub">vert ${fmt(r.layers.local.vert_m, 2)} m · pair Δ ${fmt(r.nav.summary.relativePostHoriz_m, 2)} m</div>`;
 
+  const cartographicText = formatCartographicSigmaText(r.layers.cartographic.horiz_m, undefined, 1);
+  const fault = r.nav.frameMistagFault;
   $("kpiMap").innerHTML = `
     <div class="label">Map / cartographic</div>
-    <div class="value ${r.nav.frameFault_m ? "bad" : ""}">${fmt(r.layers.map.horiz_m, 1)} / ${fmt(r.layers.cartographic.horiz_m, 1)} m</div>
-    <div class="sub">${r.nav.frameFault_m ? "ME↔PA fault included" : "map-relative · absolute"}</div>`;
+    <div class="value">${fmt(r.layers.map.horiz_m, 1)} / ${cartographicText}</div>
+    <div class="sub">${
+      fault
+        ? `Frame mistag fault ${fmt(r.nav.frameMistagFault_m, 0)} m. Not a 1-sigma.`
+        : "map-relative · absolute"
+    }</div>`;
 }
 
 function renderLayers(r) {
   $("layersBody").innerHTML = `
     <tr><td>Local / relative</td><td class="num">${fmt(r.layers.local.horiz_m)} m H / ${fmt(r.layers.local.vert_m)} m V</td><td>${r.layers.local.drives}</td></tr>
     <tr><td>Map-relative</td><td class="num">${fmt(r.layers.map.horiz_m)} m</td><td>${r.layers.map.drives}</td></tr>
-    <tr><td>Cartographic absolute</td><td class="num">${fmt(r.layers.cartographic.horiz_m)} m H / ${fmt(r.layers.cartographic.vert_m)} m V</td><td>${r.layers.cartographic.drives}</td></tr>
+    <tr><td>Cartographic absolute</td><td class="num">${r.layers.cartographic.text}</td><td>${r.layers.cartographic.drives}</td></tr>
+    ${
+      r.nav.frameMistagFault
+        ? `<tr><td>Mean Earth to principal axes frame mistag (fault)</td><td class="num">fault</td><td>${fmt(r.nav.frameMistagFault_m, 0)} m fault size. Not a 1-sigma and not a bias.</td></tr>`
+        : ""
+    }
     <tr><td>Inertial / ephemeris</td><td class="num">${fmt(r.layers.inertial.azimuth_mrad, 2)} mrad az</td><td>${r.layers.inertial.drives}</td></tr>
     <tr><td>Observability</td><td class="num">${r.observability.fullPose ? "6-DoF" : "partial"}</td><td>${r.observability.notes}</td></tr>
   `;
@@ -193,7 +207,11 @@ function renderBars(r) {
     .map((t) => {
       const value = rankedMagnitude(t);
       const pct = Math.min(100, (value / max) * 100);
-      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(value, 1)} ${unitLabel(t)}</div></div>`;
+      const shown =
+        t.id === "cart"
+          ? formatCartographicSigmaText(value, undefined, 1)
+          : `${fmt(value, 1)} ${unitLabel(t)}`;
+      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${shown}</div></div>`;
     })
     .join("");
   const context = (r.context ?? [])
@@ -238,7 +256,7 @@ function renderCompare(base) {
         <td>${row.name}</td>
         <td class="num">${fmt(row.layers.local.horiz_m)}</td>
         <td class="num">${fmt(row.layers.map.horiz_m)}</td>
-        <td class="num">${fmt(row.layers.cartographic.horiz_m)}</td>
+        <td class="num">${formatCartographicSigmaText(row.layers.cartographic.horiz_m)}</td>
         <td class="num">${sci}</td>
         <td>${row.dominant?.name ?? "—"}</td>
       </tr>`;
@@ -284,7 +302,7 @@ function drawTraverse(r) {
   const series = [
     { key: (s) => s.local.horiz, color: "#e6b35a", label: "local" },
     { key: (s) => s.map.horiz, color: "#6ec6e8", label: "map" },
-    { key: (s) => s.cartographic.horiz + r.nav.frameFault_m, color: "#e88787", label: "cartographic" },
+    { key: (s) => s.cartographic.horiz, color: "#e88787", label: "cartographic" },
   ];
   for (const ser of series) {
     ctx.strokeStyle = ser.color;
@@ -426,7 +444,12 @@ function render() {
   renderPdf(r);
   drawTraverse(r);
   drawGravity(r);
-  $("assumptions").textContent = `FA ${fmt(freeAirGradient(), 2)} µGal/m · odometry prior TBD (${PRESETS.odometry.evidence})`;
+  const applied = r.nav.meanEarthToPrincipalAxesAppliedText
+    ? ` · ${r.nav.meanEarthToPrincipalAxesAppliedText}`
+    : "";
+  $("assumptions").textContent = `FA ${fmt(freeAirGradient(), 2)} µGal/m · odometry prior TBD (${PRESETS.odometry.evidence})${applied}`;
+  $("traverseNote").textContent =
+    `Local (amber), map-relative (cyan), cartographic (red; ${CARTOGRAPHIC_SIGMA_EXCLUSION}). Green ticks = anchors.`;
 }
 
 function main() {

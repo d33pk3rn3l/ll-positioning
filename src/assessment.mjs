@@ -53,6 +53,45 @@ export function clamp(x, lo, hi) {
   return Math.max(lo, Math.min(hi, x));
 }
 
+/**
+ * Round a metre value.
+ * Use the same rounding as the page.
+ */
+export function formatMetres(value, digits = 2) {
+  if (!Number.isFinite(value)) return "—";
+  return Math.abs(value) >= 100 ? value.toFixed(0) : value.toFixed(digits);
+}
+
+/**
+ * Show this text with every cartographic 1-sigma.
+ * Mean Earth (ME) to principal axes (PA) uncertainty is outside the number.
+ */
+export const CARTOGRAPHIC_SIGMA_EXCLUSION = "excludes ME-to-PA uncertainty (TBD)";
+
+/**
+ * Build the text for one cartographic 1-sigma.
+ * horizontal_m is required.
+ * vertical_m is optional.
+ */
+export function formatCartographicSigmaText(horizontal_m, vertical_m = undefined, digits = 2) {
+  const horizontalText = `${formatMetres(horizontal_m, digits)} m`;
+  const body =
+    vertical_m === undefined
+      ? horizontalText
+      : `${horizontalText} H / ${formatMetres(vertical_m, digits)} m V`;
+  return `${body} ${CARTOGRAPHIC_SIGMA_EXCLUSION}`;
+}
+
+/**
+ * Transform applied.
+ * The rotation size is text.
+ * The size is not an error.
+ * The size is not a bias.
+ */
+export function formatMeanEarthToPrincipalAxesAppliedText(offset_m) {
+  return `ME-to-PA applied (about ${offset_m} m); residual uncertainty TBD, common-mode`;
+}
+
 /** Free-air gradient [µGal/m]. */
 export function freeAirGradient() {
   return FREE_AIR;
@@ -226,8 +265,26 @@ export function navigationUncertainty(scenario) {
   // Observability of datum transform
   const observability = datumObservability(scenario, nav);
 
-  // Frame fault
-  const frameFault_m = scenario.frameMistag ? PRESETS.control.me_pa_offset_m : 0;
+  // Transform applied. The mean Earth to principal axes rotation is in use.
+  // The rotation size is not an error.
+  // The rotation size is not a bias.
+  // Report the size as text only.
+  // The budget field is meanEarthToPrincipalAxesSigma_m.
+  // The value is null until a source exists.
+  // The uncertainty is common to all points.
+  // Frame mistag. The frame mistag is a fault.
+  // A principal axes product is used as mean Earth, or the transform is skipped.
+  // frameMistagFault_m is the fault size.
+  // Keep the fault out of every 1-sigma.
+  // Keep the fault out of every bias field.
+  const meanEarthToPrincipalAxesSize_m = PRESETS.control.me_pa_offset_m;
+  const frameMistagFault = !!scenario.frameMistag;
+  const meanEarthToPrincipalAxesSigma_m = null;
+  const meanEarthToPrincipalAxesSigmaStatus = "TBD";
+  const frameMistagFault_m = frameMistagFault ? meanEarthToPrincipalAxesSize_m : null;
+  const meanEarthToPrincipalAxesAppliedText = frameMistagFault
+    ? null
+    : formatMeanEarthToPrincipalAxesAppliedText(meanEarthToPrincipalAxesSize_m);
 
   // Mid / worst local
   const mid = stations[Math.floor(stations.length / 2)];
@@ -239,14 +296,18 @@ export function navigationUncertainty(scenario) {
     stations,
     relative,
     observability,
-    frameFault_m,
+    frameMistagFault,
+    frameMistagFault_m,
+    meanEarthToPrincipalAxesSigma_m,
+    meanEarthToPrincipalAxesSigmaStatus,
+    meanEarthToPrincipalAxesAppliedText,
     mid,
     worstLocal,
     summary: {
       worstLocalHoriz_m: worstLocal.local.horiz,
       worstLocalVert_m: Math.max(...stations.map((s) => s.local.vert)),
       midMapHoriz_m: mid.map.horiz,
-      midCartHoriz_m: mid.cartographic.horiz + frameFault_m,
+      midCartHoriz_m: mid.cartographic.horiz,
       midCartVert_m: mid.cartographic.vert,
       relativePostHoriz_m: hypot(relative.post.along, relative.post.cross),
       relativePostVert_m: relative.post.vert,
@@ -372,7 +433,13 @@ export function gravityAssessment(scenario, navResult, survey) {
   const driftTerm = survey.adjustedDrift_uGal;
   const instrumentNoise = 20; // µGal white / occupation (illustrative MEMS)
 
-  // GRAIL background: smooth over km — cartographic absolute needed only for weak ramp
+  // Gravity fields of the GRAIL type are given in principal axes.
+  // This term should use the mean Earth to principal axes uncertainty.
+  // This term should not use the map offset.
+  // The 0.01 µGal/m gradient has no source (see issue #19).
+  // The formula below is unchanged.
+  // Decision 5: the baseline navigation core will be replaced, not tuned.
+  // No new navigation model before G1.
   const grailGradient_uGal_per_m = 0.01; // ~ tens of µGal over km → ~0.01 µGal/m
   const grailTerm = grailGradient_uGal_per_m * navResult.summary.midCartHoriz_m;
 
@@ -613,6 +680,10 @@ export function assess(partial = {}) {
       horiz_m: navResult.summary.midCartHoriz_m,
       vert_m: navResult.summary.midCartVert_m,
       drives: "archive / interoperability; weak for short-traverse cave vs lunar potential",
+      text: formatCartographicSigmaText(
+        navResult.summary.midCartHoriz_m,
+        navResult.summary.midCartVert_m,
+      ),
     },
     inertial: {
       azimuth_mrad: scenario.celestialAzimuth_mrad,
