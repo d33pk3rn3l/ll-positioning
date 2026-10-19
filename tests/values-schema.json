@@ -1,0 +1,215 @@
+{
+  "formatVersion": 2,
+  "columns": [
+    {
+      "name": "value_id",
+      "required": true,
+      "numeric": false,
+      "identifier": true
+    },
+    {
+      "name": "source_key",
+      "required": true,
+      "numeric": false
+    },
+    {
+      "name": "quantity",
+      "required": true,
+      "numeric": false
+    },
+    {
+      "name": "value",
+      "required": true,
+      "numeric": true
+    },
+    {
+      "name": "uncertainty",
+      "required": true,
+      "numeric": true
+    },
+    {
+      "name": "statistic",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "statistic",
+      "ruleText": "Store the statistic as the source gives it. Do not convert the statistic in the file. When the value is itself an error or a noise, the statistic describes the value. Otherwise the statistic describes the uncertainty."
+    },
+    {
+      "name": "unit",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "unit",
+      "ruleText": "A pure unit conversion is allowed. Keep the source wording and the source unit in conditions."
+    },
+    {
+      "name": "value_type",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "value_type"
+    },
+    {
+      "name": "frame",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "frame",
+      "ruleText": "A row with frame iau_moon_approximate_mean_earth is context only. It is never a map tie. A later INPOP version has its own frame name and its version number. For a transform, this cell is the from frame. The conditions cell names the to frame, the rotation direction, and the axis order."
+    },
+    {
+      "name": "frame_status",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "frame_status",
+      "ruleText": "When the source gives no frame and the author names one, the row uses that frame and frame_status inferred.",
+      "pairing": {
+        "frameColumn": "frame",
+        "unnamedFrames": ["not_stated", "not_applicable"],
+        "statusForUnnamedFrame": "not_applicable",
+        "statusesForNamedFrame": ["sourced", "inferred"],
+        "unnamedFrameMessage": "When the frame is not stated or not applicable, the frame status must be not applicable.",
+        "namedFrameMessage": "A named frame must have frame status sourced or inferred."
+      }
+    },
+    {
+      "name": "height_reference",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "height_reference",
+      "needsFrame": {
+        "frameColumn": "frame",
+        "heightValueThatSkips": "not_applicable",
+        "forbiddenFrame": "not_applicable",
+        "message": "When the height reference applies, the frame must not be not applicable."
+      }
+    },
+    {
+      "name": "gravity_product",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "gravity_product"
+    },
+    {
+      "name": "averaging_time",
+      "required": true,
+      "numeric": true,
+      "unitText": "s",
+      "emptyCellWarning": {
+        "unitColumn": "unit",
+        "units": ["uGal", "mGal", "uGal/sqrt(Hz)"],
+        "valueTypeColumn": "value_type",
+        "valueTypes": ["measured", "specification"],
+        "conditionsColumn": "conditions",
+        "conditionsWords": "averaging time not stated",
+        "message": "The averaging time is empty. The conditions cell must contain the words \"averaging time not stated\"."
+      }
+    },
+    {
+      "name": "grade",
+      "required": true,
+      "numeric": false,
+      "vocabulary": "grade"
+    },
+    {
+      "name": "conditions",
+      "required": true,
+      "numeric": false
+    },
+    {
+      "name": "note_anchor",
+      "required": true,
+      "numeric": false
+    }
+  ],
+  "vocabularies": {
+    "statistic": [
+      "one_sigma",
+      "three_sigma",
+      "maximum",
+      "range_minimum",
+      "range_maximum",
+      "typical",
+      "author_judgement",
+      "not_stated",
+      "rms",
+      "scaled_formal",
+      "mean",
+      "median",
+      "percentile_95",
+      "linear_error_90_percent",
+      "circular_error_90_percent",
+      "peak_to_peak"
+    ],
+    "value_type": [
+      "measured",
+      "requirement",
+      "model",
+      "derived",
+      "specification"
+    ],
+    "frame": [
+      "mean_earth_de421",
+      "mean_earth_de430",
+      "mean_earth_de440",
+      "principal_axes_de421",
+      "principal_axes_de430",
+      "principal_axes_de440",
+      "mean_earth_unknown_realization",
+      "principal_axes_unknown_realization",
+      "not_stated",
+      "not_applicable",
+      "principal_axes_inpop19a",
+      "iau_moon_approximate_mean_earth"
+    ],
+    "frame_status": [
+      "sourced",
+      "inferred",
+      "not_applicable"
+    ],
+    "height_reference": [
+      "sphere_1737400m",
+      "other_stated",
+      "not_stated",
+      "not_applicable"
+    ],
+    "gravity_product": [
+      "magnitude",
+      "vertical_component",
+      "full_vector",
+      "not_applicable"
+    ],
+    "grade": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "unit": [
+      "m",
+      "km",
+      "m/s",
+      "m/s^2",
+      "km^3/s^2",
+      "uGal",
+      "mGal",
+      "uGal/m",
+      "uGal/sqrt(Hz)",
+      "mrad",
+      "urad",
+      "arcsec",
+      "arcmin",
+      "deg",
+      "ug",
+      "mg",
+      "deg/h",
+      "percent",
+      "day",
+      "s",
+      "ns",
+      "MHz",
+      "dimensionless",
+      "deg/day",
+      "mGal/m",
+      "s/day",
+      "kg/m^3"
+    ]
+  }
+}
