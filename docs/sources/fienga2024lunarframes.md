@@ -7,7 +7,7 @@ Review of the definitions and realizations of the Lunar Celestial Reference Syst
 
 ## Numbers (with units and conditions)
 Format: value | product | frame realization | statistic type. "not stated" = the source does not say.
-- PA->ME offset angles (p1c, p2c, tau_c): DE421 -78.513", 0.290", -67.753"; DE440 -78.694", 0.278", -67.853"; INPOP19a (preliminary) -78.594", 0.290", -67.930" | Table 1 | PA vs ME | values, uncertainty not stated.
+- PA->ME offset angles (p1c, p2c, tau_c): DE421 -78.513", 0.290", -67.753"; DE440 -78.694", 0.278", -67.853"; INPOP19a (preliminary) -78.594", 0.290", -67.930" | Table 1 | PA vs ME | values, uncertainty not stated. Sign convention: Table 1 (p. 5) is titled "Numerical values of offset angles for some ephemerides" and has no column labels. The labels p1c, p2c, tau_c in this note are my reading, not source labels. Eq. (3), p. 5, gives "M E = Rx(-p2c) Ry(p1c) Rz(-τc + Ic σc/2) PA", but the paper does not say which quantity each column holds and does not define Rx, Ry, Rz. Context only, not for computation; sign convention not stated in source. (The third column has the opposite sign to the "τc = 67.753"" of williams2013de430 for DE421; the source does not explain this.)
 - ME vs PA offset of a surface point: "approximately 860 meters", depends on ephemeris and gravity field | approximate.
 - Series of the International Astronomical Union (IAU) (stopped by the IAU cartographic working group in 2015): "less accurate (< 150 m)" than numerical ephemeris | bound.
 - Max differences of LLR reflector positions: INPOP21a-DE440 0.84-1.03 m; INPOP21a-DE421 1.16-1.60 m; EPM (Ephemerides of Planets and the Moon) vs INPOP17a 1.9-2.3 m | Table 2 | PA frames of each ephemeris | maximum.
