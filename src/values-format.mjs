@@ -1,5 +1,5 @@
 /**
- * Check a values table against format version 1.
+ * Check a values table against format version 2.
  * The column lists live in the rules file.
  * This module does not hold science values.
  */
@@ -158,11 +158,11 @@ export function parseCommaSeparatedValues(tableText) {
 }
 
 function checkFormatRules(formatRules) {
-  if (!formatRules || formatRules.formatVersion !== 1) {
+  if (!formatRules || formatRules.formatVersion !== 2) {
     const shownVersion = formatRules && formatRules.formatVersion !== undefined
       ? String(formatRules.formatVersion)
       : "";
-    return [makeFinding(1, "formatVersion", shownVersion, "The format version must be 1.")];
+    return [makeFinding(1, "formatVersion", shownVersion, "The format version must be 2.")];
   }
   if (!Array.isArray(formatRules.columns)) {
     return [makeFinding(1, "columns", "", "The format rules must list the columns.")];

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "columns": [
     {
       "name": "value_id",
@@ -104,13 +104,20 @@
       "author_judgement",
       "not_stated",
       "rms",
-      "scaled_formal"
+      "scaled_formal",
+      "mean",
+      "median",
+      "percentile_95",
+      "peak_to_peak",
+      "linear_error_90",
+      "circular_error_90"
     ],
     "value_type": [
       "measured",
       "requirement",
       "model",
-      "derived"
+      "derived",
+      "specification"
     ],
     "frame": [
       "mean_earth_de421",
@@ -171,7 +178,9 @@
       "MHz",
       "dimensionless",
       "deg/day",
-      "mGal/m"
+      "mGal/m",
+      "Hz",
+      "kg"
     ]
   }
 }

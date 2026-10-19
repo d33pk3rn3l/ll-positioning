@@ -57,7 +57,7 @@ function assertFinding(finding, expected) {
 
 function smallFormatRules() {
   return {
-    formatVersion: 1,
+    formatVersion: 2,
     columns: [
       { name: "value_id", required: true, numeric: false, identifier: true },
       { name: "value", required: true, numeric: true },
@@ -135,9 +135,9 @@ describe("comma-separated values parser", () => {
 });
 
 describe("format rules file", () => {
-  it("holds format version 1 and the agreed lists", () => {
+  it("holds format version 2 and the agreed lists", () => {
     assert.deepEqual(Object.keys(formatRules), ["formatVersion", "columns", "vocabularies"]);
-    assert.equal(formatRules.formatVersion, 1);
+    assert.equal(formatRules.formatVersion, 2);
     assert.equal(typeof formatRules.formatVersion, "number");
     assert.deepEqual(formatRules.columns.map((column) => column.name), columnNames);
     assert.deepEqual(
@@ -167,8 +167,14 @@ describe("format rules file", () => {
         "not_stated",
         "rms",
         "scaled_formal",
+        "mean",
+        "median",
+        "percentile_95",
+        "peak_to_peak",
+        "linear_error_90",
+        "circular_error_90",
       ],
-      value_type: ["measured", "requirement", "model", "derived"],
+      value_type: ["measured", "requirement", "model", "derived", "specification"],
       frame: [
         "mean_earth_de421",
         "mean_earth_de440",
@@ -210,8 +216,12 @@ describe("format rules file", () => {
         "dimensionless",
         "deg/day",
         "mGal/m",
+        "Hz",
+        "kg",
       ],
     });
+    assert.equal(formatRules.vocabularies.unit.includes("cm"), false);
+    assert.equal(formatRules.vocabularies.unit.includes("mm"), false);
   });
 
   it("marks the numeric columns and the required columns", () => {
@@ -247,7 +257,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 7);
+    assert.equal(parsed.records.length, 16);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -270,6 +280,19 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[5], headerNames, "value"), "3");
     assert.equal(cellByName(parsed.records[6], headerNames, "frame"), "principal_axes_unknown_realization");
     assert.equal(cellByName(parsed.records[6], headerNames, "frame_status"), "inferred");
+    assert.equal(cellByName(parsed.records[7], headerNames, "value_type"), "specification");
+    assert.equal(cellByName(parsed.records[7], headerNames, "statistic"), "three_sigma");
+    assert.equal(cellByName(parsed.records[8], headerNames, "statistic"), "mean");
+    assert.equal(cellByName(parsed.records[8], headerNames, "unit"), "m");
+    assert.equal(cellByName(parsed.records[9], headerNames, "statistic"), "median");
+    assert.equal(cellByName(parsed.records[10], headerNames, "statistic"), "percentile_95");
+    assert.equal(cellByName(parsed.records[11], headerNames, "statistic"), "peak_to_peak");
+    assert.equal(cellByName(parsed.records[12], headerNames, "statistic"), "linear_error_90");
+    assert.equal(cellByName(parsed.records[13], headerNames, "statistic"), "circular_error_90");
+    assert.equal(cellByName(parsed.records[14], headerNames, "unit"), "Hz");
+    assert.equal(cellByName(parsed.records[14], headerNames, "statistic"), "range_minimum");
+    assert.equal(cellByName(parsed.records[15], headerNames, "unit"), "kg");
+    assert.equal(cellByName(parsed.records[15], headerNames, "statistic"), "range_maximum");
     assert.deepEqual(validateValuesText(tableText, formatRules), []);
   });
 
@@ -414,13 +437,13 @@ describe("values table check", () => {
     });
 
     const wrongVersion = smallFormatRules();
-    wrongVersion.formatVersion = 2;
+    wrongVersion.formatVersion = 1;
     const versionFindings = validateValuesText("value_id,value,unit\nonly,1,m\n", wrongVersion);
     assertFinding(versionFindings[0], {
       rowNumber: 1,
       columnName: "formatVersion",
-      cellValue: "2",
-      reason: "The format version must be 1.",
+      cellValue: "1",
+      reason: "The format version must be 2.",
     });
   });
 
