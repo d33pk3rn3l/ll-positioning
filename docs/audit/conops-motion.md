@@ -30,6 +30,16 @@ A unit conversion (milliradian times 0.001 to make radians) is not its own row. 
 
 One term is one row. Later lines that only display or reuse that term are listed in the location cell.
 
+The column "error type (frames.md section 6)" uses the five types in that section. It does not change the motion class.
+
+1. Common-mode.
+2. Random walk along track.
+3. Per-station bias.
+4. White noise.
+5. Systematic, grows in proportion to separation.
+
+`none` means the row is not an error source. `not set` means the row does not pick one of the five types.
+
 ## Search
 
 Files: `src/mission-model.mjs`, `src/assessment.mjs`, `src/app.mjs`.
@@ -53,53 +63,53 @@ No row is inconsistent. There is no separate code issue to open for a forbidden 
 
 ## Terms
 
-| Location | Term | Value | Unit | Motion | Class | Number label | Note |
-|----------|------|-------|------|--------|-------|--------------|------|
-| `src/mission-model.mjs:63` | `FRAMES.body` | none | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:102-108` | `rover_tracks` | 0.5–1; ~23; 50 | m/px; cm; cm/px | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:130-136` | `leg_slip` | ~1; no mm figure | % of distance; units text also says mm | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:139-145` | `vo_drift` | 1–4; lunar figure absent | % of distance | generic | unclear | TBD/unsourced | D-012 names leg odometry and an IMU. This term is visual-odometry drift. The 1–4% words are terrestrial and have no ref key. |
-| `src/mission-model.mjs:148-154` | `imu_bias` | none | m/s², rad/s | generic | consistent | no number | — |
-| `src/mission-model.mjs:180-185` | `timing` | v absent | s to m | generic | unclear | TBD/unsourced | The unit line turns time into distance with speed v. D-012 says speed has no source. The term names no walk, hop, or wheel. |
-| `src/mission-model.mjs:202-208` | `tilt_settle` | none | mrad | legged | consistent | no number | — |
-| `src/mission-model.mjs:225-231` | `gait_vibration` | none | cm, rad | legged | consistent | no number | — |
-| `src/mission-model.mjs:238` | `active_leveling.residualDefault_mrad` | 0.2 | mrad | legged | unclear | TBD/unsourced | Residual after active body leveling at a station. D-012 leaves body motion and standing stability open. No ref in `src/`. The scenario default repeats 0.2 mrad. |
-| `src/mission-model.mjs:244` | `locked_gravity_stance.residualDefault_mrad` | 0.1 | mrad | legged | unclear | TBD/unsourced | Residual of a locked stance. Standing stability has no source in D-012. The scenario foot-creep default repeats 0.1 mrad. |
-| `src/mission-model.mjs:250` | `fixed_belly_height.residualHeight_cm` | 1.0 | cm | legged | unclear | TBD/unsourced | Belly-height change during a gait. Body motion has no source in D-012. The GPR model repeats this size as 0.01 m. |
-| `src/mission-model.mjs:256` | `downward_range.residualHeight_cm` | 0.5 | cm | generic | unclear | TBD/unsourced | Height residual of a downward range sensor. It is a body-motion size. No source. The term names no gait. |
-| `src/mission-model.mjs:259-264`; `src/app.mjs:400` | `stop_and_stare` | none | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:265-270` | `base_reoccupation` | none | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:274-281` | `local_rt` | none | — | legged | unclear | no number | The name includes leg odometry and an IMU, which matches D-012. It also includes visual odometry, which D-012 does not name. The description is contact-aided dead reckoning, so the feet stay in contact. |
-| `src/mission-model.mjs:319-324` | `gravity_network` | continuous false | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:325-331` | `gpr_2d` | continuous true | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:332-338` | `gpr_3d` | continuous true | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:339-344` | `spectro_stare` | continuous false | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:345-350` | `imaging_walk` | continuous true | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:403` | `terrestrial_nominal_pct` | 1.5 | % of distance | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:404` | `terrestrial_range_pct` | 1 to 2 | % of distance | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:405` | `lunar_tbd_prior_pct` | 2.0 | % of distance | legged | unclear | TBD/unsourced | The field name says the lunar value is TBD. D-012 gives no slip percent. The default scenario copies this 2% and the model runs it. No ref key. |
-| `src/mission-model.mjs:406` | `lunar_degraded_pct` | 6.0 | % of distance | legged | unclear | TBD/unsourced | Degraded lunar slip case. No source in `src/`. The form is still a legged percent of distance. |
-| `src/mission-model.mjs:407`; `src/app.mjs:429` | `odometry.evidence` | ~1–2 | % of distance | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:448` | `A1` | none | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:453` | `A2` | 1–2 | % of distance | legged | consistent | TBD/unsourced | — |
-| `src/mission-model.mjs:463` | `A4` | none | — | legged | consistent | no number | — |
-| `src/mission-model.mjs:483`; `src/assessment.mjs:291, 295, 300, 432, 442, 568` | `walkSpeed_m_per_s` | 0.15 | m/s | legged | unclear | TBD/unsourced | D-012 says speed has no source. 0.15 m/s has no ref in `src/`. The walk-time lines use this default. |
-| `src/mission-model.mjs:485`; `src/assessment.mjs:292, 294`; `src/app.mjs:37, 80, 102` | `settle_s` | 600 | s | legged | unclear | TBD/unsourced | Stop time before a gravity sample. D-012 gives no settle time. Standing stability, which sets that time, is TBD. No source in `src/`. |
-| `src/mission-model.mjs:489`; `src/assessment.mjs:145`; `src/app.mjs:33, 76, 98` | `odometryPct` | 2.0 | % of distance | legged | unclear | derived | Copy of `lunar_tbd_prior_pct`. That preset is TBD/unsourced. `assessment.mjs:145` turns the copy into the distance fraction k. |
-| `src/mission-model.mjs:494`; `src/assessment.mjs:352, 384` | `levelingResidual_mrad` | 0.2 | mrad | legged | unclear | TBD/unsourced | Same 0.2 mrad as `active_leveling`. Line 352 multiplies by 0.001 to make radians. That factor is a unit conversion (derived). The 0.2 mrad has no source. |
-| `src/mission-model.mjs:495`; `src/assessment.mjs:353, 384` | `tiltKnowledge_mrad` | 0.15 | mrad | generic | unclear | TBD/unsourced | Attitude knowledge at a station. D-012 says IMU specs have no source. The file does not name the sensor for this angle. The 0.001 factor on line 353 is a unit conversion (derived). |
-| `src/mission-model.mjs:496`; `src/assessment.mjs:354, 384` | `footCreep_mrad` | 0.1 | mrad | legged | unclear | TBD/unsourced | Foot creep during a locked stop. Same 0.1 mrad as `locked_gravity_stance`. Slip during a dwell matches the error type. The size has no source. The 0.001 factor on line 354 is a unit conversion (derived). |
-| `src/mission-model.mjs:509-511`; `src/app.mjs:45-47, 88-90` | `fixedBellyHeight`, `activeLeveling`, `lockedStance` | true | — | legged | consistent | no number | — |
-| `src/assessment.mjs:145, 190, 215` | `k` | odometry percent / 100 | fraction of distance | generic | unclear | derived | k is a fraction of path length. The input is the unsourced 2% prior. Along-track growth uses this fraction at lines 190 and 215. |
-| `src/assessment.mjs:191, 216` | cross-track factor | 0.8 | fraction of the along-track rate | legged | unclear | TBD/unsourced | The comment on line 189 says contact plus visual odometry. D-012 does not give this factor. No ref. |
-| `src/assessment.mjs:192, 217` | vertical factor | 0.4 | fraction of the along-track rate | legged | unclear | TBD/unsourced | Vertical rate is 0.4 times the along-track rate. The same comment applies. No ref. |
-| `src/assessment.mjs:291, 432, 442, 568` | walk-time floor | 0.01 | m/s | generic | unclear | derived | These lines use 0.01 m/s as a lower clamp so a zero speed leaves the walk time finite. The file does not call it a platform speed. D-012 leaves speed open, so the figure stays unclear. |
-| `src/assessment.mjs:352` | leveling fallback | 0.002 | rad | legged | unclear | TBD/unsourced | Used when active leveling is off. Standing-stability angle. No source. |
-| `src/assessment.mjs:354` | creep fallback | 0.001 | rad | legged | unclear | TBD/unsourced | Used when the locked stance is off. Foot-creep angle. No source. |
-| `src/assessment.mjs:425, 504`; `src/app.mjs:398` | fixed-belly residual | 0.01 | m | legged | unclear | TBD/unsourced | Same 1.0 cm as `fixed_belly_height`. The comment on lines 501–503 says this denominator is unsourced. Body motion is TBD in D-012. |
-| `src/assessment.mjs:425`; `src/app.mjs:398` | free-gait belly residual | 0.05 | m | legged | unclear | TBD/unsourced | Height residual when the belly height is not fixed. No source. Body motion is TBD in D-012. |
-| `src/assessment.mjs:431` | continuous-walking comment | none | — | legged | consistent | no number | — |
-| `src/assessment.mjs:569` | `walking traverse` label | none | — | legged | consistent | no number | — |
+| Location | Term | Value | Unit | Motion | Class | Number label | Error type (frames.md section 6) | Note |
+|----------|------|-------|------|--------|-------|--------------|--------------------------------------|------|
+| `src/mission-model.mjs:63` | `FRAMES.body` | none | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:102-108` | `rover_tracks` | 0.5–1; ~23; 50 | m/px; cm; cm/px | legged | consistent | TBD/unsourced | none | — |
+| `src/mission-model.mjs:130-136` | `leg_slip` | ~1; no mm figure | % of distance; units text also says mm | legged | consistent | TBD/unsourced | 2 random walk along track | frames.md section 6 types foot slip as a per-step random walk. It grows with the square root of distance. This row stores no growth formula. The baseline formula is on the k row, and that formula is type 5. |
+| `src/mission-model.mjs:139-145` | `vo_drift` | 1–4; lunar figure absent | % of distance | generic | unclear | TBD/unsourced | 2 random walk along track | D-012 names leg odometry and an IMU. This term is visual-odometry drift. The 1–4% words are terrestrial and have no ref key. |
+| `src/mission-model.mjs:148-154` | `imu_bias` | none | m/s², rad/s | generic | consistent | no number | not set | — |
+| `src/mission-model.mjs:180-185` | `timing` | v absent | s to m | generic | unclear | TBD/unsourced | not set | The unit line turns time into distance with speed v. D-012 says speed has no source. The term names no walk, hop, or wheel. |
+| `src/mission-model.mjs:202-208` | `tilt_settle` | none | mrad | legged | consistent | no number | 3 per-station bias | — |
+| `src/mission-model.mjs:225-231` | `gait_vibration` | none | cm, rad | legged | consistent | no number | not set | — |
+| `src/mission-model.mjs:238` | `active_leveling.residualDefault_mrad` | 0.2 | mrad | legged | unclear | TBD/unsourced | 3 per-station bias | Residual after active body leveling at a station. D-012 leaves body motion and standing stability open. No ref in `src/`. The scenario default repeats 0.2 mrad. |
+| `src/mission-model.mjs:244` | `locked_gravity_stance.residualDefault_mrad` | 0.1 | mrad | legged | unclear | TBD/unsourced | 3 per-station bias | Residual of a locked stance. Standing stability has no source in D-012. The scenario foot-creep default repeats 0.1 mrad. |
+| `src/mission-model.mjs:250` | `fixed_belly_height.residualHeight_cm` | 1.0 | cm | legged | unclear | TBD/unsourced | not set | Belly-height change during a gait. Body motion has no source in D-012. The GPR model repeats this size as 0.01 m. |
+| `src/mission-model.mjs:256` | `downward_range.residualHeight_cm` | 0.5 | cm | generic | unclear | TBD/unsourced | not set | Height residual of a downward range sensor. It is a body-motion size. No source. The term names no gait. |
+| `src/mission-model.mjs:259-264`; `src/app.mjs:400` | `stop_and_stare` | none | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:265-270` | `base_reoccupation` | none | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:274-281` | `local_rt` | none | — | legged | unclear | no number | none | The name includes leg odometry and an IMU, which matches D-012. It also includes visual odometry, which D-012 does not name. The description is contact-aided dead reckoning, so the feet stay in contact. |
+| `src/mission-model.mjs:319-324` | `gravity_network` | continuous false | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:325-331` | `gpr_2d` | continuous true | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:332-338` | `gpr_3d` | continuous true | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:339-344` | `spectro_stare` | continuous false | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:345-350` | `imaging_walk` | continuous true | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:403` | `terrestrial_nominal_pct` | 1.5 | % of distance | legged | consistent | TBD/unsourced | 5 systematic, grows with separation | — |
+| `src/mission-model.mjs:404` | `terrestrial_range_pct` | 1 to 2 | % of distance | legged | consistent | TBD/unsourced | 5 systematic, grows with separation | — |
+| `src/mission-model.mjs:405` | `lunar_tbd_prior_pct` | 2.0 | % of distance | legged | unclear | TBD/unsourced | 5 systematic, grows with separation | The field name says the lunar value is TBD. D-012 gives no slip percent. The default scenario copies this 2% and the model runs it. No ref key. |
+| `src/mission-model.mjs:406` | `lunar_degraded_pct` | 6.0 | % of distance | legged | unclear | TBD/unsourced | 5 systematic, grows with separation | Degraded lunar slip case. No source in `src/`. The form is still a legged percent of distance. |
+| `src/mission-model.mjs:407`; `src/app.mjs:429` | `odometry.evidence` | ~1–2 | % of distance | legged | consistent | TBD/unsourced | 5 systematic, grows with separation | — |
+| `src/mission-model.mjs:448` | `A1` | none | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:453` | `A2` | 1–2 | % of distance | legged | consistent | TBD/unsourced | 5 systematic, grows with separation | — |
+| `src/mission-model.mjs:463` | `A4` | none | — | legged | consistent | no number | none | — |
+| `src/mission-model.mjs:483`; `src/assessment.mjs:291, 295, 300, 432, 442, 568` | `walkSpeed_m_per_s` | 0.15 | m/s | legged | unclear | TBD/unsourced | none | D-012 says speed has no source. 0.15 m/s has no ref in `src/`. The walk-time lines use this default. |
+| `src/mission-model.mjs:485`; `src/assessment.mjs:292, 294`; `src/app.mjs:37, 80, 102` | `settle_s` | 600 | s | legged | unclear | TBD/unsourced | none | Stop time before a gravity sample. D-012 gives no settle time. Standing stability, which sets that time, is TBD. No source in `src/`. |
+| `src/mission-model.mjs:489`; `src/assessment.mjs:145`; `src/app.mjs:33, 76, 98` | `odometryPct` | 2.0 | % of distance | legged | unclear | derived | 5 systematic, grows with separation | Copy of `lunar_tbd_prior_pct`. That preset is TBD/unsourced. `assessment.mjs:145` turns the copy into the distance fraction k. |
+| `src/mission-model.mjs:494`; `src/assessment.mjs:352, 384` | `levelingResidual_mrad` | 0.2 | mrad | legged | unclear | TBD/unsourced | 3 per-station bias | Same 0.2 mrad as `active_leveling`. Line 352 multiplies by 0.001 to make radians. That factor is a unit conversion (derived). The 0.2 mrad has no source. |
+| `src/mission-model.mjs:495`; `src/assessment.mjs:353, 384` | `tiltKnowledge_mrad` | 0.15 | mrad | generic | unclear | TBD/unsourced | 3 per-station bias | Attitude knowledge at a station. D-012 says IMU specs have no source. The file does not name the sensor for this angle. The 0.001 factor on line 353 is a unit conversion (derived). |
+| `src/mission-model.mjs:496`; `src/assessment.mjs:354, 384` | `footCreep_mrad` | 0.1 | mrad | legged | unclear | TBD/unsourced | 3 per-station bias | Foot creep during a locked stop. Same 0.1 mrad as `locked_gravity_stance`. The size has no source. The 0.001 factor on line 354 is a unit conversion (derived). |
+| `src/mission-model.mjs:509-511`; `src/app.mjs:45-47, 88-90` | `fixedBellyHeight`, `activeLeveling`, `lockedStance` | true | — | legged | consistent | no number | none | — |
+| `src/assessment.mjs:145, 190, 215` | `k` | odometry percent / 100 | fraction of distance | generic | unclear | derived | 5 systematic, grows with separation | k is a fraction of path length. The input is the unsourced 2% prior. Lines 190 and 215 set sigma = k × distance. Line 215 is the relative term k × spacing. That growth is type 5 (systematic, in proportion to separation). frames.md section 6 models foot slip as a per-step random walk, which grows with the square root of distance. Mismatch. See follow-up 7. |
+| `src/assessment.mjs:191, 216` | cross-track factor | 0.8 | fraction of the along-track rate | legged | unclear | TBD/unsourced | 5 systematic, grows with separation | The comment on line 189 says contact plus visual odometry. D-012 does not give this factor. No ref. This 0.8 factor stands in for a heading term, and the growth law is wrong for that term. A start heading bias grows linearly with distance. Gyro random walk grows with distance^1.5 (frames.md section 6). The code uses 0.8 × k × distance. |
+| `src/assessment.mjs:192, 217` | vertical factor | 0.4 | fraction of the along-track rate | legged | unclear | TBD/unsourced | 5 systematic, grows with separation | Vertical rate is 0.4 times the along-track rate. The same comment applies. No ref. |
+| `src/assessment.mjs:291, 432, 442, 568` | walk-time floor | 0.01 | m/s | generic | unclear | derived | none | These lines use 0.01 m/s as a lower clamp so a zero speed leaves the walk time finite. The file does not call it a platform speed. D-012 leaves speed open, so the figure stays unclear. |
+| `src/assessment.mjs:352` | leveling fallback | 0.002 | rad | legged | unclear | TBD/unsourced | 3 per-station bias | Used when active leveling is off. Standing-stability angle. No source. |
+| `src/assessment.mjs:354` | creep fallback | 0.001 | rad | legged | unclear | TBD/unsourced | 3 per-station bias | Used when the locked stance is off. Foot-creep angle. No source. |
+| `src/assessment.mjs:425, 504`; `src/app.mjs:398` | fixed-belly residual | 0.01 | m | legged | unclear | TBD/unsourced | not set | Same 1.0 cm as `fixed_belly_height`. The comment on lines 501–503 says this denominator is unsourced. Body motion is TBD in D-012. |
+| `src/assessment.mjs:425`; `src/app.mjs:398` | free-gait belly residual | 0.05 | m | legged | unclear | TBD/unsourced | not set | Height residual when the belly height is not fixed. No source. Body motion is TBD in D-012. |
+| `src/assessment.mjs:431` | continuous-walking comment | none | — | legged | consistent | no number | none | — |
+| `src/assessment.mjs:569` | `walking traverse` label | none | — | legged | consistent | no number | none | — |
 
 What the consistent rows claim, in short:
 
@@ -154,6 +164,7 @@ These `src/` items are not motion or slip terms. They are omitted from the table
 - `src/assessment.mjs:220` uses 0.55 and 0.85 as smoother scales. They are not a gait.
 - `smooth_loop`, `map_tied`, `lander_relative`, and `beacon_aided` describe ties and loops. They set no walk, hop, wheel, or slip.
 - `README.md` and `index.html` are outside `src/`.
+- `src/` has no gyro heading-drift term. D-012 puts an IMU in the state. `docs/frames.md` section 5.1 names heading as the main position-drift term, and section 6 lists gyro heading drift as a random walk along track.
 
 ## Follow-up for ll-lead
 
@@ -167,4 +178,6 @@ Unclear rows that need a source, or an explicit TBD in code, if ll-lead wants se
 4. Slip percents 2% and 6%, the terrestrial 1–4% and 1–2% priors (no ref key), and the factors 0.8 and 0.4.
 5. Visual odometry in `vo_drift` and in `local_rt`, beside the leg-odometry-plus-IMU state.
 
-D-012 is logged in `DECISIONS.md` (approved by the PI, commit `756f0bf`). This audit does not edit that log.
+D-012 is logged in `DECISIONS.md` (approved by the PI, commit `756f0bf`). This audit does not edit that log. The old item 6 asked for that row. It is closed, so the next item is 7.
+
+7. Fix the slip growth law in the new core. Leave the baseline as it is (D-005). `src/assessment.mjs` lines 190 and 215 use sigma = k × distance, including the relative term k × spacing. That is type 5 (systematic, grows in proportion to separation). `docs/frames.md` section 6 models foot slip as a per-step random walk, which grows with the square root of distance.
