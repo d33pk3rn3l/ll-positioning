@@ -4,7 +4,7 @@ Issue #16 names this path. The audit covers `src/` on main at `3af7a0c`. It supp
 
 ## Criterion (D-012)
 
-`DECISIONS.md` on that main commit records D-000 through D-011. It has no D-012 row. `CHARTER.md` question Q1 still asks whether the platform is a walking quadruped. `STATUS.md` still lists platform confirmation as open.
+D-012 is logged in `DECISIONS.md` (PR #17, commit `756f0bf`, 2026-10-19, approved by the PI). The logged text is: the platform is a walking quadruped similar to ANYmal, with no jumping. Speed, body motion, standing stability and IMU specs are TBD until ll-scout finds ANYmal sources. Kolvenbach 2026 does not give them. `STATUS.md` records that platform question Q1 is closed by D-012.
 
 This audit uses the PI statement given with issue #16:
 
@@ -166,4 +166,5 @@ Unclear rows that need a source, or an explicit TBD in code, if ll-lead wants se
 3. Standing stability: 0.2 mrad, 0.15 mrad, 0.1 mrad, fallbacks 0.002 rad and 0.001 rad, and settle time 600 s.
 4. Slip percents 2% and 6%, the terrestrial 1–4% and 1–2% priors (no ref key), and the factors 0.8 and 0.4.
 5. Visual odometry in `vo_drift` and in `local_rt`, beside the leg-odometry-plus-IMU state.
-6. A D-012 row in `DECISIONS.md`. Charter question Q1 is still open on main. This audit does not edit that log.
+
+D-012 is logged in `DECISIONS.md` (approved by the PI, commit `756f0bf`). This audit does not edit that log.
