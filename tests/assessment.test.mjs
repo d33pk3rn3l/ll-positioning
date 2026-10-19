@@ -19,6 +19,7 @@ import {
   datumObservability,
   navigationUncertainty,
   gravitySurvey,
+  spectrometerAssessment,
   assess,
   DEFAULT_SCENARIO,
   PRESETS,
@@ -204,6 +205,24 @@ describe("control sources", () => {
     const tracks = r.controlSources.find((c) => c.id === "rover_tracks");
     assert.equal(tracks.usable, false);
     assert.equal(tracks.assessment, "negative");
+  });
+});
+
+describe("spectrometer stop-and-stare", () => {
+  const nav = { summary: { relativePostHoriz_m: 0.2 } };
+
+  function stopAndStare(surveyConops) {
+    return spectrometerAssessment(
+      { ...DEFAULT_SCENARIO, surveyConops },
+      nav,
+    ).stopAndStare;
+  }
+
+  it("is true only for spectro_stare", () => {
+    for (const id of ["gravity_network", "gpr_2d", "gpr_3d", "imaging_walk"]) {
+      assert.equal(stopAndStare(id), false, id);
+    }
+    assert.equal(stopAndStare("spectro_stare"), true);
   });
 });
 

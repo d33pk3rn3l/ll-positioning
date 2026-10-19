@@ -378,9 +378,10 @@ function renderScienceNote(r) {
       Achieved ${fmt(r.gpr.achievedAlong_m, 3)} / ${fmt(r.gpr.achievedElev_m, 3)} m.
       ${r.gpr.coverageNote}. Belly residual ${fmt(r.gpr.bellyResidual_m * 100, 1)} cm → ~${fmt(r.gpr.heightPhase_deg, 0)}° phase @ f₀.</p>`;
   } else if (r.science.kind === "spectrometer") {
+    const stareText = r.spectro.stopAndStare ? "Stop-and-stare default. " : "";
     html = `<p class="note">Footprint σ ${fmt(r.spectro.footSigma_m * 1000, 0)} mm · geo ${fmt(r.spectro.geoSigma_m * 1000, 0)} mm ·
       allowed ${fmt(r.spectro.allowedGeo_m * 1000, 0)} mm for 10% broadening.
-      Stop-and-stare default. Global rarely required.</p>`;
+      ${stareText}Global rarely required.</p>`;
   } else {
     html = `<p class="note">Imaging uses local pose for reconstruction; map tie for orbital context.</p>`;
   }

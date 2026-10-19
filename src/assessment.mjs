@@ -467,7 +467,7 @@ export function spectrometerAssessment(scenario, navResult) {
   const geo = navResult.summary.relativePostHoriz_m;
   const eff = effectiveFootprint_m(foot, geo);
   const allowed = allowedGeolocation_m(foot, 0.1);
-  const stare = scenario.surveyConops === "spectro_stare" || true; // default stop-and-stare
+  const stare = scenario.surveyConops === "spectro_stare";
   const broadeningOk = geo <= allowed;
   return {
     footSigma_m: foot,
