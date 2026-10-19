@@ -14,3 +14,5 @@ example-linear-error,example-note,example line,12,0.3,linear_error_90,m,derived,
 example-circular-error,example-note,example circle,13,0.3,circular_error_90,m,derived,mean_earth_de440,sourced,not_stated,not_applicable,,D,example circle,note-section-circular
 example-hertz,example-note,example frequency,40,,range_minimum,Hz,measured,not_applicable,not_applicable,not_applicable,not_applicable,,A,example frequency,note-section-hertz
 example-kilogram,example-note,example mass,6,1,range_maximum,kg,measured,not_applicable,not_applicable,not_applicable,not_applicable,,B,example mass,note-section-kilogram
+example-inpop-frame,example-note,example position,14,0.5,not_stated,m,model,principal_axes_inpop19a,sourced,not_stated,not_applicable,,A,example frame,note-section-inpop
+example-iau-frame,example-note,example position,15,0.5,not_stated,km,model,iau_moon_approximate_mean_earth,sourced,other_stated,not_applicable,,B,example frame,note-section-iau

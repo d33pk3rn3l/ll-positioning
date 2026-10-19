@@ -185,6 +185,8 @@ describe("format rules file", () => {
         "principal_axes_unknown_realization",
         "not_stated",
         "not_applicable",
+        "principal_axes_inpop19a",
+        "iau_moon_approximate_mean_earth",
       ],
       frame_status: ["sourced", "inferred", "not_applicable"],
       height_reference: ["sphere_1737400m", "other_stated", "not_stated", "not_applicable"],
@@ -257,7 +259,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 16);
+    assert.equal(parsed.records.length, 18);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -293,6 +295,10 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[14], headerNames, "statistic"), "range_minimum");
     assert.equal(cellByName(parsed.records[15], headerNames, "unit"), "kg");
     assert.equal(cellByName(parsed.records[15], headerNames, "statistic"), "range_maximum");
+    assert.equal(cellByName(parsed.records[16], headerNames, "frame"), "principal_axes_inpop19a");
+    assert.equal(cellByName(parsed.records[16], headerNames, "frame_status"), "sourced");
+    assert.equal(cellByName(parsed.records[17], headerNames, "frame"), "iau_moon_approximate_mean_earth");
+    assert.equal(cellByName(parsed.records[17], headerNames, "frame_status"), "sourced");
     assert.deepEqual(validateValuesText(tableText, formatRules), []);
   });
 

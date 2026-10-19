@@ -128,7 +128,9 @@
       "mean_earth_unknown_realization",
       "principal_axes_unknown_realization",
       "not_stated",
-      "not_applicable"
+      "not_applicable",
+      "principal_axes_inpop19a",
+      "iau_moon_approximate_mean_earth"
     ],
     "frame_status": [
       "sourced",
