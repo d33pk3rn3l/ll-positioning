@@ -14,6 +14,7 @@ Format: value | what it represents | statistic | conditions.
 - Feldspathic porosity cited: "mean porosity of 8.6 ± 5.3%" (Kiefer et al. 2012a, 2012c); far-side upper crust "7.7 ± 2.8%, with an upper bound of about 14%" (Huang and Wieczorek 2012, not opened by me).
 - Mare thickness in Oceanus Procellarum: "averaging 400 m thick [DeHon, 1979] and possibly even less".
 - Regolith: radar data imply that the Marius Hills are "covered by at most a few meters of regolith [Campbell et al., 2009]" (Campbell not opened by me).
+- Regolith thickness values disagree: carrier1991sourcebook gives 10 to 30 m for much of the Moon (called tentative); kiefer2013marius gives at most a few metres at Marius Hills, cited from Campbell 2009, which was not opened (secondary citation). The thickness decides whether a station height change is in regolith (0.38 m) or in basalt (0.9 m).
 - Gravity data uncertainty: "30 mGal through harmonic degree 110" (LP165P, pre-GRAIL).
 
 ## Depth and region

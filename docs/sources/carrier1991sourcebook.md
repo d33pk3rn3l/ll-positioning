@@ -12,6 +12,7 @@ Format: value | what it represents | statistic | conditions. Source units are g/
 - Site spread (drill cores): Apollo 15 "1.62 to 1.93", Apollo 16 "1.47 to 1.75", Apollo 17 "1.74 to 1.99" g/cm^3 | range.
 - Specific gravity of soil particles: "we recommend a value of 3.1"; basalt particles ">3.32".
 - Regolith thickness over much of the Moon "may be 10 to 30 m" from microwave data, called "a tentative prediction".
+- Regolith thickness values disagree: carrier1991sourcebook gives 10 to 30 m for much of the Moon (called tentative); kiefer2013marius gives at most a few metres at Marius Hills, cited from Campbell 2009, which was not opened (secondary citation). The thickness decides whether a station height change is in regolith (0.38 m) or in basalt (0.9 m).
 
 ## Depth and region
 Top ~3 m of regolith at Apollo sites (intercrater areas). Not measured at Marius Hills.
