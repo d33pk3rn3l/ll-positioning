@@ -162,11 +162,11 @@ function renderKpis(r) {
     <div class="value">${fmt(r.layers.local.horiz_m, 2)} m</div>
     <div class="sub">vert ${fmt(r.layers.local.vert_m, 2)} m · pair Δ ${fmt(r.nav.summary.relativePostHoriz_m, 2)} m</div>`;
 
-  const cartText = formatCartographicSigmaText(r.layers.cartographic.horiz_m, undefined, 1);
+  const cartographicText = formatCartographicSigmaText(r.layers.cartographic.horiz_m, undefined, 1);
   const fault = r.nav.frameMistagFault;
   $("kpiMap").innerHTML = `
     <div class="label">Map / cartographic</div>
-    <div class="value">${fmt(r.layers.map.horiz_m, 1)} / ${cartText}</div>
+    <div class="value">${fmt(r.layers.map.horiz_m, 1)} / ${cartographicText}</div>
     <div class="sub">${
       fault
         ? `Frame mistag fault ${fmt(r.nav.frameMistagFault_m, 0)} m. Not a 1-sigma.`
@@ -181,7 +181,7 @@ function renderLayers(r) {
     <tr><td>Cartographic absolute</td><td class="num">${r.layers.cartographic.text}</td><td>${r.layers.cartographic.drives}</td></tr>
     ${
       r.nav.frameMistagFault
-        ? `<tr><td>ME/PA frame mistag (fault)</td><td class="num">fault</td><td>${fmt(r.nav.frameMistagFault_m, 0)} m fault size. Not a 1-sigma and not a bias.</td></tr>`
+        ? `<tr><td>Mean Earth to principal axes frame mistag (fault)</td><td class="num">fault</td><td>${fmt(r.nav.frameMistagFault_m, 0)} m fault size. Not a 1-sigma and not a bias.</td></tr>`
         : ""
     }
     <tr><td>Inertial / ephemeris</td><td class="num">${fmt(r.layers.inertial.azimuth_mrad, 2)} mrad az</td><td>${r.layers.inertial.drives}</td></tr>
@@ -444,7 +444,9 @@ function render() {
   renderPdf(r);
   drawTraverse(r);
   drawGravity(r);
-  const applied = r.nav.mePaAppliedText ? ` · ${r.nav.mePaAppliedText}` : "";
+  const applied = r.nav.meanEarthToPrincipalAxesAppliedText
+    ? ` · ${r.nav.meanEarthToPrincipalAxesAppliedText}`
+    : "";
   $("assumptions").textContent = `FA ${fmt(freeAirGradient(), 2)} µGal/m · odometry prior TBD (${PRESETS.odometry.evidence})${applied}`;
   $("traverseNote").textContent =
     `Local (amber), map-relative (cyan), cartographic (red; ${CARTOGRAPHIC_SIGMA_EXCLUSION}). Green ticks = anchors.`;

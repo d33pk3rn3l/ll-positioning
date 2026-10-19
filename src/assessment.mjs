@@ -53,27 +53,42 @@ export function clamp(x, lo, hi) {
   return Math.max(lo, Math.min(hi, x));
 }
 
-/** Round a metre value the same way the page does. */
+/**
+ * Round a metre value.
+ * Use the same rounding as the page.
+ */
 export function formatMetres(value, digits = 2) {
   if (!Number.isFinite(value)) return "—";
   return Math.abs(value) >= 100 ? value.toFixed(0) : value.toFixed(digits);
 }
 
-/** Shown with every cartographic 1-sigma. The transform uncertainty is not in the number. */
+/**
+ * Show this text with every cartographic 1-sigma.
+ * Mean Earth (ME) to principal axes (PA) uncertainty is outside the number.
+ */
 export const CARTOGRAPHIC_SIGMA_EXCLUSION = "excludes ME-to-PA uncertainty (TBD)";
 
 /**
- * Text for one cartographic 1-sigma.
- * Pass vert_m to include the vertical 1-sigma. Omit it for a horizontal value.
+ * Build the text for one cartographic 1-sigma.
+ * horizontal_m is required.
+ * vertical_m is optional.
  */
-export function formatCartographicSigmaText(horiz_m, vert_m = undefined, digits = 2) {
-  const horiz = `${formatMetres(horiz_m, digits)} m`;
-  const body = vert_m === undefined ? horiz : `${horiz} H / ${formatMetres(vert_m, digits)} m V`;
+export function formatCartographicSigmaText(horizontal_m, vertical_m = undefined, digits = 2) {
+  const horizontalText = `${formatMetres(horizontal_m, digits)} m`;
+  const body =
+    vertical_m === undefined
+      ? horizontalText
+      : `${horizontalText} H / ${formatMetres(vertical_m, digits)} m V`;
   return `${body} ${CARTOGRAPHIC_SIGMA_EXCLUSION}`;
 }
 
-/** Case A. The rotation size is text. It is not an error and not a bias. */
-export function formatMePaAppliedText(offset_m) {
+/**
+ * Case A.
+ * The rotation size is text.
+ * The size is not an error.
+ * The size is not a bias.
+ */
+export function formatMeanEarthToPrincipalAxesAppliedText(offset_m) {
   return `ME-to-PA applied (about ${offset_m} m); residual uncertainty TBD, common-mode`;
 }
 
@@ -250,19 +265,26 @@ export function navigationUncertainty(scenario) {
   // Observability of datum transform
   const observability = datumObservability(scenario, nav);
 
-  // Case A (normal, always when the transform is applied): ME-to-PA is a known
-  // rotation. The ~875 m size is not an error and not a bias. Report it as text
-  // only. The only budget field is mePaTransformSigma_m (null until sourced).
-  // That uncertainty is common-mode.
-  // Case B (frameMistag / frame_mistag, deterministic_fault): a PA product is
-  // used as ME, or the transform is skipped. frameMistagFault_m is the fault
-  // size. Keep it out of every 1-sigma and every bias field.
-  const mePaSize_m = PRESETS.control.me_pa_offset_m;
+  // Case A. The mean Earth to principal axes transform is applied.
+  // The rotation size is not an error.
+  // The rotation size is not a bias.
+  // Report the size as text only.
+  // The budget field is meanEarthToPrincipalAxesSigma_m.
+  // The value is null until a source exists.
+  // The uncertainty is common to all points.
+  // Case B. The frame mistag is a fault.
+  // A principal axes product is used as mean Earth, or the transform is skipped.
+  // frameMistagFault_m is the fault size.
+  // Keep the fault out of every 1-sigma.
+  // Keep the fault out of every bias field.
+  const meanEarthToPrincipalAxesSize_m = PRESETS.control.me_pa_offset_m;
   const frameMistagFault = !!scenario.frameMistag;
-  const mePaTransformSigma_m = null;
-  const mePaTransformSigmaStatus = "TBD";
-  const frameMistagFault_m = frameMistagFault ? mePaSize_m : null;
-  const mePaAppliedText = frameMistagFault ? null : formatMePaAppliedText(mePaSize_m);
+  const meanEarthToPrincipalAxesSigma_m = null;
+  const meanEarthToPrincipalAxesSigmaStatus = "TBD";
+  const frameMistagFault_m = frameMistagFault ? meanEarthToPrincipalAxesSize_m : null;
+  const meanEarthToPrincipalAxesAppliedText = frameMistagFault
+    ? null
+    : formatMeanEarthToPrincipalAxesAppliedText(meanEarthToPrincipalAxesSize_m);
 
   // Mid / worst local
   const mid = stations[Math.floor(stations.length / 2)];
@@ -276,9 +298,9 @@ export function navigationUncertainty(scenario) {
     observability,
     frameMistagFault,
     frameMistagFault_m,
-    mePaTransformSigma_m,
-    mePaTransformSigmaStatus,
-    mePaAppliedText,
+    meanEarthToPrincipalAxesSigma_m,
+    meanEarthToPrincipalAxesSigmaStatus,
+    meanEarthToPrincipalAxesAppliedText,
     mid,
     worstLocal,
     summary: {
@@ -411,9 +433,11 @@ export function gravityAssessment(scenario, navResult, survey) {
   const driftTerm = survey.adjustedDrift_uGal;
   const instrumentNoise = 20; // µGal white / occupation (illustrative MEMS)
 
-  // GRAIL-type gravity fields are given in PA, so this term should use the
-  // ME-to-PA transform uncertainty, not the map offset. The 0.01 µGal/m
-  // gradient is unsourced (see issue #19). The formula below is unchanged (D-005).
+  // Gravity fields of the GRAIL type are given in principal axes.
+  // This term should use the mean Earth to principal axes uncertainty.
+  // This term should not use the map offset.
+  // The 0.01 µGal/m gradient has no source (see issue #19).
+  // The formula below is unchanged (D-005).
   const grailGradient_uGal_per_m = 0.01; // ~ tens of µGal over km → ~0.01 µGal/m
   const grailTerm = grailGradient_uGal_per_m * navResult.summary.midCartHoriz_m;
 

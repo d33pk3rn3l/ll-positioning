@@ -102,7 +102,7 @@ describe("frame / correlation / observability", () => {
     assert.ok(r.layers.cartographic.horiz_m > r.layers.local.horiz_m);
   });
 
-  it("ME/PA mistag is a fault of 875 m, kept out of the 1-sigma", () => {
+  it("mean Earth to principal axes mistag is a fault of 875 m, kept out of the 1-sigma", () => {
     const r = assess({ frameMistag: true });
     const offset = PRESETS.control.me_pa_offset_m;
     assert.equal(r.nav.frameMistagFault, true);
@@ -392,8 +392,8 @@ function oneSigmaValues(r) {
   return values;
 }
 
-describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
-  it("no 1-sigma value contains the 875 m ME/PA offset", () => {
+describe("mean Earth to principal axes offset is outside the 1-sigma (D-007)", () => {
+  it("no 1-sigma value contains the 875 m mean Earth to principal axes offset", () => {
     const offset = PRESETS.control.me_pa_offset_m;
     assert.equal(offset, 875);
     const on = assess({ frameMistag: true });
@@ -402,19 +402,19 @@ describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
     const offSigmas = oneSigmaValues(off);
     assert.equal(onSigmas.length, offSigmas.length);
     for (let i = 0; i < onSigmas.length; i++) {
-      assert.ok(onSigmas[i] < offset, `1-sigma ${onSigmas[i]} contains the ${offset} m ME/PA offset`);
+      assert.ok(onSigmas[i] < offset, `1-sigma ${onSigmas[i]} contains the ${offset} m offset`);
       assert.equal(onSigmas[i], offSigmas[i]);
     }
   });
 
-  it("ME-to-PA uncertainty is null with status TBD", () => {
+  it("mean Earth to principal axes uncertainty is null with status TBD", () => {
     const r = assess({ frameMistag: false });
-    assert.equal(r.nav.mePaTransformSigma_m, null);
-    assert.equal(r.nav.mePaTransformSigmaStatus, "TBD");
+    assert.equal(r.nav.meanEarthToPrincipalAxesSigma_m, null);
+    assert.equal(r.nav.meanEarthToPrincipalAxesSigmaStatus, "TBD");
     assert.equal(Object.hasOwn(r.nav, "mePaOffsetSigma_m"), false);
   });
 
-  it("changing the ME/PA offset does not change local or map-relative sigmas, nor gravity SNR", () => {
+  it("changing the mean Earth to principal axes offset does not change local, map, or cartographic 1-sigma, nor gravity SNR", () => {
     const saved = PRESETS.control.me_pa_offset_m;
     try {
       PRESETS.control.me_pa_offset_m = 875;
@@ -438,7 +438,7 @@ describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
 });
 
 const APPLIED_TEXT = "ME-to-PA applied (about 875 m); residual uncertainty TBD, common-mode";
-const CARTO_EXCLUSION = "excludes ME-to-PA uncertainty (TBD)";
+const cartographicExclusion = "excludes ME-to-PA uncertainty (TBD)";
 
 function numericFieldProblems(value, path = "r", problems = []) {
   if (Array.isArray(value)) {
@@ -464,15 +464,15 @@ function numericFieldProblems(value, path = "r", problems = []) {
   return problems;
 }
 
-describe("ME-to-PA cases (prof-geodesy review)", () => {
+describe("mean Earth to principal axes cases (prof-geodesy review)", () => {
   it("case A: applied transform is text only; uncertainty is null and TBD", async () => {
     const engine = await import("../src/assessment.mjs");
-    assert.equal(typeof engine.formatMePaAppliedText, "function");
-    assert.equal(engine.formatMePaAppliedText(PRESETS.control.me_pa_offset_m), APPLIED_TEXT);
+    assert.equal(typeof engine.formatMeanEarthToPrincipalAxesAppliedText, "function");
+    assert.equal(engine.formatMeanEarthToPrincipalAxesAppliedText(PRESETS.control.me_pa_offset_m), APPLIED_TEXT);
     const r = assess({ frameMistag: false });
-    assert.equal(r.nav.mePaAppliedText, APPLIED_TEXT);
-    assert.equal(r.nav.mePaTransformSigma_m, null);
-    assert.equal(r.nav.mePaTransformSigmaStatus, "TBD");
+    assert.equal(r.nav.meanEarthToPrincipalAxesAppliedText, APPLIED_TEXT);
+    assert.equal(r.nav.meanEarthToPrincipalAxesSigma_m, null);
+    assert.equal(r.nav.meanEarthToPrincipalAxesSigmaStatus, "TBD");
     assert.equal(r.nav.frameMistagFault, false);
     assert.equal(Object.hasOwn(r.nav, "mePaOffset_m"), false);
     assert.equal(Object.hasOwn(r.nav, "mePaOffsetSigma_m"), false);
@@ -489,8 +489,8 @@ describe("ME-to-PA cases (prof-geodesy review)", () => {
     const offset = PRESETS.control.me_pa_offset_m;
     assert.equal(r.nav.frameMistagFault, true);
     assert.equal(r.nav.frameMistagFault_m, offset);
-    assert.equal(r.nav.mePaTransformSigma_m, null);
-    assert.equal(r.nav.mePaAppliedText, null);
+    assert.equal(r.nav.meanEarthToPrincipalAxesSigma_m, null);
+    assert.equal(r.nav.meanEarthToPrincipalAxesAppliedText, null);
     assert.equal(Object.hasOwn(r.nav, "mePaOffset_m"), false);
     assert.equal(Object.hasOwn(r.nav, "frameFault_m"), false);
     for (const value of oneSigmaValues(r)) {
@@ -506,7 +506,7 @@ describe("ME-to-PA cases (prof-geodesy review)", () => {
       r.layers.cartographic.horiz_m,
       r.layers.cartographic.vert_m,
     );
-    assert.match(text, new RegExp(CARTO_EXCLUSION.replace(/[()]/g, "\\$&")));
+    assert.match(text, new RegExp(cartographicExclusion.replace(/[()]/g, "\\$&")));
     assert.match(text, /14\.02/);
     assert.equal(text.includes("875"), false);
     assert.equal(r.layers.cartographic.text, text);
