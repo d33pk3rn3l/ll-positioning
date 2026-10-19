@@ -3,7 +3,7 @@
 Citation key: `barker2025lolalra`. Original title: "Laser Ranging from LRO-LOLA to Retro-Reflector Arrays on the Lunar Surface".
 
 ## Claim
-The Lunar Orbiter Laser Altimeter (LOLA) on the Lunar Reconnaissance Orbiter (LRO) measured range to laser retroreflector arrays (LRA). Targets: the Apollo 11, 14 and 15 arrays, and small arrays (mini-LRA) on Chandrayaan-3, SLIM (full name: TBD - check) and Chang'e-6. LRO turned (slewed) to point at each target.
+The Lunar Orbiter Laser Altimeter (LOLA) on the Lunar Reconnaissance Orbiter (LRO) measured range to laser retroreflector arrays (LRA). Targets: the Apollo 11, 14 and 15 arrays, and small arrays (mini-LRA) on Chandrayaan-3, the Smart Lander for Investigating Moon (SLIM) of the Japan Aerospace Exploration Agency (JAXA), and Chang'e-6. LRO turned (slewed) to point at each target.
 
 ## Numbers (with units and conditions)
 Format: value | product | frame realization | statistic type. "not stated" = the source does not say.
@@ -17,7 +17,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not stated.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-LOLA can find a mini-LRA on the LunarLeaper lander. But the present geolocation is some tens of metres. That is not better than a tie to a Narrow Angle Camera (NAC) image. It is useful only as a long-term fixed reference point, unless orbits improve.
+LOLA can find a mini-LRA on the LunarLeaper lander. But the present geolocation is some tens of metres (Apollo arrays ~14 m; mini-LRAs "10's of meters peak-to-peak"). Frame not stated, preliminary orbits: the source gives no frame, calls the results "preliminary", and says the height scatter is "probably due to the preliminary reconstructed spacecraft trajectory". That is not better than a tie to a Narrow Angle Camera (NAC) image. It is useful only as a long-term fixed reference point, unless orbits improve.
 
 ## Attribution note
 Benedikt's list gives "Cremons et al. (2025)". First author is M. K. Barker; D. Cremons is second author.

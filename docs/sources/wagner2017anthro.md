@@ -16,7 +16,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Table elevations from GLD100; datum not stated in the table.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Lander positions in NAC images are tied to ME at ~10 m. The LunarLeaper lander can be tied the same way. Thus a walk relative to the lander gets ~10 m absolute horizontal error. This does not affect the gravity heights from station to station.
+Lander positions in NAC images are tied to ME at ~10 m. The LunarLeaper lander can be tied the same way. Thus a walk relative to the lander gets ~10 m absolute horizontal error. Growth type: fixed. This is the same error for every point of the walk. It does not shrink with averaging over the walk. This does not affect the gravity heights from station to station.
 
 ## Grade
 Flight data (grade A). Reason: measured in LRO images.
