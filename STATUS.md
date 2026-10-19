@@ -15,7 +15,7 @@ Kickoff. Benedikt said GO on 2026-10-19. Next gate: G1 (frame and requirements).
 | 2 | Frame and state definition note (`docs/frames.md`) | O1 | ll-lead | Not started |
 | 3 | Trace table skeleton (`docs/requirements-trace.md`) with layer, time-scale and "needs ~10x?" columns | O3 | ll-lead | Not started |
 | 4 | First bibliography, 10-15 primary sources (`docs/sources/`, `refs.bib`) | O1, O2, O3, O4 | ll-scout | In progress |
-| 5 | Repo audit issues; fix 3 baseline bugs; label unsourced numbers in code | O5 | ll-engineer | In progress |
+| 5 | Repo audit issues; fix 3 baseline bugs; label unsourced numbers in code | O5 | ll-engineer | In progress: #4 bugs; #5-#8 opened |
 
 Also running: cold read of brief and repo by prof-geodesy and prof-payload
 (top 5 concerns each).
@@ -35,5 +35,6 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 ## Blockers / waiting on PI
 
 - Charter approval.
-- Brief PDF into repo.
+- Brief text committed as docs/brief.md (done).
 - Platform confirmation (quadruped?).
+- Professor confirmations on charter: prof-geodesy no objection, prof-payload no objection (2026-10-19, group chat).

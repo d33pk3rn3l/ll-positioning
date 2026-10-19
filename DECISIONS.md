@@ -11,6 +11,11 @@ Newest at the bottom. Do not edit an approved entry; supersede it.
 | D-003 | 2026-10-19 | "50 µGal requirement" and 0.10 m vertical allocation from baseline are not adopted. Gravimetry requirement is TBD until a payload source exists. | No science basis (agreed by prof-payload). | proposed | ll-lead |
 | D-004 | 2026-10-19 | The brief's "~10x" is an expectation, not a requirement. The trace table shows per instrument whether science needs it. | prof-payload comment, 2026-10-19. | proposed | ll-lead |
 | D-005 | 2026-10-19 | Baseline navigation core (`src/assessment.mjs`) will be replaced, not tuned. No new nav model before G1. | Audit findings (see STATUS.md). | proposed | ll-lead |
+| D-006 | 2026-10-19 | O1-O5 in docs/brief.md is the official objective list. Q1-Q5 in src/mission-model.mjs is baseline text only. | One trace root. | proposed | ll-lead |
+| D-007 | 2026-10-19 | Issue #5: apply ME-to-PA as a transform and report it as a separate bias field with its own uncertainty (TBD until sourced); remove it from every 1-sigma. | Norm 3; prof-geodesy cold read. | proposed | ll-lead |
+| D-008 | 2026-10-19 | B4 (an uninformative tie improves the estimate): no patch to the baseline core. Add an expected-failure test "removing information must not improve any sigma"; the replacement core must pass it. | D-005. | proposed | ll-lead |
+| D-009 | 2026-10-19 | Cool-down stops are zero-velocity updates in the local layer (O1, O5), not O2 tie points. The <0.25 m free-air target is treated as relative station-to-station height until Mittelholz 2026 is checked; if absolute, it is a major item. Time scale named in docs/frames.md; millisecond sync is the working assumption unless a payload needs better. | prof-geodesy reading-list notes. | proposed | ll-lead |
+| D-010 | 2026-10-19 | Trace table gets a separate row for DEM/terrain registration in the map-relative layer (gravity terrain correction). | prof-payload; baseline DEM term is 218 of 223 µGal. | proposed | ll-lead |
 
 ## Baseline assertions pending review (not decisions)
 
