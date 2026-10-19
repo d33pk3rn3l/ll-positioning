@@ -219,6 +219,7 @@ describe("format rules file", () => {
         "deg/day",
         "mGal/m",
         "s/day",
+        "kg/m^3",
       ],
     });
     for (const unitName of ["cm", "mm", "rad", "deg/century", "Hz", "kg"]) {
@@ -274,7 +275,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 17);
+    assert.equal(parsed.records.length, 18);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -312,6 +313,8 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[15], headerNames, "frame_status"), "sourced");
     assert.equal(cellByName(parsed.records[16], headerNames, "frame"), "iau_moon_approximate_mean_earth");
     assert.equal(cellByName(parsed.records[16], headerNames, "frame_status"), "sourced");
+    assert.equal(cellByName(parsed.records[17], headerNames, "unit"), "kg/m^3");
+    assert.equal(cellByName(parsed.records[17], headerNames, "value_type"), "model");
     assert.deepEqual(validateValuesText(tableText, formatRules), []);
   });
 

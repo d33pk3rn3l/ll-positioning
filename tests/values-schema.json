@@ -184,7 +184,8 @@
       "dimensionless",
       "deg/day",
       "mGal/m",
-      "s/day"
+      "s/day",
+      "kg/m^3"
     ]
   }
 }
