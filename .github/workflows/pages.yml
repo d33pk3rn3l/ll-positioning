@@ -24,8 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Run assessment tests
-        run: node --test tests/assessment.test.mjs
+      - name: Run tests
+        run: node --test
 
   deploy:
     needs: test
