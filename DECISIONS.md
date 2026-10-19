@@ -16,6 +16,7 @@ Newest at the bottom. Do not edit an approved entry; supersede it.
 | D-008 | 2026-10-19 | B4 (an uninformative tie improves the estimate): no patch to the baseline core. Add an expected-failure test "removing information must not improve any sigma"; the replacement core must pass it. | D-005. | proposed | ll-lead |
 | D-009 | 2026-10-19 | Cool-down stops are zero-velocity updates in the local layer (O1, O5), not O2 tie points. The <0.25 m free-air target is treated as relative station-to-station height until Mittelholz 2026 is checked; if absolute, it is a major item. Time scale named in docs/frames.md; millisecond sync is the working assumption unless a payload needs better. | prof-geodesy reading-list notes. | proposed | ll-lead |
 | D-010 | 2026-10-19 | Trace table gets a separate row for DEM/terrain registration in the map-relative layer (gravity terrain correction). | prof-payload; baseline DEM term is 218 of 223 µGal. | proposed | ll-lead |
+| D-011 | 2026-10-19 | The spectrometer is out of scope for O3. The brief names only the gravimeter, GPR and imaging. The spectrometer can appear in the trace table as an extra, with no navigation requirements derived from it. | Raised by prof-payload in the PR #9 review. | proposed (waiting for Benedikt) | ll-lead |
 
 ## Baseline assertions pending review (not decisions)
 

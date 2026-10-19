@@ -32,6 +32,14 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 - Bugs: spectrometer stop-and-stare check always true; dimensionless ratios
   stored in field `uGal`; datum point always assumed present.
 
+## Review items (2026-10-19)
+
+- prof-geodesy, cool-down stops: Cool-down stops are zero-velocity updates in the local layer. They are not O2 tie points (see D-009).
+- prof-geodesy, relative height: The relative height target (<0.25 m, source TBD) belongs in the local/relative layer. It is separate from cartographic accuracy (see D-009). This target is not checked yet. ll-scout must check it.
+- prof-payload, DEM/terrain: The trace table gets its own DEM/terrain-correction row (D-010). The baseline value, 218 of 223 µGal, is a proxy. It is DEM height error times height sensitivity. It is not a size estimate. A terrain-correction error comes from the DEM error over the area around the station. The value is TBD until ll-scout checks Noeker & Karatekin 2022.
+- Work in progress: PR #9 fixes bug 1 of issue #4 (stop-and-stare). prof-payload says pass with review items. One minor item remains: fix the label at `src/app.mjs:383` in the same PR. Issue #10 is open. It tracks B4 (D-008). ll-engineer accepts D-006 to D-009. Order of work: issue #4 bugs 2 and 3, then the D-006 comment, then #5, #10, #7, #6, #8.
+- Open for Benedikt: Approve the charter (PR #3). Approve D-011 (spectrometer scope). Confirm the platform (Q1). Set the gate dates (Q3).
+
 ## Blockers / waiting on PI
 
 - Charter approval.
