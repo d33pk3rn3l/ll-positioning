@@ -315,11 +315,13 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[16], headerNames, "frame_status"), "sourced");
     assert.equal(cellByName(parsed.records[17], headerNames, "unit"), "kg/m^3");
     assert.equal(cellByName(parsed.records[17], headerNames, "value_type"), "model");
-    assert.deepEqual(validateValuesText(tableText, formatRules), []);
+    const result = validateValuesText(tableText, formatRules);
+    assert.deepEqual(result.errors, []);
+    assert.deepEqual(result.warnings, []);
   });
 
   it("rejects an unknown column", () => {
-    const findings = validateValuesText(readFixture("unknown-column.csv"), formatRules);
+    const findings = validateValuesText(readFixture("unknown-column.csv"), formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 1,
@@ -330,7 +332,7 @@ describe("values table check", () => {
   });
 
   it("rejects a missing column", () => {
-    const findings = validateValuesText(readFixture("missing-column.csv"), formatRules);
+    const findings = validateValuesText(readFixture("missing-column.csv"), formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 1,
@@ -341,7 +343,7 @@ describe("values table check", () => {
   });
 
   it("rejects a value outside a fixed vocabulary", () => {
-    const findings = validateValuesText(readFixture("value-outside-vocabulary.csv"), formatRules);
+    const findings = validateValuesText(readFixture("value-outside-vocabulary.csv"), formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 2,
@@ -353,7 +355,7 @@ describe("values table check", () => {
 
   it("rejects an empty vocabulary cell", () => {
     const tableText = readFixture("valid-values.csv").replace("one_sigma", "");
-    const findings = validateValuesText(tableText, formatRules);
+    const findings = validateValuesText(tableText, formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 2,
@@ -364,7 +366,7 @@ describe("values table check", () => {
   });
 
   it("rejects an unknown unit", () => {
-    const findings = validateValuesText(readFixture("unknown-unit.csv"), formatRules);
+    const findings = validateValuesText(readFixture("unknown-unit.csv"), formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 2,
@@ -377,7 +379,7 @@ describe("values table check", () => {
   it("rejects a unit that version 2 leaves out", () => {
     const fixtureText = readFixture("unit-left-out-of-version-2.csv");
     for (const unitName of ["Hz", "kg", "cm", "mm", "rad", "deg/century"]) {
-      const findings = validateValuesText(fixtureText.replace("Hz", unitName), formatRules);
+      const findings = validateValuesText(fixtureText.replace("Hz", unitName), formatRules).errors;
       assert.equal(findings.length, 1);
       assertFinding(findings[0], {
         rowNumber: 2,
@@ -389,7 +391,7 @@ describe("values table check", () => {
   });
 
   it("rejects text in a numeric cell", () => {
-    const findings = validateValuesText(readFixture("text-in-numeric-cell.csv"), formatRules);
+    const findings = validateValuesText(readFixture("text-in-numeric-cell.csv"), formatRules).errors;
     assert.deepEqual(
       findings.map((finding) => [finding.rowNumber, finding.columnName, finding.cellValue]),
       [
@@ -409,7 +411,7 @@ describe("values table check", () => {
   });
 
   it("rejects a duplicate value identifier", () => {
-    const findings = validateValuesText(readFixture("duplicate-value-identifier.csv"), formatRules);
+    const findings = validateValuesText(readFixture("duplicate-value-identifier.csv"), formatRules).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 3,
@@ -420,9 +422,56 @@ describe("values table check", () => {
     assert.ok(findings[0].message.includes("row 2"));
   });
 
+  it("warns when a gravity row leaves the averaging time empty", () => {
+    const averagingTime = formatRules.columns.find((column) => column.name === "averaging_time");
+    assert.deepEqual(averagingTime.emptyCellWarning.units, ["uGal", "mGal", "uGal/sqrt(Hz)"]);
+    assert.deepEqual(averagingTime.emptyCellWarning.valueTypes, ["measured", "specification"]);
+    assert.equal(averagingTime.emptyCellWarning.conditionsWords, "averaging time not stated");
+
+    const tableText = readFixture("averaging-time-not-stated.csv");
+    const result = validateValuesText(tableText, formatRules);
+    assert.deepEqual(result.errors, []);
+    assert.equal(result.warnings.length, 1);
+    assertFinding(result.warnings[0], {
+      rowNumber: 2,
+      columnName: "conditions",
+      cellValue: "reading at a station",
+      reason: "The averaging time is empty.",
+    });
+    assert.ok(result.warnings[0].message.includes("averaging time not stated"), result.warnings[0].message);
+
+    for (const unitName of ["mGal", "uGal/sqrt(Hz)"]) {
+      const changed = validateValuesText(tableText.replace("uGal", unitName), formatRules);
+      assert.deepEqual(changed.errors, []);
+      assert.equal(changed.warnings.length, 1);
+      assert.equal(changed.warnings[0].columnName, "conditions");
+    }
+
+    const specification = validateValuesText(tableText.replace("measured", "specification"), formatRules);
+    assert.deepEqual(specification.errors, []);
+    assert.equal(specification.warnings.length, 1);
+
+    const stated = validateValuesText(
+      tableText.replace("reading at a station", "reading at a station averaging time not stated"),
+      formatRules,
+    );
+    assert.deepEqual(stated.errors, []);
+    assert.deepEqual(stated.warnings, []);
+
+    const gradient = validateValuesText(tableText.replace("uGal", "mGal/m"), formatRules);
+    assert.deepEqual(gradient.errors, []);
+    assert.deepEqual(gradient.warnings, []);
+
+    const model = validateValuesText(tableText.replace("measured", "model"), formatRules);
+    assert.deepEqual(model.errors, []);
+    assert.deepEqual(model.warnings, []);
+  });
+
   it("checks a table from any path", () => {
-    assert.deepEqual(validateValuesFile(fixturePath("valid-values.csv")), []);
-    const findings = validateValuesFile(fixturePath("unknown-unit.csv"));
+    const validResult = validateValuesFile(fixturePath("valid-values.csv"));
+    assert.deepEqual(validResult.errors, []);
+    assert.deepEqual(validResult.warnings, []);
+    const findings = validateValuesFile(fixturePath("unknown-unit.csv")).errors;
     assert.equal(findings.length, 1);
     assertFinding(findings[0], {
       rowNumber: 2,
@@ -434,27 +483,33 @@ describe("values table check", () => {
 
   it("reads the column rules from the rules object", () => {
     const rules = smallFormatRules();
-    assert.deepEqual(validateValuesText("value_id,value,unit\nonly,,m\n", rules), []);
-    assert.deepEqual(validateValuesText("value_id,value,unit\nonly,0,m\n", rules), []);
-    assert.deepEqual(validateValuesText("value_id,value,unit\nonly,1e-3,m\n", rules), []);
-    assert.deepEqual(validateValuesText("value_id,value,unit\nonly,+45,m\n", rules), []);
-    assert.deepEqual(validateValuesText("unit,value,value_id\nm,1,only\n", rules), []);
+    for (const tableText of [
+      "value_id,value,unit\nonly,,m\n",
+      "value_id,value,unit\nonly,0,m\n",
+      "value_id,value,unit\nonly,1e-3,m\n",
+      "value_id,value,unit\nonly,+45,m\n",
+      "unit,value,value_id\nm,1,only\n",
+    ]) {
+      const result = validateValuesText(tableText, rules);
+      assert.deepEqual(result.errors, []);
+      assert.deepEqual(result.warnings, []);
+    }
 
     for (const cellValue of ["TBD", "NaN", "nan", "~45", "Infinity"]) {
-      const findings = validateValuesText(`value_id,value,unit\nonly,${cellValue},m\n`, rules);
+      const findings = validateValuesText(`value_id,value,unit\nonly,${cellValue},m\n`, rules).errors;
       assert.equal(findings.length, 1);
       assert.equal(findings[0].columnName, "value");
       assert.equal(findings[0].cellValue, cellValue);
       assert.ok(findings[0].message.includes("This cell must hold a number or be empty."));
     }
 
-    const unknownUnit = validateValuesText("value_id,value,unit\nonly,1,km\n", rules);
+    const unknownUnit = validateValuesText("value_id,value,unit\nonly,1,km\n", rules).errors;
     assert.equal(unknownUnit.length, 1);
     assert.equal(unknownUnit[0].columnName, "unit");
     assert.equal(unknownUnit[0].cellValue, "km");
     assert.ok(unknownUnit[0].message.includes("Unknown unit."));
 
-    const shortRow = validateValuesText("value_id,value,unit\nonly,1\n", rules);
+    const shortRow = validateValuesText("value_id,value,unit\nonly,1\n", rules).errors;
     assert.equal(shortRow.length, 1);
     assertFinding(shortRow[0], {
       rowNumber: 2,
@@ -463,7 +518,7 @@ describe("values table check", () => {
       reason: "The row must have 3 cells.",
     });
 
-    const emptyIdentifier = validateValuesText("value_id,value,unit\n,,m\n", rules);
+    const emptyIdentifier = validateValuesText("value_id,value,unit\n,,m\n", rules).errors;
     assert.equal(emptyIdentifier.length, 1);
     assertFinding(emptyIdentifier[0], {
       rowNumber: 2,
@@ -474,7 +529,7 @@ describe("values table check", () => {
 
     const wrongVersion = smallFormatRules();
     wrongVersion.formatVersion = 1;
-    const versionFindings = validateValuesText("value_id,value,unit\nonly,1,m\n", wrongVersion);
+    const versionFindings = validateValuesText("value_id,value,unit\nonly,1,m\n", wrongVersion).errors;
     assertFinding(versionFindings[0], {
       rowNumber: 1,
       columnName: "formatVersion",

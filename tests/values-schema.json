@@ -77,7 +77,16 @@
       "name": "averaging_time",
       "required": true,
       "numeric": true,
-      "unitText": "s"
+      "unitText": "s",
+      "emptyCellWarning": {
+        "unitColumn": "unit",
+        "units": ["uGal", "mGal", "uGal/sqrt(Hz)"],
+        "valueTypeColumn": "value_type",
+        "valueTypes": ["measured", "specification"],
+        "conditionsColumn": "conditions",
+        "conditionsWords": "averaging time not stated",
+        "message": "The averaging time is empty. The conditions cell must contain the words \"averaging time not stated\"."
+      }
     },
     {
       "name": "grade",

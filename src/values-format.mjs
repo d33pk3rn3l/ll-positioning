@@ -346,36 +346,116 @@ function checkDataRecords(dataRecords, headerNames, formatRules) {
   return findings;
 }
 
+function indexByColumnName(headerNames) {
+  const indexByName = new Map();
+  headerNames.forEach((columnName, fieldIndex) => {
+    indexByName.set(columnName, fieldIndex);
+  });
+  return indexByName;
+}
+
+/**
+ * Warn when a listed unit has an empty cell and the conditions omit the required words.
+ * The unit names and the words live in the column rule.
+ * A warning does not fail the table.
+ */
+function checkEmptyCellWarnings(dataRecords, headerNames, formatRules) {
+  const warnings = [];
+  const indexByName = indexByColumnName(headerNames);
+
+  for (const column of formatRules.columns) {
+    const rule = column.emptyCellWarning;
+    if (!rule || typeof rule !== "object") {
+      continue;
+    }
+    const timeIndex = indexByName.get(column.name);
+    const unitIndex = indexByName.get(rule.unitColumn);
+    const typeIndex = indexByName.get(rule.valueTypeColumn);
+    const conditionsIndex = indexByName.get(rule.conditionsColumn);
+    const units = Array.isArray(rule.units) ? rule.units : [];
+    const valueTypes = Array.isArray(rule.valueTypes) ? rule.valueTypes : [];
+    const words = typeof rule.conditionsWords === "string" ? rule.conditionsWords : "";
+    const reason = typeof rule.message === "string" ? rule.message : "";
+    if (
+      timeIndex === undefined
+      || unitIndex === undefined
+      || typeIndex === undefined
+      || conditionsIndex === undefined
+      || words === ""
+      || reason === ""
+    ) {
+      continue;
+    }
+
+    for (const record of dataRecords) {
+      if (record.cells.length !== headerNames.length) {
+        continue;
+      }
+      if (record.cells[timeIndex] !== "") {
+        continue;
+      }
+      if (!units.includes(record.cells[unitIndex])) {
+        continue;
+      }
+      if (!valueTypes.includes(record.cells[typeIndex])) {
+        continue;
+      }
+      const conditionsCell = record.cells[conditionsIndex];
+      if (conditionsCell.includes(words)) {
+        continue;
+      }
+      warnings.push(makeFinding(
+        record.lineNumber,
+        rule.conditionsColumn,
+        conditionsCell,
+        reason,
+      ));
+    }
+  }
+
+  return warnings;
+}
+
+function checkResult(errors, warnings = []) {
+  return { errors, warnings };
+}
+
 /**
  * Check one table text against the format rules.
  * This function does not read a file.
  * An empty numeric cell is valid.
  * Empty means that the source does not state the number.
- * Return a list of findings. An empty list means the table is valid.
+ * Return errors and warnings.
+ * Only an error fails the table.
+ * A header fault returns before the data checks.
  */
 export function validateValuesText(tableText, formatRules) {
   const ruleFindings = checkFormatRules(formatRules);
   if (ruleFindings.length > 0) {
-    return ruleFindings;
+    return checkResult(ruleFindings);
   }
 
   const parsed = parseCommaSeparatedValues(tableText);
   if (parsed.findings.length > 0) {
-    return parsed.findings;
+    return checkResult(parsed.findings);
   }
   if (parsed.records.length === 0) {
-    return formatRules.columns
+    return checkResult(formatRules.columns
       .filter((column) => column.required === true)
-      .map((column) => makeFinding(1, column.name, "", "Missing column."));
+      .map((column) => makeFinding(1, column.name, "", "Missing column.")));
   }
 
   const headerRecord = parsed.records[0];
   const headerFindings = checkHeader(headerRecord, formatRules);
   if (headerFindings.length > 0) {
-    return headerFindings;
+    return checkResult(headerFindings);
   }
 
-  return checkDataRecords(parsed.records.slice(1), headerRecord.cells, formatRules);
+  const dataRecords = parsed.records.slice(1);
+  return checkResult(
+    checkDataRecords(dataRecords, headerRecord.cells, formatRules),
+    checkEmptyCellWarnings(dataRecords, headerRecord.cells, formatRules),
+  );
 }
 
 function loadDefaultFormatRules() {
@@ -388,6 +468,8 @@ function loadDefaultFormatRules() {
  * The path can be any file.
  * This function does not select the product source table.
  * When the caller does not pass rules, the function reads tests/values-schema.json.
+ * The result has errors and warnings.
+ * Only an error fails the table.
  */
 export function validateValuesFile(filePath, formatRules = loadDefaultFormatRules()) {
   const tableText = readFileSync(filePath, "utf8");
