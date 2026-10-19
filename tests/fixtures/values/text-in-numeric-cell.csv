@@ -1,0 +1,4 @@
+value_id,source_key,quantity,value,uncertainty,statistic,unit,value_type,frame,frame_status,height_reference,gravity_product,averaging_time,grade,conditions,note_anchor
+example-to-be-determined,example-note,example quantity,TBD,0.1,one_sigma,m,measured,mean_earth_de421,sourced,sphere_1737400m,magnitude,10,A,plain text,anchor-1
+example-not-a-number,example-note,example quantity,1,NaN,one_sigma,m,measured,mean_earth_de421,sourced,sphere_1737400m,magnitude,10,A,plain text,anchor-1
+example-marked-tilde,example-note,example quantity,1,0.1,one_sigma,m,measured,mean_earth_de421,sourced,sphere_1737400m,magnitude,~45,A,plain text,anchor-1

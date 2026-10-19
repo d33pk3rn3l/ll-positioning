@@ -1,0 +1,4 @@
+value_id,source_key,quantity,value,uncertainty,statistic,unit,value_type,frame,frame_status,height_reference,gravity_product,averaging_time,grade,conditions,note_anchor
+example-radius,example-note,example radius,10,,one_sigma,m,model,mean_earth_de440,sourced,sphere_1737400m,not_applicable,,A,"radius with a comma, and a quote ""mark""",note-section-1
+example-rate,example-note,example rate,0.25,0.01,scaled_formal,deg/day,measured,not_applicable,not_applicable,not_applicable,not_applicable,30,B,steady rate,note-section-2
+example-gradient,example-note,example gradient,,1.5,rms,mGal/m,derived,not_stated,inferred,not_stated,vertical_component,,C,,
