@@ -247,6 +247,10 @@ describe("format rules file", () => {
     );
     const averagingTime = formatRules.columns.find((column) => column.name === "averaging_time");
     assert.equal(averagingTime.unitText, "s");
+    assert.equal(
+      averagingTime.ruleText,
+      "A noise given per unit of bandwidth needs no averaging time. An empty averaging time is correct for the unit uGal/sqrt(Hz). A measured value or a specification value in the unit uGal or the unit mGal gives the averaging time in seconds. When that time is empty, the conditions cell contains the words \"averaging time not stated\".",
+    );
     const frameStatus = formatRules.columns.find((column) => column.name === "frame_status");
     assert.equal(
       frameStatus.ruleText,
@@ -427,7 +431,7 @@ describe("values table check", () => {
 
   it("warns when a gravity row leaves the averaging time empty", () => {
     const averagingTime = formatRules.columns.find((column) => column.name === "averaging_time");
-    assert.deepEqual(averagingTime.emptyCellWarning.units, ["uGal", "mGal", "uGal/sqrt(Hz)"]);
+    assert.deepEqual(averagingTime.emptyCellWarning.units, ["uGal", "mGal"]);
     assert.deepEqual(averagingTime.emptyCellWarning.valueTypes, ["measured", "specification"]);
     assert.equal(averagingTime.emptyCellWarning.conditionsWords, "averaging time not stated");
 
@@ -443,12 +447,10 @@ describe("values table check", () => {
     });
     assert.ok(result.warnings[0].message.includes("averaging time not stated"), result.warnings[0].message);
 
-    for (const unitName of ["mGal", "uGal/sqrt(Hz)"]) {
-      const changed = validateValuesText(tableText.replace("uGal", unitName), formatRules);
-      assert.deepEqual(changed.errors, []);
-      assert.equal(changed.warnings.length, 1);
-      assert.equal(changed.warnings[0].columnName, "conditions");
-    }
+    const milliGal = validateValuesText(tableText.replace("uGal", "mGal"), formatRules);
+    assert.deepEqual(milliGal.errors, []);
+    assert.equal(milliGal.warnings.length, 1);
+    assert.equal(milliGal.warnings[0].columnName, "conditions");
 
     const specification = validateValuesText(tableText.replace("measured", "specification"), formatRules);
     assert.deepEqual(specification.errors, []);
@@ -468,6 +470,12 @@ describe("values table check", () => {
     const model = validateValuesText(tableText.replace("measured", "model"), formatRules);
     assert.deepEqual(model.errors, []);
     assert.deepEqual(model.warnings, []);
+  });
+
+  it("accepts an empty averaging time for a noise per unit of bandwidth", () => {
+    const result = validateValuesText(readFixture("noise-per-unit-bandwidth.csv"), formatRules);
+    assert.deepEqual(result.errors, []);
+    assert.deepEqual(result.warnings, []);
   });
 
   it("rejects a frame status on a frame that is not stated", () => {

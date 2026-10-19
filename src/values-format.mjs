@@ -357,6 +357,8 @@ function indexByColumnName(headerNames) {
 /**
  * Warn when a listed unit has an empty cell and the conditions omit the required words.
  * The unit names and the words live in the column rule.
+ * A noise given per unit of bandwidth is not in the unit list.
+ * That noise needs no averaging time, so an empty averaging time is correct.
  * A warning does not fail the table.
  */
 function checkEmptyCellWarnings(dataRecords, headerNames, formatRules) {
