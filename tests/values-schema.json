@@ -92,9 +92,10 @@
       "required": true,
       "numeric": true,
       "unitText": "s",
+      "ruleText": "A noise given per unit of bandwidth needs no averaging time. An empty averaging time is correct for the unit uGal/sqrt(Hz). A measured value or a specification value in the unit uGal or the unit mGal gives the averaging time in seconds. When that time is empty, the conditions cell contains the words \"averaging time not stated\".",
       "emptyCellWarning": {
         "unitColumn": "unit",
-        "units": ["uGal", "mGal", "uGal/sqrt(Hz)"],
+        "units": ["uGal", "mGal"],
         "valueTypeColumn": "value_type",
         "valueTypes": ["measured", "specification"],
         "conditionsColumn": "conditions",
