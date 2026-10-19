@@ -53,6 +53,30 @@ export function clamp(x, lo, hi) {
   return Math.max(lo, Math.min(hi, x));
 }
 
+/** Round a metre value the same way the page does. */
+export function formatMetres(value, digits = 2) {
+  if (!Number.isFinite(value)) return "—";
+  return Math.abs(value) >= 100 ? value.toFixed(0) : value.toFixed(digits);
+}
+
+/** Shown with every cartographic 1-sigma. The transform uncertainty is not in the number. */
+export const CARTOGRAPHIC_SIGMA_EXCLUSION = "excludes ME-to-PA uncertainty (TBD)";
+
+/**
+ * Text for one cartographic 1-sigma.
+ * Pass vert_m to include the vertical 1-sigma. Omit it for a horizontal value.
+ */
+export function formatCartographicSigmaText(horiz_m, vert_m = undefined, digits = 2) {
+  const horiz = `${formatMetres(horiz_m, digits)} m`;
+  const body = vert_m === undefined ? horiz : `${horiz} H / ${formatMetres(vert_m, digits)} m V`;
+  return `${body} ${CARTOGRAPHIC_SIGMA_EXCLUSION}`;
+}
+
+/** Case A. The rotation size is text. It is not an error and not a bias. */
+export function formatMePaAppliedText(offset_m) {
+  return `ME-to-PA applied (about ${offset_m} m); residual uncertainty TBD, common-mode`;
+}
+
 /** Free-air gradient [µGal/m]. */
 export function freeAirGradient() {
   return FREE_AIR;
@@ -226,12 +250,19 @@ export function navigationUncertainty(scenario) {
   // Observability of datum transform
   const observability = datumObservability(scenario, nav);
 
-  // D-007: ME-to-PA is a known rotation (a transform), not noise.
-  // mePaOffset_m is the applied transform size. Its uncertainty is common to all
-  // points and is not sourced. Do not add either value to a 1-sigma.
-  const mePaOffset_m = scenario.frameMistag ? PRESETS.control.me_pa_offset_m : 0;
-  const mePaOffsetSigma_m = "TBD";
-  const frameFault_m = mePaOffset_m;
+  // Case A (normal, always when the transform is applied): ME-to-PA is a known
+  // rotation. The ~875 m size is not an error and not a bias. Report it as text
+  // only. The only budget field is mePaTransformSigma_m (null until sourced).
+  // That uncertainty is common-mode.
+  // Case B (frameMistag / frame_mistag, deterministic_fault): a PA product is
+  // used as ME, or the transform is skipped. frameMistagFault_m is the fault
+  // size. Keep it out of every 1-sigma and every bias field.
+  const mePaSize_m = PRESETS.control.me_pa_offset_m;
+  const frameMistagFault = !!scenario.frameMistag;
+  const mePaTransformSigma_m = null;
+  const mePaTransformSigmaStatus = "TBD";
+  const frameMistagFault_m = frameMistagFault ? mePaSize_m : null;
+  const mePaAppliedText = frameMistagFault ? null : formatMePaAppliedText(mePaSize_m);
 
   // Mid / worst local
   const mid = stations[Math.floor(stations.length / 2)];
@@ -243,9 +274,11 @@ export function navigationUncertainty(scenario) {
     stations,
     relative,
     observability,
-    frameFault_m,
-    mePaOffset_m,
-    mePaOffsetSigma_m,
+    frameMistagFault,
+    frameMistagFault_m,
+    mePaTransformSigma_m,
+    mePaTransformSigmaStatus,
+    mePaAppliedText,
     mid,
     worstLocal,
     summary: {
@@ -378,7 +411,9 @@ export function gravityAssessment(scenario, navResult, survey) {
   const driftTerm = survey.adjustedDrift_uGal;
   const instrumentNoise = 20; // µGal white / occupation (illustrative MEMS)
 
-  // GRAIL background: smooth over km — cartographic absolute needed only for weak ramp
+  // GRAIL-type gravity fields are given in PA, so this term should use the
+  // ME-to-PA transform uncertainty, not the map offset. The 0.01 µGal/m
+  // gradient is unsourced (see issue #19). The formula below is unchanged (D-005).
   const grailGradient_uGal_per_m = 0.01; // ~ tens of µGal over km → ~0.01 µGal/m
   const grailTerm = grailGradient_uGal_per_m * navResult.summary.midCartHoriz_m;
 
@@ -619,6 +654,10 @@ export function assess(partial = {}) {
       horiz_m: navResult.summary.midCartHoriz_m,
       vert_m: navResult.summary.midCartVert_m,
       drives: "archive / interoperability; weak for short-traverse cave vs lunar potential",
+      text: formatCartographicSigmaText(
+        navResult.summary.midCartHoriz_m,
+        navResult.summary.midCartVert_m,
+      ),
     },
     inertial: {
       azimuth_mrad: scenario.celestialAzimuth_mrad,

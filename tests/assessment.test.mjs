@@ -102,12 +102,13 @@ describe("frame / correlation / observability", () => {
     assert.ok(r.layers.cartographic.horiz_m > r.layers.local.horiz_m);
   });
 
-  it("ME/PA mistag reports the 875 m offset as a bias", () => {
+  it("ME/PA mistag is a fault of 875 m, kept out of the 1-sigma", () => {
     const r = assess({ frameMistag: true });
     const offset = PRESETS.control.me_pa_offset_m;
-    assert.equal(r.nav.frameFault_m, offset);
-    assert.equal(r.nav.mePaOffset_m, offset);
-    assert.ok(r.nav.mePaOffsetSigma_m === null || r.nav.mePaOffsetSigma_m === "TBD");
+    assert.equal(r.nav.frameMistagFault, true);
+    assert.equal(r.nav.frameMistagFault_m, offset);
+    assert.equal(Object.hasOwn(r.nav, "frameFault_m"), false);
+    assert.equal(Object.hasOwn(r.nav, "mePaOffset_m"), false);
     assert.ok(r.layers.cartographic.horiz_m < offset);
     assert.ok(r.layers.local.horiz_m < offset);
     assert.ok(r.layers.map.horiz_m < offset);
@@ -406,14 +407,11 @@ describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
     }
   });
 
-  it("reports the ME/PA term as a separate bias; uncertainty is TBD", () => {
-    const r = assess({ frameMistag: true });
-    assert.equal(r.nav.mePaOffset_m, PRESETS.control.me_pa_offset_m);
-    assert.ok(
-      r.nav.mePaOffsetSigma_m === null || r.nav.mePaOffsetSigma_m === "TBD",
-      `mePaOffsetSigma_m must be null or "TBD", got ${r.nav.mePaOffsetSigma_m}`,
-    );
-    assert.equal(Number.isFinite(r.nav.mePaOffsetSigma_m), false);
+  it("ME-to-PA uncertainty is null with status TBD", () => {
+    const r = assess({ frameMistag: false });
+    assert.equal(r.nav.mePaTransformSigma_m, null);
+    assert.equal(r.nav.mePaTransformSigmaStatus, "TBD");
+    assert.equal(Object.hasOwn(r.nav, "mePaOffsetSigma_m"), false);
   });
 
   it("changing the ME/PA offset does not change local or map-relative sigmas, nor gravity SNR", () => {
@@ -429,9 +427,95 @@ describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
       assert.equal(a.layers.map.vert_m, b.layers.map.vert_m);
       assert.equal(a.nav.summary.worstLocalHoriz_m, b.nav.summary.worstLocalHoriz_m);
       assert.equal(a.nav.summary.midMapHoriz_m, b.nav.summary.midMapHoriz_m);
+      assert.equal(a.layers.cartographic.horiz_m, b.layers.cartographic.horiz_m);
+      assert.equal(a.layers.cartographic.vert_m, b.layers.cartographic.vert_m);
+      assert.equal(a.nav.summary.midCartHoriz_m, b.nav.summary.midCartHoriz_m);
       assert.equal(a.gravity.snr, b.gravity.snr);
     } finally {
       PRESETS.control.me_pa_offset_m = saved;
+    }
+  });
+});
+
+const APPLIED_TEXT = "ME-to-PA applied (about 875 m); residual uncertainty TBD, common-mode";
+const CARTO_EXCLUSION = "excludes ME-to-PA uncertainty (TBD)";
+
+function numericFieldProblems(value, path = "r", problems = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item, i) => numericFieldProblems(item, `${path}[${i}]`, problems));
+    return problems;
+  }
+  if (!value || typeof value !== "object") return problems;
+  for (const [key, child] of Object.entries(value)) {
+    const childPath = `${path}.${key}`;
+    const metreLike =
+      /(_m|_uGal|_mrad)$/.test(key) ||
+      key === "uGal" ||
+      key === "snr" ||
+      key === "ratio" ||
+      key === "value_m";
+    if (typeof child === "number" && Number.isNaN(child)) problems.push(`${childPath} is NaN`);
+    if (metreLike) {
+      if (typeof child === "string") problems.push(`${childPath} is a string`);
+      else if (child !== null && typeof child !== "number") problems.push(`${childPath} is ${typeof child}`);
+    }
+    if (child && typeof child === "object") numericFieldProblems(child, childPath, problems);
+  }
+  return problems;
+}
+
+describe("ME-to-PA cases (prof-geodesy review)", () => {
+  it("case A: applied transform is text only; uncertainty is null and TBD", async () => {
+    const engine = await import("../src/assessment.mjs");
+    assert.equal(typeof engine.formatMePaAppliedText, "function");
+    assert.equal(engine.formatMePaAppliedText(PRESETS.control.me_pa_offset_m), APPLIED_TEXT);
+    const r = assess({ frameMistag: false });
+    assert.equal(r.nav.mePaAppliedText, APPLIED_TEXT);
+    assert.equal(r.nav.mePaTransformSigma_m, null);
+    assert.equal(r.nav.mePaTransformSigmaStatus, "TBD");
+    assert.equal(r.nav.frameMistagFault, false);
+    assert.equal(Object.hasOwn(r.nav, "mePaOffset_m"), false);
+    assert.equal(Object.hasOwn(r.nav, "mePaOffsetSigma_m"), false);
+    assert.equal(Object.hasOwn(r.nav, "frameFault_m"), false);
+    assert.equal(
+      r.gravity.terms.some((term) => term.uGal === PRESETS.control.me_pa_offset_m),
+      false,
+    );
+    assert.equal(String(r.layers.cartographic.text ?? "").includes("875"), false);
+  });
+
+  it("case B: frame mistag is a fault flag, not a bias and not a 1-sigma", () => {
+    const r = assess({ frameMistag: true });
+    const offset = PRESETS.control.me_pa_offset_m;
+    assert.equal(r.nav.frameMistagFault, true);
+    assert.equal(r.nav.frameMistagFault_m, offset);
+    assert.equal(r.nav.mePaTransformSigma_m, null);
+    assert.equal(r.nav.mePaAppliedText, null);
+    assert.equal(Object.hasOwn(r.nav, "mePaOffset_m"), false);
+    assert.equal(Object.hasOwn(r.nav, "frameFault_m"), false);
+    for (const value of oneSigmaValues(r)) {
+      assert.ok(value < offset);
+    }
+  });
+
+  it("cartographic 1-sigma text excludes ME-to-PA uncertainty (TBD)", async () => {
+    const engine = await import("../src/assessment.mjs");
+    assert.equal(typeof engine.formatCartographicSigmaText, "function");
+    const r = assess();
+    const text = engine.formatCartographicSigmaText(
+      r.layers.cartographic.horiz_m,
+      r.layers.cartographic.vert_m,
+    );
+    assert.match(text, new RegExp(CARTO_EXCLUSION.replace(/[()]/g, "\\$&")));
+    assert.match(text, /14\.02/);
+    assert.equal(text.includes("875"), false);
+    assert.equal(r.layers.cartographic.text, text);
+  });
+
+  it("no numeric output is NaN or a string", () => {
+    for (const frameMistag of [false, true]) {
+      const problems = numericFieldProblems(assess({ frameMistag, instrument: "gravimeter" }));
+      assert.deepEqual(problems, []);
     }
   });
 });

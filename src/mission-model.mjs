@@ -170,11 +170,12 @@ export const ERROR_SOURCES = [
   },
   {
     id: "frame_mistag",
-    name: "ME↔PA frame mis-tag",
+    name: "ME/PA frame mistag",
     units: "m",
     correlation: "deterministic_fault",
     affects: ["cartographic_absolute"],
-    mitigation: "explicit frame kernel tags; fault flag ~875 m",
+    mitigation:
+      "fault flag when a PA product is used as ME, or the ME-to-PA transform is skipped; fault size ~875 m; kept out of every 1-sigma and every bias",
   },
   {
     id: "timing",
