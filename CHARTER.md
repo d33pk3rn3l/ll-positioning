@@ -110,5 +110,5 @@ Exit criteria:
 ## 7. Open questions for the PI
 
 - Q1: Is the platform confirmed as a walking quadruped?
-- Q2: Please add the brief PDF to the repo (`docs/brief/`) so it is the trace root.
+- Q2: Brief text is in docs/brief.md (original PDF with Benedikt). Closed.
 - Q3: Target dates for G1, G2, G3? (TBD)
