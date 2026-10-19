@@ -266,3 +266,89 @@ describe("end-to-end assess", () => {
     assert.ok(Number.isFinite(r.gravity.snr));
   });
 });
+
+describe("ranked error units", () => {
+  const instruments = ["gravimeter", "gpr", "spectrometer", "imaging"];
+
+  for (const instrument of instruments) {
+    it(`${instrument}: every ranked term has one shared explicit unit`, () => {
+      const r = assess({ instrument });
+      assert.ok(r.ranked.length >= 1);
+      for (const term of r.ranked) {
+        assert.equal(typeof term.unit, "string");
+        assert.ok(term.unit.length > 0);
+      }
+      const unit = r.ranked[0].unit;
+      for (const term of r.ranked) {
+        assert.equal(term.unit, unit);
+      }
+    });
+  }
+
+  it("gravity terms keep microgal values in uGal", () => {
+    const r = assess({ instrument: "gravimeter" });
+    for (const term of r.ranked) {
+      assert.equal(term.unit, "µGal");
+      assert.equal(typeof term.uGal, "number");
+      assert.ok(Number.isFinite(term.uGal));
+      assert.equal(Object.hasOwn(term, "ratio"), false);
+    }
+  });
+
+  it("GPR and spectrometer terms use a ratio and do not use uGal", () => {
+    for (const instrument of ["gpr", "spectrometer"]) {
+      const r = assess({ instrument });
+      assert.equal(r.ranked[0].unit, "m/m");
+      for (const term of r.ranked) {
+        assert.equal(Object.hasOwn(term, "uGal"), false);
+        assert.equal(typeof term.ratio, "number");
+        assert.ok(Number.isFinite(term.ratio));
+      }
+    }
+  });
+
+  it("GPR ratios stay equal to the length ratios", () => {
+    const r = assess({ instrument: "gpr" });
+    const along = r.ranked.find((t) => t.id === "along");
+    const elev = r.ranked.find((t) => t.id === "elev");
+    const belly = r.ranked.find((t) => t.id === "belly");
+    assert.ok(Math.abs(along.ratio - r.gpr.achievedAlong_m / r.gpr.alongNeed_m) < 1e-12);
+    assert.ok(Math.abs(elev.ratio - r.gpr.achievedElev_m / r.gpr.elevNeed_m) < 1e-12);
+    assert.ok(Math.abs(belly.ratio - r.gpr.bellyResidual_m / 0.01) < 1e-12);
+  });
+
+  it("spectrometer footprint ratio stays a ratio to the allowed geolocation", () => {
+    const r = assess({ instrument: "spectrometer" });
+    const allowed_m = Math.max(r.spectro.allowedGeo_m, 1e-9);
+    const geo = r.ranked.find((t) => t.id === "geo");
+    assert.ok(geo);
+    assert.ok(Math.abs(geo.ratio - r.spectro.geoSigma_m / allowed_m) < 1e-12);
+  });
+
+  it("spectrometer map term is in metres and is not compared to allowedGeo_m", () => {
+    const r = assess({ instrument: "spectrometer" });
+    const map = r.context.find((t) => t.id === "map");
+    const allowed_m = r.spectro.allowedGeo_m;
+    assert.ok(map);
+    assert.equal(map.unit, "m");
+    assert.equal(map.value_m, r.nav.summary.midMapHoriz_m);
+    assert.equal(Object.hasOwn(map, "ratio"), false);
+    assert.equal(r.ranked.some((t) => t.id === "map"), false);
+    assert.ok(Math.abs(map.value_m - r.nav.summary.midMapHoriz_m / allowed_m) > 1);
+  });
+
+  it("imaging terms use value_m and state that the requirement is TBD", () => {
+    const r = assess({ instrument: "imaging" });
+    const local = r.ranked.find((t) => t.id === "local");
+    const cart = r.ranked.find((t) => t.id === "cart");
+    assert.equal(local.unit, "m");
+    assert.equal(cart.unit, "m");
+    assert.equal(Object.hasOwn(local, "uGal"), false);
+    assert.equal(Object.hasOwn(local, "score"), false);
+    assert.equal(Object.hasOwn(cart, "score"), false);
+    assert.equal(local.value_m, r.nav.summary.worstLocalHoriz_m);
+    assert.equal(cart.value_m, r.nav.summary.midCartHoriz_m);
+    assert.equal(local.label, "no imaging requirement yet (TBD)");
+    assert.equal(cart.label, "no imaging requirement yet (TBD)");
+  });
+});
