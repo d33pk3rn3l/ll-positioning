@@ -21,7 +21,7 @@ Review of v0.1 by prof-geodesy (PR #12). All items accepted.
    Heading random walk grows as distance^1.5. See 2.1, 5.2, 6.
 2. (major) Item 2, reference vertical for attitude. Roll and pitch are
    defined against the local vertical at the rover. The d / R tilt and the
-   north turn are stated. See 2, 2.4, 5.1.
+   north turn are stated. See 2, 2.3, 5.1.
 3. Item 3, velocity added to the state. See 5.1.
 4. Item 4, zero-velocity updates do not constrain heading. See 5.2.
 5. Item 5, payload lever arms and boresights added to the state as [TBD].
@@ -31,12 +31,14 @@ Review of v0.1 by prof-geodesy (PR #12). All items accepted.
    inclinometer bias spec [TBD]. Design rule: the core returns a sigma per
    observable. See 5.3, 7.2, 7.4.
 8. prof-geodesy addition (GRAV-A): for a vector gravity product, heading and
-   the d / R tilt enter the gravity budget at first order. See 2.4, 7.1.
+   the d / R tilt enter the gravity budget at first order. See 2.3, 7.1.
 9. Platform D-012 (PI): walking quadruped, ANYmal-like, no jumping.
    prof-geodesy additions: IMU north-finding excluded (2.1); leg-specific
    states and foot slip as random walk (5.1, 6); zero-velocity update only
    with four feet down and body still; gravity tilt is the standing-pose tilt
    (5.2). See also 7.1.
+10. prof-geodesy re-check minor item: section 2.4 renumbered to 2.3. Every cross-reference updated, including this list and `requirements-trace.md`.
+11. prof-geodesy re-check minor item: the d/R (0.58 mrad) comparison with the 0.2 mrad levelling residual is not evidence. The rule stands on the 27 µGal (vertical, second order) and 94 mGal (vector, first order) numbers alone. See 2.3.
 
 Decisions that this note uses: D-001 (four layers), D-002 (labels),
 D-007 (ME-to-PA as a transform), D-009 (zero-velocity updates, relative
@@ -91,7 +93,7 @@ All items in this section are **proposed**. The PI decides at G1.
 | Item | Proposal | Status |
 |------|----------|--------|
 | Origin | Lander reference point (a marked, surveyed point on the lander, for example a target or the base of the mast). | proposed; exact point [TBD] with the lander team |
-| Axes | Local east-north-up (ENU) at the origin. A flat tangent plane that touches the Moon at the lander. x = east, y = north, z = up (away from the Moon's centre). Used for **position** only. Attitude uses the local vertical and local north at the rover (2.4). | proposed |
+| Axes | Local east-north-up (ENU) at the origin. A flat tangent plane that touches the Moon at the lander. x = east, y = north, z = up (away from the Moon's centre). Used for **position** only. Attitude uses the local vertical and local north at the rover (2.3). | proposed |
 | Azimuth reference | How we know where "north" is at the start. Options below. | [TBD], decision needed |
 | Height reference | Height above a sphere of radius 1737.4 km around the Moon's centre of mass: h = r - 1737.4 km. | proposed; radius value [sourced: lrolgcwg2008, PR #15] |
 
@@ -147,13 +149,14 @@ list is not known).
   Mittelholz 2026) is treated as station-to-station height until ll-scout
   confirms what the paper means. If it is absolute, it becomes a major item.
 
-### 2.4 Reference vertical and north for attitude
+### 2.3 Reference vertical and north for attitude
 
 The ENU axes are a tangent plane at the lander. A level rover at distance d
 from the lander is tilted against that plane by about d / R.
 - At 1 km: 1000 / 1,737,400 = 0.58 mrad [derived; R [sourced: lrolgcwg2008, PR #15], see
   2.2].
 - This is larger than the 0.2 mrad leveling residual [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad].
+  The 0.2 mrad value is an assumption, so this comparison is not evidence. The rule stands on the 27 µGal (vertical, second order) and 94 mGal (vector, first order) numbers alone.
 
 If a tilt correction uses roll and pitch in lander ENU, the error at one
 station is:
@@ -281,7 +284,7 @@ payload needs better. Payload time needs are in `requirements-trace.md`
 |-------|---------|---------------------------|
 | Position | 3 values: east, north, up in the local frame (converted to the other layers by transforms). | Local (primary) |
 | Velocity | 3 values: east, north, up rates in the local frame. Zero-velocity updates constrain it (5.2). | Local |
-| Attitude | 3 values: roll, pitch, heading (yaw). Roll and pitch against the **local vertical at the rover**; heading against **local north at the rover** (2.4). Heading is the most important for position drift. | Local |
+| Attitude | 3 values: roll, pitch, heading (yaw). Roll and pitch against the **local vertical at the rover**; heading against **local north at the rover** (2.3). Heading is the most important for position drift. | Local |
 | Clock offset | 1 value (and, if needed, a drift rate) to the named time scale. | Time (needed for inertial layer and for payload time tags) |
 | Transform parameters | Local-to-map (rotation, shift, maybe scale); map-to-ME offset; ME-to-PA (fixed, uncertainty only). | Map-relative, cartographic, inertial |
 | Sensor errors (quadruped, D-012) | Gyro biases and accelerometer biases (3 + 3 values). Leg-kinematics calibration: link lengths and joint offsets per leg. Odometry scale (error type 5, section 6). Foot slip: a per-step error, so **random-walk** type, not white noise (section 6). Values [TBD, platform source]. | Local |
@@ -311,7 +314,7 @@ valid only when all four feet are down and the body is still. A stop with a
 foot moving, or with body sway, is not a zero-velocity update.
 
 **Gravity-reading tilt.** The tilt for a gravity reading is the tilt of the
-standing pose against the local vertical at the rover (2.4). The
+standing pose against the local vertical at the rover (2.3). The
 IMU-to-gravimeter lever arm and mounting angles go through that pose (5.1,
 payload lever arms).
 
@@ -372,7 +375,7 @@ time) where relevant.
    error rotates signal between the east and north components, so start
    heading bias (2.1, type 5) and heading drift (random walk) enter the
    gravity budget; (b) the d / R tilt gives a first-order error, about 94 mGal
-   at 1 km [derived, 2.4]. Then roll and pitch against the local vertical at
+   at 1 km [derived, 2.3]. Then roll and pitch against the local vertical at
    the rover are required. See `requirements-trace.md` GRAV-A.
 
 ### 7.2 Inputs needed from ll-scout (source notes)
