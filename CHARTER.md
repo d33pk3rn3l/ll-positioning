@@ -18,7 +18,7 @@ requirements, geodetic sources and error budget that make this possible.
 | O1 | Define a local mission frame and the estimated quantities (position, attitude, time). | `docs/frames.md`: frame definitions, state vector, the four knowledge layers, height convention, time scale. PDF handout. | G1 |
 | O2 | Register the local frame to the global lunar frame via geodetic tie points, with minimum accumulated uncertainty. | `docs/registration.md`: tie-point types, transform model, observability, accumulated uncertainty per layer. PDF handout. | G2 |
 | O3 | Translate gravimeter, GPR and imaging needs into requirements on real-time accuracy, relative accuracy between measurements, and post-processed geodetic accuracy. | `docs/requirements-trace.md`: trace table. One row per instrument and nav quantity (position, attitude, time on separate rows). Columns: science objective, instrument, instrument parameter it depends on, physical relation, source, layer, time scale, RT / relative / post-processed value, "needs ~10x?", what fails if not met. | G1 |
-| O4 | Identify post-mission geodetic information sources. | `docs/sources-assessment.md`: lander position, LRO NAC imagery, visual landmarks, rover tracks, retroreflectors/beacons; each with accuracy, layer, availability, grade. | G2 |
+| O4 | Identify post-mission geodetic information sources. | `docs/sources-assessment.md`: lander position, LRO NAC imagery, visual landmarks, rover tracks, retroreflectors/beacons; each with accuracy, layer, availability, grade. For each accuracy: product, frame realization, and confidence measure (1-sigma, 90 %, or bound). | G2 |
 | O5 | Error budget that propagates each source to trajectory and science results. | `docs/error-budget.md` plus code in `src/` that regenerates every number. Allocation per layer and per instrument. | G3 |
 
 ## 3. Scope
@@ -51,7 +51,7 @@ not approve its own gate.
    inertial. Never collapse them into one accuracy number.
 2. Every number carries a label: **sourced** (with ref key), **derived** (with
    script or calculation), or **TBD**.
-3. Biases and noise stay separate. A bias is not added into a 1-sigma value.
+3. Biases and noise stay separate. A bias is not added into a 1-sigma value. Each error source states its correlation type: common to all points, random walk along track, per-station bias, or white noise. Correlated errors are never treated as independent.
 4. No requirement without a science trace. Missing instrument specs are TBD.
 5. Every number in a doc is reproducible from a committed script and a clean clone.
 6. Work is tracked as GitHub issues with done-criteria. One change per PR.
@@ -69,8 +69,7 @@ items", no major review item is open, and Benedikt gives go/no-go.
 ### G1: Frame and requirements (O1, O3)
 
 Entry criteria:
-- `docs/frames.md` complete: local frame, state vector (position, attitude,
-  time), four layers, height and time conventions.
+- docs/frames.md complete: ME or PA choice per layer with ephemeris version; local frame origin and axes (for example lander-centred east-north-up); azimuth reference; height reference; state vector with position, attitude and clock offset to a named time scale; four layers.
 - `docs/requirements-trace.md` complete for gravimeter, GPR and imaging. Every
   cell labelled sourced / derived / TBD.
 - Instrument-parameter list in docs/requirements-trace.md: gravimeter noise and drift, GPR centre frequency, camera field of view and resolution. Each value may be TBD; each requirement names the parameter it depends on.
@@ -85,10 +84,9 @@ Exit criteria:
 
 Entry criteria:
 - G1 passed.
-- `docs/registration.md` complete: tie-point types, transform model,
-  observability, accumulated uncertainty per layer (back-of-envelope plus script).
+- docs/registration.md complete: transform parameters (translation, rotation, scale yes/no); estimator (weighted least squares with tie-point covariance); redundancy check (more ties than parameters, geometry leaves no rotation unobservable); accumulated uncertainty per layer, including the error all ties share from a common map product (back-of-envelope plus script).
 - `docs/sources-assessment.md` covers all five O4 source types with accuracy,
-  layer, availability and grade.
+  layer, availability and grade. For each accuracy: product, frame realization, and confidence measure (1-sigma, 90 %, or bound).
 
 Exit criteria:
 - prof-geodesy: pass or pass with review items, no open majors.
@@ -102,6 +100,8 @@ Entry criteria:
 - `docs/error-budget.md` complete: every source propagated to trajectory (per
   layer) and to each science result; allocations versus G1 requirements.
 - All budget numbers reproduced by CI from a clean clone.
+- Post-processing estimator stated (for example a smoother with loop closures and lander observations), so the ~10x expectation can be tested.
+- One independent check of the budget (for example a Monte Carlo that agrees with the analytic covariance).
 
 Exit criteria:
 - prof-geodesy (math) and prof-payload (science impact): pass or pass with
