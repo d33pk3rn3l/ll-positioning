@@ -17,7 +17,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not applicable.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Best grade (CA51) in-run accel bias 25 µg -> 0.15 mrad tilt on the Moon [derived], inside the team's 33 µg / 0.2 mrad target; BA51 (50 µg -> 0.30 mrad) and AA51 (75 µg -> 0.45 mrad) do not meet it [derived]. Turn-on repeatability 1.7 mg -> ~10 mrad [derived], so again per-station calibration is needed. Gyro 0.25 °/hr is ~500x above the 0.0005 °/h north-finding need [derived]. Not space-qualified; no radiation data in these files.
+Label for in-run bias stability: Allan deviation floor, best case; not a residual bias after calibration. Best grade (CA51) in-run accel bias 25 µg -> 0.15 mrad tilt on the Moon [derived, with g = 1.6242 m/s^2], inside the team's 33 µg / 0.2 mrad target; BA51 (50 µg -> 0.30 mrad) and AA51 (75 µg -> 0.45 mrad) do not meet it [derived]. Turn-on repeatability 1.7 mg -> ~10 mrad [derived], so (inference: a robot standing still cannot separate horizontal accelerometer bias from tilt; it needs a turn of the unit (for example 180 deg about vertical) between readings, or an independent tilt reference; question for the robot team). Gyro 0.25 °/hr is ~500x above the 0.0005 °/h north-finding need [derived]. Not space-qualified; no radiation data in these files.
 
 ## Grade
 B (manufacturer datasheet, typical 1-sigma values).

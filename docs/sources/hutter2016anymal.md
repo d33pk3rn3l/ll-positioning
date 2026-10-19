@@ -20,6 +20,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not applicable.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
+Context only for this iteration; the budget uses delivered numbers from the robot team.
 Team assumption walk speed 0.15 m/s: not contradicted; the source gives ~0.3 m/s for the static walk on flat lab ground (Earth gravity, 30 kg robot). 0.15 m/s is half of that and is plausible for rough terrain, but this source does not address rough terrain. Slip priors 2 % / 6 %: not addressed. Levelling/creep angles and belly-height residuals: not addressed (only "very smooth and almost straight line of the base", no number). IMU class (MTi-100) is given; see xsens2020mti100.
 
 ## Grade

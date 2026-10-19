@@ -14,7 +14,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not stated.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Shows that a navigation-grade MEMS IMU used as a gravimeter reaches ~10 mGal, about 50x to 500x worse than the team range 20-300 µGal. So the nav IMU cannot replace the gravimeter. The final paper (Lewis et al. 2019, Science 363:535, doi 10.1126/science.aat0738) was NOT opened (paywall); only its abstract via search.
+Shows that a navigation-grade MEMS IMU used as a gravimeter reaches ~10 mGal, about 33x to 500x worse than the team range 20-300 µGal [derived]. The abstract says the data were "collected from the RIMU sensors over several minutes while stationary for fine attitude determination". So the 10 mGal comes from data taken over several minutes while stationary, with fine orientation determination. The abstract does not give the exact averaging time. So the nav IMU cannot replace the gravimeter. The final paper (Lewis et al. 2019, Science 363:535, doi 10.1126/science.aat0738) was NOT opened (paywall); only its abstract via search.
 
 ## Grade
 A (flight data), abstract-level detail only.

@@ -22,7 +22,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 1738 km reference sphere for maps (not the 1737.4 km cartographic sphere).
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Gives a sourced GM. Mean surface g [derived]: GM / R^2 = 4902.80031e9 / (1737.4e3)^2 = 1.6242 m/s^2 at R = 1737.4 km; 1.6231 m/s^2 at R = 1738.0 km. Neither 1.62 nor 1.625 is the sourced value; 1.6242 rounds to 1.624. The 0.05 % difference to 1.625 does not matter for the tilt relation (bias/g), but the local g at the site also depends on height and anomaly: 1 km of height changes g by ~0.0019 m/s^2 [derived: 2g/R]. Centrifugal term at 14.1° N ~1.2e-5 m/s^2 [derived], negligible. Field resolution ~9-15 km: GRAIL cannot see a ~100 m lava tube; it gives only the regional background.
+Gives a sourced GM. Mean surface g [derived]: GM / R^2 = 4902.80031e9 / (1737.4e3)^2 = 1.6242 m/s^2 at R = 1737.4 km; 1.6231 m/s^2 at R = 1738.0 km. Use 1.6242 m/s^2 in all derived values. 1.62 and 1.625 are old unsourced code values. The 0.05 % difference to 1.625 does not matter for the tilt relation (bias/g), but the local g at the site also depends on height and anomaly: 1 km of height changes g by ~0.0019 m/s^2 [derived: 2g/R]. Centrifugal term at 14.1° N ~1.2e-5 m/s^2 [derived], negligible. Field resolution ~9-15 km: GRAIL cannot see a ~100 m lava tube; it gives only the regional background.
 
 ## Grade
 A (flight data).

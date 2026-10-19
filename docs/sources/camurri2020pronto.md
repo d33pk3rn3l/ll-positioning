@@ -23,6 +23,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Local frame of the test site.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
+Context only for this iteration; the budget uses delivered numbers from the robot team.
 Primary number for leg-odometry drift on an ANYmal: 8.3 % of distance [derived] (total drift of the position estimate from inertial unit plus leg odometry, one 10 m run, not a foot-slip rate) for IMU + legs only, trotting at 0.3 m/s on an industrial site. Team slip prior 2 %: contradicted for proprioceptive-only ANYmal trotting (8.3 % observed); 6 %: of the same order but still lower than 8.3 %. The 1.67 % figure is for Atlas (a biped), not a quadruped. Note: the drift includes all error sources (not only foot slip), and it is a trot, not a static walk. Walk speed 0.15 m/s: not addressed (trot at 0.3 m/s). Belly height: only the qualitative vertical drift from leg compression. With VO + LiDAR, 3.4 %. Foot slip grows as a random walk, so this figure does not scale linearly with distance.
 
 ## Grade

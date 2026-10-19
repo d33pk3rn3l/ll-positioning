@@ -15,7 +15,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not applicable.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Tilt error from accelerometer bias on the Moon is about bias / 1.625 m/s^2 (team relation). In g units: 15 µg -> 15e-6 x 9.80665 / 1.6242 = 0.09 mrad [derived]; this meets the team's 33 µg (0.2 mrad) target only for the in-run part. The initial (turn-on) bias 5 mg -> ~30 mrad [derived] is ~150x the target, so a per-station bias calibration (or a separate inclinometer) is needed. Gyro in-run bias 10 º/h is ~2e4 x above the 0.0005 º/h needed for lunar north-finding [derived from prof-geodesy number]. Statistic type not stated by the vendor.
+Label for in-run bias stability: Allan deviation floor, best case; not a residual bias after calibration. Tilt error from accelerometer bias on the Moon is about bias / 1.6242 m/s^2 (team relation; 1.62 and 1.625 are old unsourced code values; 1.6242 m/s^2 is derived in konopliv2013gl0660b). In g units: 15 µg -> 15e-6 x 9.80665 / 1.6242 = 0.09 mrad [derived]; this meets the team's 33 µg (0.2 mrad) target only for the in-run part. The initial (turn-on) bias 5 mg -> ~30 mrad [derived] is ~150x the target, so (inference: a robot standing still cannot separate horizontal accelerometer bias from tilt; it needs a turn of the unit (for example 180 deg about vertical) between readings, or an independent tilt reference; question for the robot team). Gyro in-run bias 10 º/h is ~2e4 x above the 0.0005 º/h needed for lunar north-finding [derived from prof-geodesy number]. Statistic type not stated by the vendor.
 
 ## Grade
 B (manufacturer datasheet, typical lab values, not independently verified).

@@ -20,6 +20,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not stated.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
+Context only for this iteration; the budget uses delivered numbers from the robot team.
 Team assumption walk speed 0.15 m/s: not contradicted; analog-terrain top speed is 0.7 m/s on a 25° slope, so 0.15 m/s is conservative. Mean traverse speed is not stated. Slip priors 2 % / 6 %: not addressed (only "no locomotion failure"). Levelling/creep and belly height: not addressed. Note the mass (50 kg) is far above LunarLeaper's 15 kg class (kolvenbach2026ll), so speeds do not transfer directly. Earth gravity only.
 
 ## Grade
