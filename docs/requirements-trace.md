@@ -201,12 +201,17 @@ Each row has one layer. Values from different layers are not added.
 **Gravity station height, relative**
 
 - Layer: local (relative height between stations).
+- Growth type: grows with the distance walked.
+- Separation over which 0.38 m applies: it applies over the full profile across the anomaly, from stations off the tube to stations above it. The length is TBD. It depends on the tube depth and the tube width and on question 9.
 - Need: gravity error from height below 0.05 mGal [sourced: mittelholz2026ll, stated by the science side; statistic not stated].
+- The full 0.05 mGal is given to height. There is no split yet with density, terrain correction and instrument noise. This is the upper end.
 - Relation: net height sensitivity = free-air gradient minus the infinite flat slab term.
   - Free-air gradient: 0.187 mGal/m [sourced: mittelholz2026ll; agrees with 2g/R, derived in the note].
   - Slab term: 4.19e-5 mGal/m for each kg/m³ of density [derived: 2 pi G, G = 6.674e-11 m³/(kg s²)].
-- Regolith, 1300 kg/m³ [assumption, density source TBD]: net 0.133 mGal/m [derived: 0.187 - 0.0545]. Height need 0.38 m [derived: 0.05 / 0.133]. **This is the design value (strict end).**
-- Basalt, 3150 kg/m³ [assumption, density source TBD]: net 0.055 mGal/m [derived: 0.187 - 0.132]. Height need about 0.9 m [derived: 0.05 / 0.055]. This is the relaxed end. It is not a design value. Fractured basalt can have a lower density, and then the need is stricter.
+- Regolith, 1300 kg/m³ [source in draft PR #27, not reviewed yet]: net 0.133 mGal/m [derived: 0.187 - 0.0545]. Height need 0.38 m [derived: 0.05 / 0.133]. **This is the design value (strict end).**
+- Basalt, 3150 kg/m³ [source in draft PR #27, not reviewed yet]: net 0.055 mGal/m [derived: 0.187 - 0.132]. Height need about 0.9 m [derived: 0.05 / 0.055]. This is the relaxed end. It is not a design value. Fractured basalt can have a lower density, and then the need is stricter.
+- Statistic not stated, as for the 0.05 mGal. So 0.38 m and 0.9 m are not 1-sigma.
+- Timing: needed in post-processing. Real-time need: none known, TBD. Whether the brief's expectation of about 10 times better after post-processing applies here: TBD.
 - Rule from prof-payload: use regolith for height differences of a few metres or less. Use basalt for height differences of tens of metres.
 - Label: derived, infinite flat slab, no terrain correction, density layer TBD.
 - The old 0.25 m (free-air only) is removed.
@@ -215,17 +220,22 @@ Each row has one layer. Values from different layers are not added.
 **Terrain correction near the pit wall**
 
 - Layer: map-relative.
-- Growth type: fixed (the same for all stations near the rim). See decision 15, Simple standard interfaces for this iteration.
+- Growth type: shared between nearby stations, but it changes with the position relative to the rim, so it does not cancel between stations. The growth type is TBD until the steep-terrain source is in. See decision 15, Simple standard interfaces for this iteration.
 - Value: TBD.
 - The flat-terrain map errors in henriksen2016nac and urbancic2017a17 are context only. They are not values for this row.
 - Next step: ll-scout searches for sources on terrain model error on steep terrain at the Marius Hills pit.
 
 **Imaging attitude**
 
-- Layer: local.
+- Layer: local and map-relative, values TBD for each.
 - Value: TBD.
 - The angular resolution is a property of the camera. It is not a navigation need. Do not derive this row from 0.25 mrad.
 - The camera leads give 0.34 mrad per pixel [derived: 40 deg in rad / 2048 pixels; both inputs are leads from kolvenbach2026ll]. The difference between 0.25 mrad and 0.34 mrad per pixel goes to the science team (section 4.1, item 12).
+
+**Imaging camera position**
+
+- Layer: local and map-relative.
+- Value: TBD for each.
 
 ---
 
@@ -262,6 +272,8 @@ Each row has one layer. Values from different layers are not added.
     It is not a navigation requirement.
 12. Imager angle. Is 0.25 mrad or 0.34 mrad per pixel (40 deg over 2048
     pixels) correct? This is a camera property, not a navigation need.
+    The source gives "0.25 mrad for 5 cm at 100 m". But 0.25 mrad at 100 m
+    is 2.5 cm. So the source has a factor-of-2 inconsistency inside it.
 
 ### 4.2 Needed from ll-scout (source notes)
 
