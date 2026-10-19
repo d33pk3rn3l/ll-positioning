@@ -226,8 +226,12 @@ export function navigationUncertainty(scenario) {
   // Observability of datum transform
   const observability = datumObservability(scenario, nav);
 
-  // Frame fault
-  const frameFault_m = scenario.frameMistag ? PRESETS.control.me_pa_offset_m : 0;
+  // D-007: ME-to-PA is a known rotation (a transform), not noise.
+  // mePaOffset_m is the applied transform size. Its uncertainty is common to all
+  // points and is not sourced. Do not add either value to a 1-sigma.
+  const mePaOffset_m = scenario.frameMistag ? PRESETS.control.me_pa_offset_m : 0;
+  const mePaOffsetSigma_m = "TBD";
+  const frameFault_m = mePaOffset_m;
 
   // Mid / worst local
   const mid = stations[Math.floor(stations.length / 2)];
@@ -240,13 +244,15 @@ export function navigationUncertainty(scenario) {
     relative,
     observability,
     frameFault_m,
+    mePaOffset_m,
+    mePaOffsetSigma_m,
     mid,
     worstLocal,
     summary: {
       worstLocalHoriz_m: worstLocal.local.horiz,
       worstLocalVert_m: Math.max(...stations.map((s) => s.local.vert)),
       midMapHoriz_m: mid.map.horiz,
-      midCartHoriz_m: mid.cartographic.horiz + frameFault_m,
+      midCartHoriz_m: mid.cartographic.horiz,
       midCartVert_m: mid.cartographic.vert,
       relativePostHoriz_m: hypot(relative.post.along, relative.post.cross),
       relativePostVert_m: relative.post.vert,

@@ -102,10 +102,15 @@ describe("frame / correlation / observability", () => {
     assert.ok(r.layers.cartographic.horiz_m > r.layers.local.horiz_m);
   });
 
-  it("ME/PA mistag raises frame fault ~875 m", () => {
+  it("ME/PA mistag reports the 875 m offset as a bias", () => {
     const r = assess({ frameMistag: true });
-    assert.equal(r.nav.frameFault_m, PRESETS.control.me_pa_offset_m);
-    assert.ok(r.layers.cartographic.horiz_m >= PRESETS.control.me_pa_offset_m);
+    const offset = PRESETS.control.me_pa_offset_m;
+    assert.equal(r.nav.frameFault_m, offset);
+    assert.equal(r.nav.mePaOffset_m, offset);
+    assert.ok(r.nav.mePaOffsetSigma_m === null || r.nav.mePaOffsetSigma_m === "TBD");
+    assert.ok(r.layers.cartographic.horiz_m < offset);
+    assert.ok(r.layers.local.horiz_m < offset);
+    assert.ok(r.layers.map.horiz_m < offset);
   });
 
   it("smoothing/loop can improve local relative without external map tie", () => {
@@ -350,5 +355,83 @@ describe("ranked error units", () => {
     assert.equal(cart.value_m, r.nav.summary.midCartHoriz_m);
     assert.equal(local.label, "no imaging requirement yet (TBD)");
     assert.equal(cart.label, "no imaging requirement yet (TBD)");
+  });
+});
+
+/** Every local, map-relative, and cartographic 1-sigma on one assessment. */
+function oneSigmaValues(r) {
+  const s = r.nav.summary;
+  const values = [
+    r.layers.local.horiz_m,
+    r.layers.local.vert_m,
+    r.layers.map.horiz_m,
+    r.layers.map.vert_m,
+    r.layers.cartographic.horiz_m,
+    r.layers.cartographic.vert_m,
+    s.worstLocalHoriz_m,
+    s.worstLocalVert_m,
+    s.midMapHoriz_m,
+    s.midCartHoriz_m,
+    s.midCartVert_m,
+    s.relativePostHoriz_m,
+    s.relativePostVert_m,
+  ];
+  for (const st of r.nav.stations) {
+    values.push(
+      st.local.along,
+      st.local.cross,
+      st.local.vert,
+      st.local.horiz,
+      st.map.horiz,
+      st.map.vert,
+      st.cartographic.horiz,
+      st.cartographic.vert,
+    );
+  }
+  return values;
+}
+
+describe("ME/PA offset is a bias, not a 1-sigma (D-007)", () => {
+  it("no 1-sigma value contains the 875 m ME/PA offset", () => {
+    const offset = PRESETS.control.me_pa_offset_m;
+    assert.equal(offset, 875);
+    const on = assess({ frameMistag: true });
+    const off = assess({ frameMistag: false });
+    const onSigmas = oneSigmaValues(on);
+    const offSigmas = oneSigmaValues(off);
+    assert.equal(onSigmas.length, offSigmas.length);
+    for (let i = 0; i < onSigmas.length; i++) {
+      assert.ok(onSigmas[i] < offset, `1-sigma ${onSigmas[i]} contains the ${offset} m ME/PA offset`);
+      assert.equal(onSigmas[i], offSigmas[i]);
+    }
+  });
+
+  it("reports the ME/PA term as a separate bias; uncertainty is TBD", () => {
+    const r = assess({ frameMistag: true });
+    assert.equal(r.nav.mePaOffset_m, PRESETS.control.me_pa_offset_m);
+    assert.ok(
+      r.nav.mePaOffsetSigma_m === null || r.nav.mePaOffsetSigma_m === "TBD",
+      `mePaOffsetSigma_m must be null or "TBD", got ${r.nav.mePaOffsetSigma_m}`,
+    );
+    assert.equal(Number.isFinite(r.nav.mePaOffsetSigma_m), false);
+  });
+
+  it("changing the ME/PA offset does not change local or map-relative sigmas, nor gravity SNR", () => {
+    const saved = PRESETS.control.me_pa_offset_m;
+    try {
+      PRESETS.control.me_pa_offset_m = 875;
+      const a = assess({ frameMistag: true, instrument: "gravimeter" });
+      PRESETS.control.me_pa_offset_m = 100;
+      const b = assess({ frameMistag: true, instrument: "gravimeter" });
+      assert.equal(a.layers.local.horiz_m, b.layers.local.horiz_m);
+      assert.equal(a.layers.local.vert_m, b.layers.local.vert_m);
+      assert.equal(a.layers.map.horiz_m, b.layers.map.horiz_m);
+      assert.equal(a.layers.map.vert_m, b.layers.map.vert_m);
+      assert.equal(a.nav.summary.worstLocalHoriz_m, b.nav.summary.worstLocalHoriz_m);
+      assert.equal(a.nav.summary.midMapHoriz_m, b.nav.summary.midMapHoriz_m);
+      assert.equal(a.gravity.snr, b.gravity.snr);
+    } finally {
+      PRESETS.control.me_pa_offset_m = saved;
+    }
   });
 });

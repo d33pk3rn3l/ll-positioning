@@ -44,7 +44,7 @@ Over a few-hundred-metre traverse, GRAIL-scale lunar potential is a smooth ramp.
 
 Height convention: canonical **center-of-mass radius**; geometric `h = r − 1,737,400 m`. Do not mix with potential-referenced heights.
 
-Default cartographic realization: **DE440 dynamics with DE421-aligned ME**. ME↔PA mistag is modeled as a deterministic ~875 m fault, not random noise.
+Default cartographic realization: **DE440 dynamics with DE421-aligned ME**. The ME-to-PA offset is a known transform (a bias). It is not a 1-sigma. Its uncertainty is TBD.
 
 ## Platform model (quadruped)
 

@@ -159,10 +159,16 @@ function renderKpis(r) {
     <div class="value">${fmt(r.layers.local.horiz_m, 2)} m</div>
     <div class="sub">vert ${fmt(r.layers.local.vert_m, 2)} m · pair Δ ${fmt(r.nav.summary.relativePostHoriz_m, 2)} m</div>`;
 
+  const mePaBias_m = r.nav.mePaOffset_m;
+  const mePaSigma = r.nav.mePaOffsetSigma_m == null ? "TBD" : r.nav.mePaOffsetSigma_m;
   $("kpiMap").innerHTML = `
     <div class="label">Map / cartographic</div>
-    <div class="value ${r.nav.frameFault_m ? "bad" : ""}">${fmt(r.layers.map.horiz_m, 1)} / ${fmt(r.layers.cartographic.horiz_m, 1)} m</div>
-    <div class="sub">${r.nav.frameFault_m ? "ME↔PA fault included" : "map-relative · absolute"}</div>`;
+    <div class="value">${fmt(r.layers.map.horiz_m, 1)} / ${fmt(r.layers.cartographic.horiz_m, 1)} m</div>
+    <div class="sub">${
+      mePaBias_m
+        ? `ME/PA bias ${fmt(mePaBias_m, 0)} m · uncertainty ${mePaSigma}`
+        : "map-relative · absolute"
+    }</div>`;
 }
 
 function renderLayers(r) {
@@ -170,6 +176,11 @@ function renderLayers(r) {
     <tr><td>Local / relative</td><td class="num">${fmt(r.layers.local.horiz_m)} m H / ${fmt(r.layers.local.vert_m)} m V</td><td>${r.layers.local.drives}</td></tr>
     <tr><td>Map-relative</td><td class="num">${fmt(r.layers.map.horiz_m)} m</td><td>${r.layers.map.drives}</td></tr>
     <tr><td>Cartographic absolute</td><td class="num">${fmt(r.layers.cartographic.horiz_m)} m H / ${fmt(r.layers.cartographic.vert_m)} m V</td><td>${r.layers.cartographic.drives}</td></tr>
+    ${
+      r.nav.mePaOffset_m
+        ? `<tr><td>ME/PA offset (bias)</td><td class="num">not a 1σ</td><td>${fmt(r.nav.mePaOffset_m, 0)} m transform, common to all points. Uncertainty: ${r.nav.mePaOffsetSigma_m ?? "TBD"}.</td></tr>`
+        : ""
+    }
     <tr><td>Inertial / ephemeris</td><td class="num">${fmt(r.layers.inertial.azimuth_mrad, 2)} mrad az</td><td>${r.layers.inertial.drives}</td></tr>
     <tr><td>Observability</td><td class="num">${r.observability.fullPose ? "6-DoF" : "partial"}</td><td>${r.observability.notes}</td></tr>
   `;
@@ -284,7 +295,7 @@ function drawTraverse(r) {
   const series = [
     { key: (s) => s.local.horiz, color: "#e6b35a", label: "local" },
     { key: (s) => s.map.horiz, color: "#6ec6e8", label: "map" },
-    { key: (s) => s.cartographic.horiz + r.nav.frameFault_m, color: "#e88787", label: "cartographic" },
+    { key: (s) => s.cartographic.horiz, color: "#e88787", label: "cartographic" },
   ];
   for (const ser of series) {
     ctx.strokeStyle = ser.color;
