@@ -1,15 +1,17 @@
-# urbancic2017a17: Subsurface density structure of Taurus-Littrow Valley using Apollo 17 gravity data (Urbancic et al. 2017, JGR Planets 122)
+# Density below the surface of the Taurus-Littrow Valley from Apollo 17 gravity data (Urbancic et al. 2017, Journal of Geophysical Research: Planets 122)
+
+Citation key: `urbancic2017a17`. Original title: "Subsurface density structure of Taurus-Littrow Valley using Apollo 17 gravity data".
 
 ## Claim
-Re-analysis of the Apollo 17 Traverse Gravimeter Experiment (TGE) with an LROC NAC DTM and 3-D terrain corrections.
+A new analysis of the Apollo 17 Traverse Gravimeter Experiment (TGE). It uses a digital terrain model (DTM) from the Narrow Angle Camera (NAC) of the Lunar Reconnaissance Orbiter Camera (LROC), and 3-D terrain corrections.
 
 ## Numbers (with units and conditions)
 Format: value | product | frame realization | statistic type. "not stated" = the source does not say.
-Access note: Wiley full text blocked (Cloudflare challenge, fetch timeout). Numbers below come from the Wiley article page text returned by web search (methods paragraph and Table 1). Treat as verified text excerpts, full paper not read.
+Access note: the Wiley full text was blocked (Cloudflare challenge, fetch timeout). The numbers below come from the text of the Wiley article page that web search returned (methods paragraph and Table 1). Treat them as verified text excerpts. I did not read the full paper.
 - Station georeferencing: ±5 m, by aligning hand-drawn maps to NAC images (~0.5 m/pixel) -> error in gravity corrections and modelling < 0.25 mGal | NAC images | frame not stated | statistic not stated.
 - NAC DTM: 2 m horizontal resolution, 2.05 m vertical error | LROC NAC DTM (Oberst et al. 2010) | frame not stated | statistic not stated.
-- T73 elevations: 500 m horizontal resolution | Talwani 1973 | n/a.
-- TGE instrumental uncertainty ~1.8 mGal | T73 | statistic not stated here (Apollo 17 PSR describes 1.8 mGal as an rms value - search snippet only).
+- Elevations of Talwani 1973 (labelled T73 in this note): 500 m horizontal resolution | Talwani 1973 | not applicable.
+- TGE instrumental uncertainty ~1.8 mGal | T73 | statistic not stated here (the Apollo 17 Preliminary Science Report describes 1.8 mGal as a root mean square (rms) value - search snippet only).
 - Average total uncertainty ~2.5 mGal: from search synthesis only, not seen in source text. Not verified.
 - Station elevation differences up to 207 m (station 2 vs station 9) | NAC DTM | relative to station 9.
 - 0.035 mGal sensor value: NOT in this paper.
@@ -18,13 +20,13 @@ Access note: Wiley full text blocked (Cloudflare challenge, fetch timeout). Numb
 Elevations relative to station 9 (NAC DTM).
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Only lunar surface gravity traverse. Station placement error (±5 m) and DTM height error were handled at the <0.25 mGal level, about 5x worse than the 0.05 mGal LunarLeaper free-air target.
+The only lunar surface gravity traverse. Error of station placement (±5 m) and DTM height error were kept at the <0.25 mGal level. That is about 5x worse than the 0.05 mGal free-air target of LunarLeaper.
 
 ## Grade
-A (flight data, reprocessed).
+Flight data (grade A), processed again.
 
 ## URL or DOI
-https://doi.org/10.1002/2017JE005296 ; LPSC 2016 abstract 1790: https://ntrs.nasa.gov/citations/20160005861 (opened)
+https://doi.org/10.1002/2017JE005296 ; abstract 1790 of the Lunar and Planetary Science Conference (LPSC) 2016: https://ntrs.nasa.gov/citations/20160005861 (opened)
 
 ## Date opened
 2026-10-19
