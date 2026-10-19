@@ -83,7 +83,7 @@ export function formatCartographicSigmaText(horizontal_m, vertical_m = undefined
 }
 
 /**
- * Case A.
+ * Transform applied.
  * The rotation size is text.
  * The size is not an error.
  * The size is not a bias.
@@ -265,14 +265,14 @@ export function navigationUncertainty(scenario) {
   // Observability of datum transform
   const observability = datumObservability(scenario, nav);
 
-  // Case A. The mean Earth to principal axes transform is applied.
+  // Transform applied. The mean Earth to principal axes rotation is in use.
   // The rotation size is not an error.
   // The rotation size is not a bias.
   // Report the size as text only.
   // The budget field is meanEarthToPrincipalAxesSigma_m.
   // The value is null until a source exists.
   // The uncertainty is common to all points.
-  // Case B. The frame mistag is a fault.
+  // Frame mistag. The frame mistag is a fault.
   // A principal axes product is used as mean Earth, or the transform is skipped.
   // frameMistagFault_m is the fault size.
   // Keep the fault out of every 1-sigma.

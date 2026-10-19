@@ -464,8 +464,8 @@ function numericFieldProblems(value, path = "r", problems = []) {
   return problems;
 }
 
-describe("mean Earth to principal axes cases (prof-geodesy review)", () => {
-  it("case A: applied transform is text only; uncertainty is null and TBD", async () => {
+describe("transform applied and frame mistag (prof-geodesy review)", () => {
+  it("transform applied: the size is text only; uncertainty is null and TBD", async () => {
     const engine = await import("../src/assessment.mjs");
     assert.equal(typeof engine.formatMeanEarthToPrincipalAxesAppliedText, "function");
     assert.equal(engine.formatMeanEarthToPrincipalAxesAppliedText(PRESETS.control.me_pa_offset_m), APPLIED_TEXT);
@@ -484,7 +484,7 @@ describe("mean Earth to principal axes cases (prof-geodesy review)", () => {
     assert.equal(String(r.layers.cartographic.text ?? "").includes("875"), false);
   });
 
-  it("case B: frame mistag is a fault flag, not a bias and not a 1-sigma", () => {
+  it("frame mistag: the fault flag is not a bias and not a 1-sigma", () => {
     const r = assess({ frameMistag: true });
     const offset = PRESETS.control.me_pa_offset_m;
     assert.equal(r.nav.frameMistagFault, true);
