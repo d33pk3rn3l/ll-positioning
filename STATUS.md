@@ -53,7 +53,7 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 
 ## Source notes not yet reviewed
 
-These notes are in the repo. No value from them may go into any budget until the named professor has reviewed them.
+These notes are in the repo. Only the seven notes that prof-geodesy has not reviewed are not for budget use. No value from those seven notes may go into any budget until prof-geodesy has reviewed them.
 
 Not yet reviewed by prof-geodesy:
 
@@ -65,7 +65,7 @@ Not yet reviewed by prof-geodesy:
 - ashby2024clock
 - wagner2017anthro
 
-Not yet reviewed by prof-payload:
+Reviewed by prof-payload at 4d927dc: pass with review items, 6 minor items open, usable with care
 
 - li2020ce4lpr
 - mittelholz2026ll
@@ -74,12 +74,18 @@ Not yet reviewed by prof-payload:
 - urbancic2017a17
 - eisenman2001mercam
 
+Three of the open items change numbers.
+
+- The gravity station height target is 0.25 m. With the Bouguer correction it could relax to about 0.5 m. The density is not yet sourced.
+- The imager value is 0.25 mrad. The note mittelholz2026ll gives 5 cm.
+- The note urbancic2017a17 has an unverified line of 2.5 mGal.
+
 Pull request #18 is merged. The mean Earth to principal axes transform is applied. Its size is not a 1-sigma value. A frame mistag is a fault flag.
 
 Pull request #20 is merged. It is the platform motion audit.
 
 Issue #22 is open. It covers the format of source values and the continuous integration check. The owner is ll-engineer.
 
-The PI set the scope for this iteration on 2026-10-19. See decision D-015, Simple standard interfaces for this iteration. The robot interface, the science interface, and the tie-source interface are short input sheets. Each value has a 1-sigma value or a bound. Each value has a growth type. The growth type is fixed, grows with the distance walked, or is random at each point. Each value has a source label, or the value is TBD. This iteration has no foot-slip model. It has no leg model. It has no model of the inside of an instrument. Extend a sheet only when a verdict needs the extra detail.
+The PI set the scope for this iteration on 2026-10-19. See decision 15, Simple standard interfaces for this iteration. The robot interface, the science interface, and the tie-source interface are short input sheets. Each value has a 1-sigma value or a bound. Each value has a growth type. The growth type is fixed, grows with the distance walked, or is random at each point. Each value has a source label, or the value is TBD. This iteration has no foot-slip model. It has no leg model. It has no model of the inside of an instrument. Extend a sheet only when a verdict needs the extra detail.
 
-See also decision D-014, Uncertainty of the mean Earth to principal axes transform.
+See also decision 14, Uncertainty of the mean Earth to principal axes transform.
