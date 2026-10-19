@@ -5,7 +5,7 @@ Lunar Reconnaissance Orbiter Camera (LROC) catalog of lunar pits with coordinate
 
 ## Numbers (with units and conditions)
 Format: value | product | frame realization | statistic type. "not stated" = the source does not say.
-- MHP: "Latitude 14.0917°N", "Longitude 303.2299°E" | LROC pit catalog | frame NOT stated in the catalog (LROC products are Mean Earth/polar axis frame (ME) per lrolgcwg2008; inference, not a quote) | see next line.
+- MHP: "Latitude 14.0917°N", "Longitude 303.2299°E" | LROC pit catalog | frame: mean Earth, inferred (not sourced). The catalog does not state the frame. I infer the Mean Earth/polar axis frame (ME) because lrolgcwg2008 sets it for LROC products; this is not a quote | see next line.
 - Coordinate accuracy: "Coordinates are estimated from multiple NAC images, and are usually accurate to within 30 m (see Wagner et al. 2017 ...)"; "should be more accurate than the ~31 m uncertainty of an arbitrary NAC image" | catalog | bound (author statement).
 - Location reference: "NAC M155607349R line 32437, sample 723", given "to ensure unambiguous identification of each pit regardless of any future updates to the LROC ephemeris or changes to the lunar reference frame".
 - MHP size: inner pit "55 m × 49 m", funnel "92 m × 79 m", long-axis azimuth 65°, depth "40 m" ("Depth is determined from stereo modelling"); "Funnel is ~10 m deep"; overhang "Yes" | catalog.
@@ -16,7 +16,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 DTM tied to LOLA (per Henriksen 2016 method, cited on the page); datum not stated on the page.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Best primary MHP coordinates found: 14.0917° N, 303.2299° E, ~30 m bound, frame inferred ME. The DTM label (.PDS label file (LBL)) with the explicit frame and datum was not opened (Planetary Data System (PDS) node is a JavaScript app). Use the NAC image line/sample as the frame-independent anchor.
+Best primary MHP coordinates found: 14.0917° N, 303.2299° E, ~30 m bound, frame: mean Earth, inferred (not sourced). The DTM label (.PDS label file (LBL)) with the explicit frame and datum was not opened (Planetary Data System (PDS) node is a JavaScript app). Use the NAC image line/sample as the frame-independent anchor.
 
 ## Grade
 A (flight data, LROC NAC measurements).

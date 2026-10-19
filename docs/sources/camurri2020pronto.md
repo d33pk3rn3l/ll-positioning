@@ -12,7 +12,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 - ANYmal experiment 7: "commanded to trot at 0.3 m/s ... for a total of 240 m distance covered in 33 min"; industrial site 32.5 x 42.5 m; ground truth Leica TS16 "with millimeter accuracy" | field test | local | n/a.
 - Table 2 ANYmal: Relative pose error (RPE) 0.34 m with visual odometry (VO) and LiDAR (auto-tuned iterative closest point laser registration, AICP); 0.83 m without them (IMU + leg odometry only). "RPE, Relative Pose Error (translational part, evaluated over 10 m distance)" | field | local | RPE (statistic over segments not stated).
 - Text: "achieving an RPE of 34 cm over 10 m, which corresponds to 3.4 % error"; LiDAR "allowed the RPE to be reduced by 60 % from the baseline algorithm with IMU and Leg Odometry only" | field | local.
-- IMU + leg odometry only: 0.83 m per 10 m = 8.3 % [derived from Table 2].
+- IMU + leg odometry only: 0.83 m per 10 m = 8.3 % [derived from Table 2]. Label: total drift of the position estimate from inertial unit plus leg odometry, one 10 m run, not a foot-slip rate. Foot slip grows as a random walk, so this figure does not scale linearly with distance.
 - Vertical drift: "characteristic vertical drift caused by leg/ground compression while trotting" | qualitative.
 - After 240 m with VO+LiDAR: "the pose estimate is <30 cm away from the ground truth" | field | local | bound.
 - Atlas: "~1.67 % traveled distance in preliminary indoor tests" (Pronto without LiDAR) | lab | n/a | not stated.
@@ -23,7 +23,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Local frame of the test site.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Primary number for leg-odometry drift on an ANYmal: 8.3 % of distance [derived] for IMU + legs only, trotting at 0.3 m/s on an industrial site. Team slip prior 2 %: contradicted for proprioceptive-only ANYmal trotting (8.3 % observed); 6 %: of the same order but still lower than 8.3 %. The 1.67 % figure is for Atlas (a biped), not a quadruped. Note: the drift includes all error sources (not only foot slip), and it is a trot, not a static walk. Walk speed 0.15 m/s: not addressed (trot at 0.3 m/s). Belly height: only the qualitative vertical drift from leg compression. With VO + LiDAR, 3.4 %.
+Primary number for leg-odometry drift on an ANYmal: 8.3 % of distance [derived] (total drift of the position estimate from inertial unit plus leg odometry, one 10 m run, not a foot-slip rate) for IMU + legs only, trotting at 0.3 m/s on an industrial site. Team slip prior 2 %: contradicted for proprioceptive-only ANYmal trotting (8.3 % observed); 6 %: of the same order but still lower than 8.3 %. The 1.67 % figure is for Atlas (a biped), not a quadruped. Note: the drift includes all error sources (not only foot slip), and it is a trot, not a static walk. Walk speed 0.15 m/s: not addressed (trot at 0.3 m/s). Belly height: only the qualitative vertical drift from leg compression. With VO + LiDAR, 3.4 %. Foot slip grows as a random walk, so this figure does not scale linearly with distance.
 
 ## Grade
 B (field and lab experiments with ground truth).
