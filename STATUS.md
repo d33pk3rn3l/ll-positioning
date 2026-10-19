@@ -11,11 +11,11 @@ Kickoff. Benedikt said GO on 2026-10-19. Next gate: G1 (frame and requirements).
 
 | # | Item | Obj | Owner | State |
 |---|------|-----|-------|-------|
-| 1 | CHARTER, STATUS, DECISIONS drafted; charter approved by PI | all | ll-lead | Draft in PR |
-| 2 | Frame and state definition note (`docs/frames.md`) | O1 | ll-lead | Not started |
-| 3 | Trace table skeleton (`docs/requirements-trace.md`) with layer, time-scale and "needs ~10x?" columns | O3 | ll-lead | Not started |
+| 1 | CHARTER, STATUS, DECISIONS drafted; charter approved by PI | all | ll-lead | Merged 2026-10-19 (PR #3) |
+| 2 | Frame and state definition note (`docs/frames.md`) | O1 | ll-lead | PR #12 v0.2 under re-review |
+| 3 | Trace table skeleton (`docs/requirements-trace.md`) with layer, time-scale and "needs ~10x?" columns | O3 | ll-lead | PR #12 v0.2 under re-review |
 | 4 | First bibliography, 10-15 primary sources (`docs/sources/`, `refs.bib`) | O1, O2, O3, O4 | ll-scout | In progress |
-| 5 | Repo audit issues; fix 3 baseline bugs; label unsourced numbers in code | O5 | ll-engineer | In progress: #4 bugs; #5-#8 opened |
+| 5 | Repo audit issues; fix 3 baseline bugs; label unsourced numbers in code | O5 | ll-engineer | PRs #9, #11, #13 merged 2026-10-19. #14 and #5 can leave draft. Issue #16 open: conops motion/slip audit (ll-engineer, reviewer prof-geodesy) |
 
 Also running: cold read of brief and repo by prof-geodesy and prof-payload
 (top 5 concerns each).
@@ -37,12 +37,16 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 - prof-geodesy, cool-down stops: Cool-down stops are zero-velocity updates in the local layer. They are not O2 tie points (see D-009).
 - prof-geodesy, relative height: The relative height target (<0.25 m, source TBD) belongs in the local/relative layer. It is separate from cartographic accuracy (see D-009). This target is not checked yet. ll-scout must check it.
 - prof-payload, DEM/terrain: The trace table gets its own DEM/terrain-correction row (D-010). The baseline value, 218 of 223 µGal, is a proxy. It is DEM height error times height sensitivity. It is not a size estimate. A terrain-correction error comes from the DEM error over the area around the station. The value is TBD until ll-scout checks Noeker & Karatekin 2022.
-- Work in progress: PR #9 fixes bug 1 of issue #4 (stop-and-stare). prof-payload says pass with review items. One minor item remains: fix the label at `src/app.mjs:383` in the same PR. Issue #10 is open. It tracks B4 (D-008). ll-engineer accepts D-006 to D-009. Order of work: issue #4 bugs 2 and 3, then the D-006 comment, then #5, #10, #7, #6, #8.
-- Open for Benedikt: Approve the charter (PR #3). Approve D-011 (spectrometer scope). Confirm the platform (Q1). Set the gate dates (Q3).
+- Work in progress: PRs #9, #11 and #13 merged on 2026-10-19. PR #12 is at v0.2 and is under re-review. Issues #14 and #5 can leave draft. Issue #16 is open: conops motion and slip audit (ll-engineer, reviewer prof-geodesy).
+- Open: IMU or inclinometer bias spec is TBD. Tilt from bias on the Moon is about 6 times the tilt on Earth. A 0.2 mrad levelling residual [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad] needs a bias of 33 µg or better. The 33 µg bias is derived from that assumption. IMU north-finding is excluded on the Moon. The gyro bias would need to be below 0.0005 deg/h [derived].
+- Open for Benedikt: Approve D-011 (spectrometer scope). Set the gate dates (Q3). Charter text is on main (PR #3, merged 2026-10-19). Platform (Q1) is closed by D-012.
 
 ## Blockers / waiting on PI
 
-- Charter approval.
+- Charter text is on main (PR #3, merged 2026-10-19).
 - Brief text committed as docs/brief.md (done).
-- Platform confirmation (quadruped?).
+- Platform decided (D-012, approved by PI, 2026-10-19): walking quadruped similar to ANYmal, no jumping.
 - Professor confirmations on charter: prof-geodesy no objection, prof-payload no objection (2026-10-19, group chat).
+- Gate dates (Q3) still TBD.
+- D-011 spectrometer scope still proposed.
+- IMU or inclinometer bias spec TBD. The 33 µg bias is derived from the 0.2 mrad levelling residual assumption [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad]. IMU north-finding is excluded on the Moon (gyro bias would need to be below 0.0005 deg/h [derived]).
