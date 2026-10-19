@@ -7,6 +7,25 @@ STATUS.md and DECISIONS.md.
 
 Kickoff. Benedikt said GO on 2026-10-19. Next gate: G1 (frame and requirements). Date TBD.
 
+## Merged and open pull requests (update 2026-10-19)
+
+Merged:
+
+| Pull request | Merge commit | Content |
+|---|---|---|
+| #25 | `6ed74b8` | Status and review state |
+| #15 | `ea29616` | Source notes, batch 1 |
+| #23 | `dc22bbc` | Source values format version 2 and its check. Closes issues #22 and #24. |
+| #21 | `ac93f8f` | Source notes, batch 2, and `docs/sources/values.csv`. The table has 388 rows. The check gives 0 errors and 0 warnings. |
+| #28 | `be502b6` | Remove `uGal/sqrt(Hz)` from the averaging-time warning. This is item 3 of issue #26. |
+
+Open:
+
+| Item | State | Reviewer |
+|---|---|---|
+| Pull request #27, density source notes | Draft | prof-payload |
+| Issue #26 | Open for item 1 (checked transform direction) and item 2 (split of the other height references). Item 3 is done by pull request #28. | - |
+
 ## This week (week of 2026-10-19)
 
 | # | Item | Obj | Owner | State |
@@ -49,11 +68,15 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 - Professor confirmations on charter: prof-geodesy no objection, prof-payload no objection (2026-10-19, group chat).
 - Gate dates (Q3) still TBD.
 - D-011 spectrometer scope still proposed.
+- New questions for the PI or the science team (2026-10-19). The full text is in `docs/requirements-trace.md`, section 4.1, items 9 to 11:
+  - Gravity station spacing: about 1 m or 10 m.
+  - Gravity product: magnitude or vector. The words "gravity vector" do not answer this.
+  - How the science team gets the rock density near the pit.
 - IMU or inclinometer bias spec TBD. The 33 µg bias is derived from the 0.2 mrad levelling residual assumption [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad]. IMU north-finding is excluded on the Moon (gyro bias would need to be below 0.0005 deg/h [derived]).
 
 ## Source notes not yet reviewed
 
-These notes are in the repo. Only the seven notes that prof-geodesy has not reviewed are not for budget use. No value from those seven notes may go into any budget until prof-geodesy has reviewed them.
+These notes are in the repo on main. No value from these seven notes may go into any budget until prof-geodesy has reviewed them on main. Until then they are "not for budget use".
 
 Not yet reviewed by prof-geodesy:
 
@@ -65,7 +88,9 @@ Not yet reviewed by prof-geodesy:
 - ashby2024clock
 - wagner2017anthro
 
-Reviewed by prof-payload at 4d927dc: pass with review items, 6 minor items open, usable with care
+## Source notes reviewed
+
+Reviewed by prof-payload, pass:
 
 - li2020ce4lpr
 - mittelholz2026ll
@@ -74,17 +99,17 @@ Reviewed by prof-payload at 4d927dc: pass with review items, 6 minor items open,
 - urbancic2017a17
 - eisenman2001mercam
 
-Three of the open items change numbers.
+Changes to numbers from that review:
 
-- The gravity station height target is 0.25 m. With the Bouguer correction it could relax to about 0.5 m. The density is not yet sourced.
-- The imager value is 0.25 mrad. The note mittelholz2026ll gives 5 cm.
+- Gravity station height, relative: the old 0.25 m (free-air only) is removed. The new design value is 0.38 m [derived]. See the row "Gravity station height, relative" in `docs/requirements-trace.md`, section 3.7.
+- Imaging attitude: the value is TBD. It is not derived from 0.25 mrad. See section 3.7 of `docs/requirements-trace.md`.
 - The note urbancic2017a17 has an unverified line of 2.5 mGal.
 
 Pull request #18 is merged. The mean Earth to principal axes transform is applied. Its size is not a 1-sigma value. A frame mistag is a fault flag.
 
 Pull request #20 is merged. It is the platform motion audit.
 
-Issue #22 is open. It covers the format of source values and the continuous integration check. The owner is ll-engineer.
+Issue #22 is closed by pull request #23 (source values format version 2 and its check).
 
 The PI set the scope for this iteration on 2026-10-19. See decision 15, Simple standard interfaces for this iteration. The robot interface, the science interface, and the tie-source interface are short input sheets. Each value has a 1-sigma value or a bound. Each value has a growth type. The growth type is fixed, grows with the distance walked, or is random at each point. Each value has a source label, or the value is TBD. This iteration has no foot-slip model. It has no leg model. It has no model of the inside of an instrument. Extend a sheet only when a verdict needs the extra detail.
 
