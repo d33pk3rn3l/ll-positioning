@@ -178,20 +178,32 @@ function renderLayers(r) {
 function rankedMagnitude(term) {
   if (term.uGal != null) return term.uGal;
   if (term.ratio != null) return term.ratio;
-  return term.score;
+  return term.value_m;
+}
+
+function unitLabel(term) {
+  if (term.unit === "m/m") return "ratio to need";
+  return term.unit ?? "";
 }
 
 function renderBars(r) {
   const max = Math.max(...r.ranked.map(rankedMagnitude), 1e-9);
-  $("errorBars").innerHTML = r.ranked
+  const bars = r.ranked
     .slice(0, 8)
     .map((t) => {
       const value = rankedMagnitude(t);
       const pct = Math.min(100, (value / max) * 100);
-      const unit = t.unit ?? "";
-      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(value, 1)} ${unit}</div></div>`;
+      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(value, 1)} ${unitLabel(t)}</div></div>`;
     })
     .join("");
+  const context = (r.context ?? [])
+    .map((t) => {
+      return `<div class="bar-row"><div>${t.name}<div class="note">context only</div></div><div></div><div class="num">${fmt(t.value_m, 1)} ${unitLabel(t)}</div></div>`;
+    })
+    .join("");
+  const label = r.ranked.find((t) => t.label)?.label ?? "";
+  const note = label ? `<p class="note">${label}</p>` : "";
+  $("errorBars").innerHTML = bars + context + note;
 }
 
 function renderControls(r) {

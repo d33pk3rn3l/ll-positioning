@@ -180,7 +180,7 @@ td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
 .tag.neg { color: var(--violet); border-color: #4a4560; }
 
 .bars { display: flex; flex-direction: column; gap: 8px; }
-.bar-row { display: grid; grid-template-columns: 160px 1fr 64px; gap: 8px; align-items: center; font-size: 12px; }
+.bar-row { display: grid; grid-template-columns: 160px 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
 .bar-track {
   height: 8px;
   background: #182030;
@@ -192,7 +192,7 @@ td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
   background: linear-gradient(90deg, #3d7ea0, var(--cyan));
   border-radius: 99px;
 }
-.bar-row .num { font-family: var(--mono); color: var(--amber); text-align: right; }
+.bar-row .num { font-family: var(--mono); color: var(--amber); text-align: right; white-space: nowrap; }
 
 canvas.chart {
   width: 100%;

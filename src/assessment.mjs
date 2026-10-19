@@ -483,8 +483,11 @@ export function spectrometerAssessment(scenario, navResult) {
 
 /**
  * Ranked error contributions for the active instrument.
- * Every term has a unit. Terms in one list share that unit.
- * Gravity values stay in uGal. Other instruments use ratio or score.
+ * Every term in the list has a unit. Terms in one list share that unit.
+ * Gravity values stay in uGal.
+ * GPR terms and the spectrometer footprint term use ratio.
+ * The spectrometer map length is not in this list.
+ * Imaging terms use value_m.
  */
 export function rankErrors(instrument, gravity, gpr, spectro, navResult) {
   if (instrument === "gravimeter") return gravity.ranked;
@@ -492,13 +495,14 @@ export function rankErrors(instrument, gravity, gpr, spectro, navResult) {
     return [
       { id: "along", name: "Along-track relative pose", ratio: gpr.achievedAlong_m / gpr.alongNeed_m, unit: "m/m" },
       { id: "elev", name: "Elevation statics", ratio: gpr.achievedElev_m / gpr.elevNeed_m, unit: "m/m" },
+      // The 0.01 m denominator is unsourced.
+      // It equals the fixed-belly residual.
+      // The real value depends on the GPR frequency (TBD).
       { id: "belly", name: "Antenna height / gait", ratio: gpr.bellyResidual_m / 0.01, unit: "m/m" },
     ].sort((a, b) => b.ratio - a.ratio);
   }
   if (instrument === "spectrometer") {
     const allowed_m = Math.max(spectro.allowedGeo_m, 1e-9);
-    // Divide the map length by the allowed geolocation.
-    // The result uses the same unit as the footprint term.
     return [
       {
         id: "geo",
@@ -506,17 +510,41 @@ export function rankErrors(instrument, gravity, gpr, spectro, navResult) {
         ratio: spectro.geoSigma_m / allowed_m,
         unit: "m/m",
       },
-      {
-        id: "map",
-        name: "Map-relative (if used)",
-        ratio: navResult.summary.midMapHoriz_m / allowed_m,
-        unit: "m/m",
-      },
-    ].sort((a, b) => b.ratio - a.ratio);
+    ];
   }
+  const imagingLabel = "no imaging requirement yet (TBD)";
   return [
-    { id: "local", name: "Local horiz", score: navResult.summary.worstLocalHoriz_m, unit: "m" },
-    { id: "cart", name: "Cartographic horiz", score: navResult.summary.midCartHoriz_m, unit: "m" },
+    {
+      id: "local",
+      name: "Local horiz",
+      value_m: navResult.summary.worstLocalHoriz_m,
+      unit: "m",
+      label: imagingLabel,
+    },
+    {
+      id: "cart",
+      name: "Cartographic horiz",
+      value_m: navResult.summary.midCartHoriz_m,
+      unit: "m",
+      label: imagingLabel,
+    },
+  ];
+}
+
+/**
+ * Terms that give context and are not ranked.
+ * The spectrometer map length stays in metres.
+ * Scene-relative position drives the spectrometer. Map registration is not a footprint need.
+ */
+export function contextTerms(instrument, navResult) {
+  if (instrument !== "spectrometer") return [];
+  return [
+    {
+      id: "map",
+      name: "Map-relative (if used)",
+      value_m: navResult.summary.midMapHoriz_m,
+      unit: "m",
+    },
   ];
 }
 
@@ -565,6 +593,7 @@ export function assess(partial = {}) {
   const spectro = spectrometerAssessment(scenario, navResult);
   const resources = missionResources(scenario, survey, gpr);
   const ranked = rankErrors(scenario.instrument, gravity, gpr, spectro, navResult);
+  const context = contextTerms(scenario.instrument, navResult);
 
   const layers = {
     local: {
@@ -636,6 +665,7 @@ export function assess(partial = {}) {
     spectro,
     resources,
     ranked,
+    context,
     layers,
     science,
     controlSources: assessControlSources(),

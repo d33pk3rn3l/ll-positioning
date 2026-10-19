@@ -268,25 +268,38 @@ describe("ranked error units", () => {
     assert.ok(Math.abs(belly.ratio - r.gpr.bellyResidual_m / 0.01) < 1e-12);
   });
 
-  it("spectrometer terms are ratios to the allowed geolocation", () => {
+  it("spectrometer footprint ratio stays a ratio to the allowed geolocation", () => {
     const r = assess({ instrument: "spectrometer" });
     const allowed_m = Math.max(r.spectro.allowedGeo_m, 1e-9);
     const geo = r.ranked.find((t) => t.id === "geo");
-    const map = r.ranked.find((t) => t.id === "map");
+    assert.ok(geo);
     assert.ok(Math.abs(geo.ratio - r.spectro.geoSigma_m / allowed_m) < 1e-12);
-    assert.ok(Math.abs(map.ratio - r.nav.summary.midMapHoriz_m / allowed_m) < 1e-12);
-    assert.notEqual(map.ratio, r.nav.summary.midMapHoriz_m);
   });
 
-  it("imaging terms keep metre values and do not use uGal", () => {
+  it("spectrometer map term is in metres and is not compared to allowedGeo_m", () => {
+    const r = assess({ instrument: "spectrometer" });
+    const map = r.context.find((t) => t.id === "map");
+    const allowed_m = r.spectro.allowedGeo_m;
+    assert.ok(map);
+    assert.equal(map.unit, "m");
+    assert.equal(map.value_m, r.nav.summary.midMapHoriz_m);
+    assert.equal(Object.hasOwn(map, "ratio"), false);
+    assert.equal(r.ranked.some((t) => t.id === "map"), false);
+    assert.ok(Math.abs(map.value_m - r.nav.summary.midMapHoriz_m / allowed_m) > 1);
+  });
+
+  it("imaging terms use value_m and state that the requirement is TBD", () => {
     const r = assess({ instrument: "imaging" });
     const local = r.ranked.find((t) => t.id === "local");
     const cart = r.ranked.find((t) => t.id === "cart");
     assert.equal(local.unit, "m");
     assert.equal(cart.unit, "m");
     assert.equal(Object.hasOwn(local, "uGal"), false);
-    assert.equal(Object.hasOwn(cart, "uGal"), false);
-    assert.equal(local.score, r.nav.summary.worstLocalHoriz_m);
-    assert.equal(cart.score, r.nav.summary.midCartHoriz_m);
+    assert.equal(Object.hasOwn(local, "score"), false);
+    assert.equal(Object.hasOwn(cart, "score"), false);
+    assert.equal(local.value_m, r.nav.summary.worstLocalHoriz_m);
+    assert.equal(cart.value_m, r.nav.summary.midCartHoriz_m);
+    assert.equal(local.label, "no imaging requirement yet (TBD)");
+    assert.equal(cart.label, "no imaging requirement yet (TBD)");
   });
 });
