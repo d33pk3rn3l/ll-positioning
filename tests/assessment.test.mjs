@@ -19,6 +19,7 @@ import {
   datumObservability,
   navigationUncertainty,
   gravitySurvey,
+  spectrometerAssessment,
   assess,
   DEFAULT_SCENARIO,
   PRESETS,
@@ -141,6 +142,36 @@ describe("frame / correlation / observability", () => {
     assert.equal(obs.yaw, true);
     assert.equal(obs.fullPose, true);
   });
+
+  it("a scenario with no point tie gives translation false", () => {
+    const obs = datumObservability(
+      { ...DEFAULT_SCENARIO, hasPoint: false, celestialAzimuth_mrad: 0.2 },
+      { celestialAzimuth: true },
+    );
+    assert.equal(obs.translation, false);
+    assert.equal(obs.rollPitch, true);
+    assert.equal(obs.yaw, true);
+    assert.equal(obs.fullPose, false);
+  });
+
+  it("a ConOps with no point tie gives translation false", () => {
+    const obs = datumObservability(
+      { ...DEFAULT_SCENARIO, celestialAzimuth_mrad: 0.2 },
+      { celestialAzimuth: true, hasPoint: false },
+    );
+    assert.equal(obs.translation, false);
+    assert.equal(obs.fullPose, false);
+  });
+
+  it("a scenario with no gravity attitude gives roll and pitch false", () => {
+    const obs = datumObservability(
+      { ...DEFAULT_SCENARIO, hasGravityAttitude: false, celestialAzimuth_mrad: 0.2 },
+      { celestialAzimuth: true },
+    );
+    assert.equal(obs.rollPitch, false);
+    assert.equal(obs.translation, true);
+    assert.equal(obs.fullPose, false);
+  });
 });
 
 describe("gravity survey trades", () => {
@@ -204,6 +235,24 @@ describe("control sources", () => {
     const tracks = r.controlSources.find((c) => c.id === "rover_tracks");
     assert.equal(tracks.usable, false);
     assert.equal(tracks.assessment, "negative");
+  });
+});
+
+describe("spectrometer stop-and-stare", () => {
+  const nav = { summary: { relativePostHoriz_m: 0.2 } };
+
+  function stopAndStare(surveyConops) {
+    return spectrometerAssessment(
+      { ...DEFAULT_SCENARIO, surveyConops },
+      nav,
+    ).stopAndStare;
+  }
+
+  it("is true only for spectro_stare", () => {
+    for (const id of ["gravity_network", "gpr_2d", "gpr_3d", "imaging_walk"]) {
+      assert.equal(stopAndStare(id), false, id);
+    }
+    assert.equal(stopAndStare("spectro_stare"), true);
   });
 });
 

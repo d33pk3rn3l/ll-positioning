@@ -510,4 +510,7 @@ export const DEFAULT_SCENARIO = {
   activeLeveling: true,
   lockedStance: true,
   frameMistag: false,
+  // Default is true. The lander point and the gravity attitude are present.
+  hasPoint: true,
+  hasGravityAttitude: true,
 };

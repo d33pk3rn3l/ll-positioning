@@ -256,11 +256,14 @@ export function navigationUncertainty(scenario) {
 
 /**
  * Datum / transform observability.
- * Gravity pins roll & pitch; celestial azimuth pins yaw; one lander point pins translation.
+ * Gravity pins roll and pitch. Celestial azimuth pins yaw. One lander point pins translation.
+ * hasPoint and hasGravityAttitude come from the scenario or the ConOps.
+ * An omitted flag stays true.
  */
 export function datumObservability(scenario, nav = NAV_CONOPS[scenario.navConops]) {
-  const hasPoint = true; // lander always
-  const hasGravityAttitude = true;
+  const hasPoint = scenario.hasPoint !== false && (!nav || nav.hasPoint !== false);
+  const hasGravityAttitude =
+    scenario.hasGravityAttitude !== false && (!nav || nav.hasGravityAttitude !== false);
   const hasAzimuth = !!(nav && nav.celestialAzimuth !== false) && scenario.celestialAzimuth_mrad < 100;
   const translation = hasPoint;
   const rollPitch = hasGravityAttitude;
@@ -467,7 +470,7 @@ export function spectrometerAssessment(scenario, navResult) {
   const geo = navResult.summary.relativePostHoriz_m;
   const eff = effectiveFootprint_m(foot, geo);
   const allowed = allowedGeolocation_m(foot, 0.1);
-  const stare = scenario.surveyConops === "spectro_stare" || true; // default stop-and-stare
+  const stare = scenario.surveyConops === "spectro_stare";
   const broadeningOk = geo <= allowed;
   return {
     footSigma_m: foot,
