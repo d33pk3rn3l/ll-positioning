@@ -59,7 +59,15 @@
       "required": true,
       "numeric": false,
       "vocabulary": "frame_status",
-      "ruleText": "When the source gives no frame and the author names one, the row uses that frame and frame_status inferred."
+      "ruleText": "When the source gives no frame and the author names one, the row uses that frame and frame_status inferred.",
+      "pairing": {
+        "frameColumn": "frame",
+        "unnamedFrames": ["not_stated", "not_applicable"],
+        "statusForUnnamedFrame": "not_applicable",
+        "statusesForNamedFrame": ["sourced", "inferred"],
+        "unnamedFrameMessage": "When the frame is not stated or not applicable, the frame status must be not applicable.",
+        "namedFrameMessage": "A named frame must have frame status sourced or inferred."
+      }
     },
     {
       "name": "height_reference",

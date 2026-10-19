@@ -416,6 +416,75 @@ function checkEmptyCellWarnings(dataRecords, headerNames, formatRules) {
   return warnings;
 }
 
+function vocabularyForColumn(formatRules, columnName) {
+  const column = formatRules.columns.find((item) => item.name === columnName);
+  if (!column || typeof column.vocabulary !== "string") {
+    return undefined;
+  }
+  const values = formatRules.vocabularies[column.vocabulary];
+  return Array.isArray(values) ? values : undefined;
+}
+
+/**
+ * Check that the frame status matches the frame.
+ * An unnamed frame uses one status.
+ * A named frame uses one of the named statuses.
+ * The names live in the column rule.
+ */
+function checkFramePairings(dataRecords, headerNames, formatRules) {
+  const errors = [];
+  const indexByName = indexByColumnName(headerNames);
+
+  for (const column of formatRules.columns) {
+    const pairing = column.pairing;
+    if (!pairing || typeof pairing !== "object") {
+      continue;
+    }
+    const statusIndex = indexByName.get(column.name);
+    const frameIndex = indexByName.get(pairing.frameColumn);
+    const unnamedFrames = Array.isArray(pairing.unnamedFrames) ? pairing.unnamedFrames : [];
+    const namedStatuses = Array.isArray(pairing.statusesForNamedFrame) ? pairing.statusesForNamedFrame : [];
+    const statusForUnnamed = typeof pairing.statusForUnnamedFrame === "string"
+      ? pairing.statusForUnnamedFrame
+      : "";
+    const unnamedMessage = typeof pairing.unnamedFrameMessage === "string" ? pairing.unnamedFrameMessage : "";
+    const namedMessage = typeof pairing.namedFrameMessage === "string" ? pairing.namedFrameMessage : "";
+    const frameValues = vocabularyForColumn(formatRules, pairing.frameColumn);
+    if (
+      statusIndex === undefined
+      || frameIndex === undefined
+      || frameValues === undefined
+      || statusForUnnamed === ""
+      || unnamedMessage === ""
+      || namedMessage === ""
+    ) {
+      continue;
+    }
+
+    for (const record of dataRecords) {
+      if (record.cells.length !== headerNames.length) {
+        continue;
+      }
+      const frameCell = record.cells[frameIndex];
+      const statusCell = record.cells[statusIndex];
+      if (!frameValues.includes(frameCell)) {
+        continue;
+      }
+      if (unnamedFrames.includes(frameCell)) {
+        if (statusCell !== statusForUnnamed) {
+          errors.push(makeFinding(record.lineNumber, column.name, statusCell, unnamedMessage));
+        }
+        continue;
+      }
+      if (!namedStatuses.includes(statusCell)) {
+        errors.push(makeFinding(record.lineNumber, column.name, statusCell, namedMessage));
+      }
+    }
+  }
+
+  return errors;
+}
+
 function checkResult(errors, warnings = []) {
   return { errors, warnings };
 }
@@ -452,9 +521,11 @@ export function validateValuesText(tableText, formatRules) {
   }
 
   const dataRecords = parsed.records.slice(1);
+  const headerNames = headerRecord.cells;
   return checkResult(
-    checkDataRecords(dataRecords, headerRecord.cells, formatRules),
-    checkEmptyCellWarnings(dataRecords, headerRecord.cells, formatRules),
+    checkDataRecords(dataRecords, headerNames, formatRules)
+      .concat(checkFramePairings(dataRecords, headerNames, formatRules)),
+    checkEmptyCellWarnings(dataRecords, headerNames, formatRules),
   );
 }
 

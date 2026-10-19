@@ -467,6 +467,52 @@ describe("values table check", () => {
     assert.deepEqual(model.warnings, []);
   });
 
+  it("rejects a frame status on a frame that is not stated", () => {
+    const frameStatus = formatRules.columns.find((column) => column.name === "frame_status");
+    assert.deepEqual(frameStatus.pairing.unnamedFrames, ["not_stated", "not_applicable"]);
+    assert.equal(frameStatus.pairing.statusForUnnamedFrame, "not_applicable");
+
+    const tableText = readFixture("frame-not-stated-with-status.csv");
+    const result = validateValuesText(tableText, formatRules);
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.errors.length, 1);
+    assertFinding(result.errors[0], {
+      rowNumber: 2,
+      columnName: "frame_status",
+      cellValue: "sourced",
+      reason: "the frame status must be not applicable",
+    });
+
+    const otherUnnamed = validateValuesText(tableText.replace("not_stated", "not_applicable"), formatRules);
+    assert.deepEqual(otherUnnamed.warnings, []);
+    assert.equal(otherUnnamed.errors.length, 1);
+    assert.equal(otherUnnamed.errors[0].columnName, "frame_status");
+
+    const matched = validateValuesText(tableText.replace("sourced", "not_applicable"), formatRules);
+    assert.deepEqual(matched.errors, []);
+    assert.deepEqual(matched.warnings, []);
+  });
+
+  it("rejects a named frame whose frame status is not applicable", () => {
+    const frameStatus = formatRules.columns.find((column) => column.name === "frame_status");
+    assert.deepEqual(frameStatus.pairing.statusesForNamedFrame, ["sourced", "inferred"]);
+
+    const tableText = readFixture("named-frame-without-status.csv");
+    const result = validateValuesText(tableText, formatRules);
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.errors.length, 1);
+    assertFinding(result.errors[0], {
+      rowNumber: 2,
+      columnName: "frame_status",
+      cellValue: "not_applicable",
+      reason: "sourced or inferred",
+    });
+
+    const sourced = validateValuesText(tableText.replace("not_applicable", "sourced"), formatRules);
+    assert.deepEqual(sourced.errors, []);
+    assert.deepEqual(sourced.warnings, []);
+  });
+
   it("checks a table from any path", () => {
     const validResult = validateValuesFile(fixturePath("valid-values.csv"));
     assert.deepEqual(validResult.errors, []);
