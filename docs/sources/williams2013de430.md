@@ -27,7 +27,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Cartesian XYZ and radius R from the centre of mass, in metres. The memo uses mean radius 1737.151 km to convert arc to distance.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Primary source for the size of the ME/PA offset. It is also the source for the uncertainty of the DE430 rotation (about 2 m). Use for DE440 PA to DE421-aligned ME carries the label above. For LunarLeaper the ME/PA rotation is known much better than any tie to an orbital map (10 m class). Thus the risk is a wrong frame tag (~875 m), not the rotation error.
+Primary source for the size of the ME/PA offset. It is also the source for the uncertainty of the DE430 rotation (1.7 m). Use for DE440 PA to DE421-aligned ME carries the label above. For LunarLeaper the ME/PA rotation is known much better than any tie to an orbital map (10 m class). Thus the risk is a wrong frame tag (~875 m), not the rotation error.
 
 ## Grade
 Flight data (grade A). Reason: fit to 18,548 LLR ranges, 1970-2012.
