@@ -10,7 +10,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 - Mass: "a payload-equipped 15 kg-class legged robot" (abstract) | design class.
 - Legs: "The selection of either mammal-type or spider-type leg configuration ... remains under evaluation." Number of legs: not stated in the text I read. The word 'quadruped' appears only in the titles of cited references.
 - GPR: "continuous GPR measurements at intervals of approximately 0.1 m"; antenna tip-to-tip 1.0 m; antenna height < quarter wavelength | plan. Centre frequency: not stated in the text I read.
-- Gravity: "gravity vector measurements at approximately one-meter intervals" | plan.
+- Gravity: "gravity vector measurements at approximately one-meter intervals" (p. 6; line 366 of my text extraction of the author postprint) | plan. Gravity product: the words are "gravity vector measurements". Note: measuring a vector does not mean the science uses the direction. The paper does not say whether the direction is used.
 - Data: <10 kB per GPR observation, ~20 kB per gravity observation; <1 GB per ~1 km.
 - Navigation: "follows globally defined paths by localizing in the global reference frame and using a local navigation planner" | no accuracy stated.
 - Cost estimate 40 million euro (MEUR) + 25 % contingency.
@@ -20,7 +20,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not stated.
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-Baseline for the platform class and the payload spacing. Its 1 m gravity spacing conflicts with Mittelholz 2026 (`mittelholz2026ll`: 10 m, and 5 m on the rille). The '~30 kg' claim from the candidate list does not agree with this paper (15 kg class). The paper gives no navigation accuracy.
+Baseline for the platform class and the payload spacing. Open question for the science team: station spacing 1 m or 10 m. This paper (p. 6): "gravity vector measurements at approximately one-meter intervals". Mittelholz 2026 (`mittelholz2026ll`, p. 30): "A gravimeter will obtain measurements every 10 m" (and "every 5 meters for 50 meters" on the rille). The '~30 kg' claim from the candidate list does not agree with this paper (15 kg class). The paper gives no navigation accuracy.
 
 ## Grade
 Model (grade C). Reason: mission design study.

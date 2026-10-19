@@ -15,6 +15,8 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 - Loss tangent (5 ± 2) x 10^-3 | uncertainty type not stated.
 - Lander 45.4446°S, 177.5991°E | frame not stated.
 - How each trace was positioned (and its accuracy): not stated. Trace spacing is inferred from mean rover speed.
+- Derived (Chang'E-4 site, not Marius Hills): relative permittivity of the ground from the wave speed: (speed of light / wave speed)^2 = (0.2998 m/ns / 0.16 m/ns)^2 = 1.874^2 = 3.51 (about 3.5). Not in source.
+- Derived (Chang'E-4 site, not Marius Hills): wavelength in the ground at 100 MHz = wave speed / frequency = 0.16 m/ns / 0.1 per ns = 1.6 m; a quarter of it is 0.4 m. Not in source.
 
 ## Height reference
 Depth from two-way time; no geodetic height reference.

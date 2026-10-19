@@ -3,7 +3,7 @@
 Citation key: `mittelholz2026ll`. Original title: "Lava Tube Exploration with LunarLeaper".
 
 ## Claim
-Concept chapter. LunarLeaper goes to the Marius Hills Pit and the rille next to it. Payload: a gravimeter with GRASS heritage (full name: TBD - check), a ground-penetrating radar (GPR) based on RIMFAX (full name: TBD - check), an imager, a spectrometer and leg experiments.
+Concept chapter. LunarLeaper goes to the Marius Hills Pit and the rille next to it. Payload: a gravimeter with heritage from the GRAvimeter for small Solar System bodies (GRASS) (full name as given in `ritter2019grass`), a ground-penetrating radar (GPR) based on the Radar Imager for Mars' Subsurface Experiment (RIMFAX) (full name as given in the source, p. 18), an imager, a spectrometer and leg experiments.
 
 ## Numbers (with units and conditions)
 Format: value | product | frame realization | statistic type. "not stated" = the source does not say.
@@ -20,6 +20,9 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 - GPR antenna 'significant gain around ~100 MHz'; RIMFAX itself 150-1200 MHz; forward model Ricker 100 MHz (also tried 250 MHz) | plan/model.
 - Anomaly examples: tube 500 m wide, 20 m high, 50 m deep, Δρ = -1500 kg/m³ -> ~1 mGal; 50 m wide tube -> 0.4 mGal | forward model.
 - Imager: 0.25 mrad angular resolution for 5 cm at 100 m | requirement.
+- Imager, source wording (p. 21): "To resolve structures of ∼5 cm in size across the pit from a distance of 100 meters, an angular resolution of 0.25 mrad is needed." Derived: 0.25 mrad x 100 m = 2.5 cm, so 5 cm is 2 x 2.5 cm. This agrees with two pixels across a 5 cm structure, but the source does not say "pixel" or "two pixels". The source is unclear on this point. Derived (inputs from the same paragraph, "2048x2048 pixels and 40◦ horizontal Field of View"): 40 deg / 2048 pixels = 0.341 mrad per pixel, which is 3.4 cm per pixel at 100 m. This is coarser than 0.25 mrad; the source does not discuss this.
+- Derived: net height sensitivity of gravity after free-air and Bouguer corrections = free-air gradient - 2 pi G rho. Inputs: lunar free-air gradient 2g/R with g = 1.6242 m/s^2 (`konopliv2013gl0660b`, derived) and R = 1737.4 km: 2 x 1.6242 / 1 737 400 m = 1.8697e-6 s^-2 = 0.18697 mGal/m. This agrees with the 0.187 mGal/m that the note uses; I compute with 0.187 mGal/m. G = 6.674e-11 m^3 kg^-1 s^-2; rho = 2000 kg/m^3 (assumption from prof-payload review; density TBD, no source yet). 2 pi G rho = 2 x 3.14159 x 6.674e-11 x 2000 = 8.387e-7 s^-2 = 0.0839 mGal/m. Net = 0.187 - 0.0839 = 0.103 mGal/m (about 0.10 mGal/m). Height for 0.05 mGal: 0.05 / 0.103 = 0.485 m (about 0.5 m). Not in source.
+- Derived: the source's forward model (p. 13) says a 50 m wide tube "might generate a maximum signal amplitude of 4 · 10−1 mGal" (0.4 mGal; see the anomaly line above). 0.05 mGal / 0.4 mGal = 0.125, so 0.05 mGal is about one eighth of the smallest anomaly in the paper. Not in source.
 
 ## Height reference
 Not stated for the 0.25 m target. The text speaks of 'relative elevation changes' corrected by free-air and Bouguer corrections.
