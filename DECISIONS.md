@@ -17,11 +17,12 @@ Newest at the bottom. Do not edit an approved entry; supersede it.
 | D-009 | 2026-10-19 | Cool-down stops are zero-velocity updates in the local layer (O1, O5), not O2 tie points. The <0.25 m free-air target is treated as relative station-to-station height until Mittelholz 2026 is checked; if absolute, it is a major item. Time scale named in docs/frames.md; millisecond sync is the working assumption unless a payload needs better. | prof-geodesy reading-list notes. | proposed | ll-lead |
 | D-010 | 2026-10-19 | Trace table gets a separate row for DEM/terrain registration in the map-relative layer (gravity terrain correction). | prof-payload; baseline DEM term is 218 of 223 µGal. | proposed | ll-lead |
 | D-011 | 2026-10-19 | The spectrometer is out of scope for O3. The brief names only the gravimeter, GPR and imaging. The spectrometer can appear in the trace table as an extra, with no navigation requirements derived from it. | Raised by prof-payload in the PR #9 review. | proposed (waiting for Benedikt) | ll-lead |
+| D-012 | 2026-10-19 | Platform is a walking quadruped similar to ANYmal, no jumping. Speed, body motion, standing stability and IMU specs are TBD until ll-scout finds ANYmal sources. Kolvenbach 2026 does not give them. | Decided by PI (k3rn3l), 2026-10-19. | approved (PI) | k3rn3l |
+| D-013 | 2026-10-19 | Merge delegation. A PR is ready when the right professor gives pass or pass with review items, no major item is open, and CI is green. The author never merges their own PR. ll-lead merges code PRs. ll-engineer merges ll-lead docs PRs after both professors have no objection. ll-lead may accept a proposed decision after both professors agree, unless it changes scope, and logs it. Escalate to the PI for a gate go or no-go, a scope change, a requirement with no science basis, a disagreement between a professor and ll-lead, or a sign-in or approval. Gate go/no-go (G1-G3) stays with the PI; only merges and acceptance of non-scope decisions are delegated (PI confirmed 2026-10-19). | Decided by PI, 2026-10-19. | approved (PI) | PI |
 
 ## Baseline assertions pending review (not decisions)
 
 These appear in the old repo. They have no status until reviewed:
-- Platform is a quadruped.
 - Default frame DE440 with DE421-aligned ME.
 - Heights as center-of-mass radius, h = r - 1,737,400 m.
 - Rover tracks rejected as a geodetic source.
