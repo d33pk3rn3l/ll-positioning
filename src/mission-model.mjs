@@ -10,6 +10,7 @@ export const G_MOON = 1.62468; // m/s^2 surface gravity (approx)
 export const FREE_AIR = (2 * G_MOON) / R_MOON * 1e8; // µGal/m ≈ 187.05
 export const SLAB_COEFF = (2 * Math.PI * G) * 1e8; // µGal/m per (kg/m³) ≈ 0.041936
 
+/** Q1-Q5 are baseline text. The official objectives O1-O5 are in docs/brief.md. */
 export const PDF_QUESTIONS = [
   {
     id: "Q1",
