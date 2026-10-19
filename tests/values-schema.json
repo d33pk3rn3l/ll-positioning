@@ -31,13 +31,15 @@
       "name": "statistic",
       "required": true,
       "numeric": false,
-      "vocabulary": "statistic"
+      "vocabulary": "statistic",
+      "ruleText": "Store the statistic as the source gives it. Do not convert the statistic in the file."
     },
     {
       "name": "unit",
       "required": true,
       "numeric": false,
-      "vocabulary": "unit"
+      "vocabulary": "unit",
+      "ruleText": "A pure unit conversion is allowed. Keep the source wording and the source unit in conditions."
     },
     {
       "name": "value_type",
@@ -49,7 +51,8 @@
       "name": "frame",
       "required": true,
       "numeric": false,
-      "vocabulary": "frame"
+      "vocabulary": "frame",
+      "ruleText": "A row with frame iau_moon_approximate_mean_earth is context only. It is never a map tie. A later INPOP version has its own frame name and its version number. For a transform, this cell is the from frame. The conditions cell names the to frame, the rotation direction, and the axis order."
     },
     {
       "name": "frame_status",
@@ -108,9 +111,9 @@
       "mean",
       "median",
       "percentile_95",
-      "peak_to_peak",
-      "linear_error_90",
-      "circular_error_90"
+      "linear_error_90_percent",
+      "circular_error_90_percent",
+      "peak_to_peak"
     ],
     "value_type": [
       "measured",
@@ -181,8 +184,7 @@
       "dimensionless",
       "deg/day",
       "mGal/m",
-      "Hz",
-      "kg"
+      "s/day"
     ]
   }
 }

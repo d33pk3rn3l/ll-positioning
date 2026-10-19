@@ -170,9 +170,9 @@ describe("format rules file", () => {
         "mean",
         "median",
         "percentile_95",
+        "linear_error_90_percent",
+        "circular_error_90_percent",
         "peak_to_peak",
-        "linear_error_90",
-        "circular_error_90",
       ],
       value_type: ["measured", "requirement", "model", "derived", "specification"],
       frame: [
@@ -218,12 +218,12 @@ describe("format rules file", () => {
         "dimensionless",
         "deg/day",
         "mGal/m",
-        "Hz",
-        "kg",
+        "s/day",
       ],
     });
-    assert.equal(formatRules.vocabularies.unit.includes("cm"), false);
-    assert.equal(formatRules.vocabularies.unit.includes("mm"), false);
+    for (const unitName of ["cm", "mm", "rad", "deg/century", "Hz", "kg"]) {
+      assert.equal(formatRules.vocabularies.unit.includes(unitName), false);
+    }
   });
 
   it("marks the numeric columns and the required columns", () => {
@@ -251,6 +251,21 @@ describe("format rules file", () => {
       "When the source gives no frame and the author names one, the row uses that frame and frame_status inferred.",
     );
     assert.ok(formatRules.vocabularies.frame.includes("principal_axes_unknown_realization"));
+    const statistic = formatRules.columns.find((column) => column.name === "statistic");
+    assert.equal(
+      statistic.ruleText,
+      "Store the statistic as the source gives it. Do not convert the statistic in the file.",
+    );
+    const unit = formatRules.columns.find((column) => column.name === "unit");
+    assert.equal(
+      unit.ruleText,
+      "A pure unit conversion is allowed. Keep the source wording and the source unit in conditions.",
+    );
+    const frame = formatRules.columns.find((column) => column.name === "frame");
+    assert.equal(
+      frame.ruleText,
+      "A row with frame iau_moon_approximate_mean_earth is context only. It is never a map tie. A later INPOP version has its own frame name and its version number. For a transform, this cell is the from frame. The conditions cell names the to frame, the rotation direction, and the axis order.",
+    );
   });
 });
 
@@ -259,7 +274,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 18);
+    assert.equal(parsed.records.length, 17);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -289,16 +304,14 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[9], headerNames, "statistic"), "median");
     assert.equal(cellByName(parsed.records[10], headerNames, "statistic"), "percentile_95");
     assert.equal(cellByName(parsed.records[11], headerNames, "statistic"), "peak_to_peak");
-    assert.equal(cellByName(parsed.records[12], headerNames, "statistic"), "linear_error_90");
-    assert.equal(cellByName(parsed.records[13], headerNames, "statistic"), "circular_error_90");
-    assert.equal(cellByName(parsed.records[14], headerNames, "unit"), "Hz");
+    assert.equal(cellByName(parsed.records[12], headerNames, "statistic"), "linear_error_90_percent");
+    assert.equal(cellByName(parsed.records[13], headerNames, "statistic"), "circular_error_90_percent");
+    assert.equal(cellByName(parsed.records[14], headerNames, "unit"), "s/day");
     assert.equal(cellByName(parsed.records[14], headerNames, "statistic"), "range_minimum");
-    assert.equal(cellByName(parsed.records[15], headerNames, "unit"), "kg");
-    assert.equal(cellByName(parsed.records[15], headerNames, "statistic"), "range_maximum");
-    assert.equal(cellByName(parsed.records[16], headerNames, "frame"), "principal_axes_inpop19a");
+    assert.equal(cellByName(parsed.records[15], headerNames, "frame"), "principal_axes_inpop19a");
+    assert.equal(cellByName(parsed.records[15], headerNames, "frame_status"), "sourced");
+    assert.equal(cellByName(parsed.records[16], headerNames, "frame"), "iau_moon_approximate_mean_earth");
     assert.equal(cellByName(parsed.records[16], headerNames, "frame_status"), "sourced");
-    assert.equal(cellByName(parsed.records[17], headerNames, "frame"), "iau_moon_approximate_mean_earth");
-    assert.equal(cellByName(parsed.records[17], headerNames, "frame_status"), "sourced");
     assert.deepEqual(validateValuesText(tableText, formatRules), []);
   });
 
@@ -356,6 +369,20 @@ describe("values table check", () => {
       cellValue: "furlong",
       reason: "Unknown unit.",
     });
+  });
+
+  it("rejects a unit that version 2 leaves out", () => {
+    const fixtureText = readFixture("unit-left-out-of-version-2.csv");
+    for (const unitName of ["Hz", "kg", "cm", "mm", "rad", "deg/century"]) {
+      const findings = validateValuesText(fixtureText.replace("Hz", unitName), formatRules);
+      assert.equal(findings.length, 1);
+      assertFinding(findings[0], {
+        rowNumber: 2,
+        columnName: "unit",
+        cellValue: unitName,
+        reason: "Unknown unit.",
+      });
+    }
   });
 
   it("rejects text in a numeric cell", () => {

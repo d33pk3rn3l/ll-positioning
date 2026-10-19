@@ -10,9 +10,8 @@ example-mean,example-note,example mean,7,0.3,mean,m,measured,not_stated,not_appl
 example-median,example-note,example median,8,0.3,median,km,requirement,not_applicable,not_applicable,not_applicable,not_applicable,,C,example median,note-section-median
 example-percentile,example-note,example percentile,9,0.3,percentile_95,m,model,mean_earth_de440,sourced,other_stated,vertical_component,,A,example percentile,note-section-percentile
 example-peak,example-note,example peak,11,0.3,peak_to_peak,uGal,measured,not_stated,not_applicable,not_stated,magnitude,5,B,example peak to peak,note-section-peak
-example-linear-error,example-note,example line,12,0.3,linear_error_90,m,derived,mean_earth_de421,sourced,sphere_1737400m,not_applicable,,C,example line,note-section-linear
-example-circular-error,example-note,example circle,13,0.3,circular_error_90,m,derived,mean_earth_de440,sourced,not_stated,not_applicable,,D,example circle,note-section-circular
-example-hertz,example-note,example frequency,40,,range_minimum,Hz,measured,not_applicable,not_applicable,not_applicable,not_applicable,,A,example frequency,note-section-hertz
-example-kilogram,example-note,example mass,6,1,range_maximum,kg,measured,not_applicable,not_applicable,not_applicable,not_applicable,,B,example mass,note-section-kilogram
+example-linear-error,example-note,example line,12,0.3,linear_error_90_percent,m,derived,mean_earth_de421,sourced,sphere_1737400m,not_applicable,,C,example line,note-section-linear
+example-circular-error,example-note,example circle,13,0.3,circular_error_90_percent,m,derived,mean_earth_de440,sourced,not_stated,not_applicable,,D,example circle,note-section-circular
+example-second-per-day,example-note,example drift,0.2,0.01,range_minimum,s/day,measured,not_applicable,not_applicable,not_applicable,not_applicable,,A,example drift,note-section-drift
 example-inpop-frame,example-note,example position,14,0.5,not_stated,m,model,principal_axes_inpop19a,sourced,not_stated,not_applicable,,A,example frame,note-section-inpop
 example-iau-frame,example-note,example position,15,0.5,not_stated,km,model,iau_moon_approximate_mean_earth,sourced,other_stated,not_applicable,,B,example frame,note-section-iau
