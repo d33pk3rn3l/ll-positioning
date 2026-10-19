@@ -16,3 +16,4 @@ example-second-per-day,example-note,example drift,0.2,0.01,range_minimum,s/day,m
 example-inpop-frame,example-note,example position,14,0.5,not_stated,m,model,principal_axes_inpop19a,sourced,not_stated,not_applicable,,A,example frame,note-section-inpop
 example-iau-frame,example-note,example position,15,0.5,not_stated,km,model,iau_moon_approximate_mean_earth,sourced,other_stated,not_applicable,,B,example frame,note-section-iau
 example-density,example-note,example density,2000,50,range_maximum,kg/m^3,model,mean_earth_de421,sourced,sphere_1737400m,not_applicable,,C,example density,note-section-density
+example-de430-frame,example-note,example position,16,0.5,not_stated,m,model,mean_earth_de430,sourced,not_stated,not_applicable,,A,example frame,note-section-de430

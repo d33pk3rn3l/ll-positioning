@@ -177,6 +177,7 @@ describe("format rules file", () => {
       value_type: ["measured", "requirement", "model", "derived", "specification"],
       frame: [
         "mean_earth_de421",
+        "mean_earth_de430",
         "mean_earth_de440",
         "principal_axes_de421",
         "principal_axes_de430",
@@ -275,7 +276,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 18);
+    assert.equal(parsed.records.length, 19);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -315,6 +316,8 @@ describe("values table check", () => {
     assert.equal(cellByName(parsed.records[16], headerNames, "frame_status"), "sourced");
     assert.equal(cellByName(parsed.records[17], headerNames, "unit"), "kg/m^3");
     assert.equal(cellByName(parsed.records[17], headerNames, "value_type"), "model");
+    assert.equal(cellByName(parsed.records[18], headerNames, "frame"), "mean_earth_de430");
+    assert.equal(cellByName(parsed.records[18], headerNames, "frame_status"), "sourced");
     const result = validateValuesText(tableText, formatRules);
     assert.deepEqual(result.errors, []);
     assert.deepEqual(result.warnings, []);
