@@ -175,16 +175,35 @@ function renderLayers(r) {
   `;
 }
 
+function rankedMagnitude(term) {
+  if (term.uGal != null) return term.uGal;
+  if (term.ratio != null) return term.ratio;
+  return term.value_m;
+}
+
+function unitLabel(term) {
+  if (term.unit === "m/m") return "ratio to need";
+  return term.unit ?? "";
+}
+
 function renderBars(r) {
-  const max = Math.max(...r.ranked.map((x) => x.uGal), 1e-9);
-  $("errorBars").innerHTML = r.ranked
+  const max = Math.max(...r.ranked.map(rankedMagnitude), 1e-9);
+  const bars = r.ranked
     .slice(0, 8)
     .map((t) => {
-      const pct = Math.min(100, (t.uGal / max) * 100);
-      const unit = r.science.kind === "gravimetry" ? "µGal" : "×";
-      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(t.uGal, 1)} ${unit}</div></div>`;
+      const value = rankedMagnitude(t);
+      const pct = Math.min(100, (value / max) * 100);
+      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(value, 1)} ${unitLabel(t)}</div></div>`;
     })
     .join("");
+  const context = (r.context ?? [])
+    .map((t) => {
+      return `<div class="bar-row"><div>${t.name}<div class="note">context only</div></div><div></div><div class="num">${fmt(t.value_m, 1)} ${unitLabel(t)}</div></div>`;
+    })
+    .join("");
+  const label = r.ranked.find((t) => t.label)?.label ?? "";
+  const note = label ? `<p class="note">${label}</p>` : "";
+  $("errorBars").innerHTML = bars + context + note;
 }
 
 function renderControls(r) {
@@ -378,9 +397,10 @@ function renderScienceNote(r) {
       Achieved ${fmt(r.gpr.achievedAlong_m, 3)} / ${fmt(r.gpr.achievedElev_m, 3)} m.
       ${r.gpr.coverageNote}. Belly residual ${fmt(r.gpr.bellyResidual_m * 100, 1)} cm → ~${fmt(r.gpr.heightPhase_deg, 0)}° phase @ f₀.</p>`;
   } else if (r.science.kind === "spectrometer") {
+    const stareText = r.spectro.stopAndStare ? "Stop-and-stare default. " : "";
     html = `<p class="note">Footprint σ ${fmt(r.spectro.footSigma_m * 1000, 0)} mm · geo ${fmt(r.spectro.geoSigma_m * 1000, 0)} mm ·
       allowed ${fmt(r.spectro.allowedGeo_m * 1000, 0)} mm for 10% broadening.
-      Stop-and-stare default. Global rarely required.</p>`;
+      ${stareText}Global rarely required.</p>`;
   } else {
     html = `<p class="note">Imaging uses local pose for reconstruction; map tie for orbital context.</p>`;
   }
