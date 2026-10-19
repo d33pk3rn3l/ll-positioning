@@ -513,6 +513,31 @@ describe("values table check", () => {
     assert.deepEqual(sourced.warnings, []);
   });
 
+  it("rejects a height reference when the frame is not applicable", () => {
+    const heightReference = formatRules.columns.find((column) => column.name === "height_reference");
+    assert.equal(heightReference.needsFrame.heightValueThatSkips, "not_applicable");
+    assert.equal(heightReference.needsFrame.forbiddenFrame, "not_applicable");
+
+    const tableText = readFixture("height-reference-needs-a-frame.csv");
+    const result = validateValuesText(tableText, formatRules);
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.errors.length, 1);
+    assertFinding(result.errors[0], {
+      rowNumber: 2,
+      columnName: "frame",
+      cellValue: "not_applicable",
+      reason: "the frame must not be not applicable",
+    });
+
+    const notStated = validateValuesText(tableText.replace("sphere_1737400m", "not_stated"), formatRules);
+    assert.deepEqual(notStated.warnings, []);
+    assert.equal(notStated.errors.length, 1);
+
+    const skipped = validateValuesText(tableText.replace("sphere_1737400m", "not_applicable"), formatRules);
+    assert.deepEqual(skipped.errors, []);
+    assert.deepEqual(skipped.warnings, []);
+  });
+
   it("checks a table from any path", () => {
     const validResult = validateValuesFile(fixturePath("valid-values.csv"));
     assert.deepEqual(validResult.errors, []);

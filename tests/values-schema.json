@@ -73,7 +73,13 @@
       "name": "height_reference",
       "required": true,
       "numeric": false,
-      "vocabulary": "height_reference"
+      "vocabulary": "height_reference",
+      "needsFrame": {
+        "frameColumn": "frame",
+        "heightValueThatSkips": "not_applicable",
+        "forbiddenFrame": "not_applicable",
+        "message": "When the height reference applies, the frame must not be not applicable."
+      }
     },
     {
       "name": "gravity_product",

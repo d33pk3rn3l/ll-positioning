@@ -485,6 +485,56 @@ function checkFramePairings(dataRecords, headerNames, formatRules) {
   return errors;
 }
 
+/**
+ * Check that a height reference has a frame.
+ * The skip value and the forbidden frame live in the column rule.
+ */
+function checkHeightNeedsFrame(dataRecords, headerNames, formatRules) {
+  const errors = [];
+  const indexByName = indexByColumnName(headerNames);
+
+  for (const column of formatRules.columns) {
+    const rule = column.needsFrame;
+    if (!rule || typeof rule !== "object") {
+      continue;
+    }
+    const heightIndex = indexByName.get(column.name);
+    const frameIndex = indexByName.get(rule.frameColumn);
+    const skipValue = typeof rule.heightValueThatSkips === "string" ? rule.heightValueThatSkips : "";
+    const forbiddenFrame = typeof rule.forbiddenFrame === "string" ? rule.forbiddenFrame : "";
+    const reason = typeof rule.message === "string" ? rule.message : "";
+    if (
+      heightIndex === undefined
+      || frameIndex === undefined
+      || skipValue === ""
+      || forbiddenFrame === ""
+      || reason === ""
+    ) {
+      continue;
+    }
+
+    for (const record of dataRecords) {
+      if (record.cells.length !== headerNames.length) {
+        continue;
+      }
+      if (record.cells[heightIndex] === skipValue) {
+        continue;
+      }
+      if (record.cells[frameIndex] !== forbiddenFrame) {
+        continue;
+      }
+      errors.push(makeFinding(
+        record.lineNumber,
+        rule.frameColumn,
+        record.cells[frameIndex],
+        reason,
+      ));
+    }
+  }
+
+  return errors;
+}
+
 function checkResult(errors, warnings = []) {
   return { errors, warnings };
 }
@@ -524,7 +574,8 @@ export function validateValuesText(tableText, formatRules) {
   const headerNames = headerRecord.cells;
   return checkResult(
     checkDataRecords(dataRecords, headerNames, formatRules)
-      .concat(checkFramePairings(dataRecords, headerNames, formatRules)),
+      .concat(checkFramePairings(dataRecords, headerNames, formatRules))
+      .concat(checkHeightNeedsFrame(dataRecords, headerNames, formatRules)),
     checkEmptyCellWarnings(dataRecords, headerNames, formatRules),
   );
 }
