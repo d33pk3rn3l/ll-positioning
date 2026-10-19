@@ -1,4 +1,7 @@
 value_id,source_key,quantity,value,uncertainty,statistic,unit,value_type,frame,frame_status,height_reference,gravity_product,averaging_time,grade,conditions,note_anchor
 example-radius,example-note,example radius,10,,one_sigma,m,model,mean_earth_de440,sourced,sphere_1737400m,not_applicable,,A,"radius with a comma, and a quote ""mark""",note-section-1
-example-rate,example-note,example rate,0.25,0.01,scaled_formal,deg/day,measured,not_applicable,not_applicable,not_applicable,not_applicable,30,B,steady rate,note-section-2
-example-gradient,example-note,example gradient,,1.5,rms,mGal/m,derived,not_stated,inferred,not_stated,vertical_component,,C,,
+example-rms,example-note,example noise,2,0.2,rms,mGal,measured,not_stated,not_applicable,not_applicable,magnitude,10,B,root mean square,note-section-rms
+example-scaled-formal,example-note,example scale,4,0.4,scaled_formal,km^3/s^2,derived,not_applicable,not_applicable,not_applicable,not_applicable,40,C,scaled formal error,note-section-scaled
+example-degree-per-day,example-note,example spin,2.5,0.1,typical,deg/day,measured,not_applicable,not_applicable,not_applicable,not_applicable,,A,example spin,note-section-day
+example-gradient-unit,example-note,example gradient,3,,maximum,mGal/m,derived,not_stated,not_applicable,not_stated,vertical_component,,D,example gradient,note-section-gradient
+example-inferred-frame,example-note,example azimuth,5,1,author_judgement,deg,model,principal_axes_unknown_realization,inferred,not_stated,not_applicable,,B,source gives no frame,note-section-inferred

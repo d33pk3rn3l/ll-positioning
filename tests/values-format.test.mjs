@@ -233,6 +233,12 @@ describe("format rules file", () => {
     );
     const averagingTime = formatRules.columns.find((column) => column.name === "averaging_time");
     assert.equal(averagingTime.unitText, "s");
+    const frameStatus = formatRules.columns.find((column) => column.name === "frame_status");
+    assert.equal(
+      frameStatus.ruleText,
+      "When the source gives no frame and the author names one, the row uses that frame and frame_status inferred.",
+    );
+    assert.ok(formatRules.vocabularies.frame.includes("principal_axes_unknown_realization"));
   });
 });
 
@@ -241,7 +247,7 @@ describe("values table check", () => {
     const tableText = readFixture("valid-values.csv");
     const parsed = parseCommaSeparatedValues(tableText);
     assert.deepEqual(parsed.findings, []);
-    assert.equal(parsed.records.length, 4);
+    assert.equal(parsed.records.length, 7);
     const headerNames = parsed.records[0].cells;
     assert.deepEqual(headerNames, columnNames);
     for (const record of parsed.records) {
@@ -253,12 +259,17 @@ describe("values table check", () => {
       cellByName(parsed.records[1], headerNames, "conditions"),
       'radius with a comma, and a quote "mark"',
     );
-    assert.equal(cellByName(parsed.records[2], headerNames, "statistic"), "scaled_formal");
-    assert.equal(cellByName(parsed.records[2], headerNames, "unit"), "deg/day");
-    assert.equal(cellByName(parsed.records[3], headerNames, "value"), "");
-    assert.equal(cellByName(parsed.records[3], headerNames, "statistic"), "rms");
-    assert.equal(cellByName(parsed.records[3], headerNames, "unit"), "mGal/m");
-    assert.equal(cellByName(parsed.records[3], headerNames, "frame_status"), "inferred");
+    assert.equal(cellByName(parsed.records[2], headerNames, "statistic"), "rms");
+    assert.equal(cellByName(parsed.records[2], headerNames, "unit"), "mGal");
+    assert.equal(cellByName(parsed.records[3], headerNames, "statistic"), "scaled_formal");
+    assert.equal(cellByName(parsed.records[3], headerNames, "unit"), "km^3/s^2");
+    assert.equal(cellByName(parsed.records[4], headerNames, "statistic"), "typical");
+    assert.equal(cellByName(parsed.records[4], headerNames, "unit"), "deg/day");
+    assert.equal(cellByName(parsed.records[5], headerNames, "statistic"), "maximum");
+    assert.equal(cellByName(parsed.records[5], headerNames, "unit"), "mGal/m");
+    assert.equal(cellByName(parsed.records[5], headerNames, "value"), "3");
+    assert.equal(cellByName(parsed.records[6], headerNames, "frame"), "principal_axes_unknown_realization");
+    assert.equal(cellByName(parsed.records[6], headerNames, "frame_status"), "inferred");
     assert.deepEqual(validateValuesText(tableText, formatRules), []);
   });
 
