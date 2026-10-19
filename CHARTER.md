@@ -17,7 +17,7 @@ requirements, geodetic sources and error budget that make this possible.
 |----|------------------------|-----------------------|------|
 | O1 | Define a local mission frame and the estimated quantities (position, attitude, time). | `docs/frames.md`: frame definitions, state vector, the four knowledge layers, height convention, time scale. PDF handout. | G1 |
 | O2 | Register the local frame to the global lunar frame via geodetic tie points, with minimum accumulated uncertainty. | `docs/registration.md`: tie-point types, transform model, observability, accumulated uncertainty per layer. PDF handout. | G2 |
-| O3 | Translate gravimeter, GPR and imaging needs into requirements on real-time accuracy, relative accuracy between measurements, and post-processed geodetic accuracy. | `docs/requirements-trace.md`: trace table (science objective, instrument, physical relation, source, nav quantity, layer, time scale, RT / relative / post-processed value, "needs ~10x?"). | G1 |
+| O3 | Translate gravimeter, GPR and imaging needs into requirements on real-time accuracy, relative accuracy between measurements, and post-processed geodetic accuracy. | `docs/requirements-trace.md`: trace table. One row per instrument and nav quantity (position, attitude, time on separate rows). Columns: science objective, instrument, instrument parameter it depends on, physical relation, source, layer, time scale, RT / relative / post-processed value, "needs ~10x?", what fails if not met. | G1 |
 | O4 | Identify post-mission geodetic information sources. | `docs/sources-assessment.md`: lander position, LRO NAC imagery, visual landmarks, rover tracks, retroreflectors/beacons; each with accuracy, layer, availability, grade. | G2 |
 | O5 | Error budget that propagates each source to trajectory and science results. | `docs/error-budget.md` plus code in `src/` that regenerates every number. Allocation per layer and per instrument. | G3 |
 
@@ -73,6 +73,7 @@ Entry criteria:
   time), four layers, height and time conventions.
 - `docs/requirements-trace.md` complete for gravimeter, GPR and imaging. Every
   cell labelled sourced / derived / TBD.
+- Instrument-parameter list in docs/requirements-trace.md: gravimeter noise and drift, GPR centre frequency, camera field of view and resolution. Each value may be TBD; each requirement names the parameter it depends on.
 - Frame and payload source notes in `docs/sources/`, graded.
 - Baseline code bugs closed; unsourced baseline numbers labelled in code.
 
