@@ -1,0 +1,2 @@
+value_id,source_key,quantity,value,uncertainty,statistic,unit,value_type,frame,frame_status,height_reference,gravity_product,averaging_time,grade,conditions,note_anchor
+example-one,example-note,example quantity,1,0.1,one_sigma,m,measured,mean_earth_de440,not_applicable,not_applicable,magnitude,10,A,plain text,anchor-1

@@ -1,0 +1,3 @@
+value_id,source_key,quantity,value,uncertainty,statistic,unit,value_type,frame,frame_status,height_reference,gravity_product,averaging_time,grade,conditions,note_anchor
+example-radius,example-note,example quantity,1,0.1,one_sigma,m,measured,mean_earth_de421,sourced,sphere_1737400m,magnitude,10,A,plain text,anchor-1
+example-radius,example-note,example quantity two,2,0.2,three_sigma,km,requirement,principal_axes_de440,inferred,other_stated,full_vector,20,D,other text,anchor-2

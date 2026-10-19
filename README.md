@@ -37,14 +37,14 @@ No build step. ES modules in the browser and Node.
 
 1. **Local / relative** — autonomy, station spacing, GPR migration, footprint co-registration  
 2. **Map-relative** — trajectory-to-DEM / NAC co-registration (drives terrain corrections)  
-3. **Cartographic absolute (ME)** — archive / interoperability  
-4. **Inertial / ephemeris (PA, ICRF)** — tides, celestial azimuth  
+3. **Cartographic absolute (mean Earth, ME)** — archive / interoperability  
+4. **Inertial / ephemeris (principal axes, PA, ICRF)** — tides, celestial azimuth  
 
 Over a few-hundred-metre traverse, GRAIL-scale lunar potential is a smooth ramp. Differentiating a cave signal is usually limited by **map-relative DEM registration and radial knowledge**, not metre-class ME absolute.
 
 Height convention: canonical **center-of-mass radius**; geometric `h = r − 1,737,400 m`. Do not mix with potential-referenced heights.
 
-Default cartographic realization: **DE440 dynamics with DE421-aligned ME**. ME↔PA mistag is modeled as a deterministic ~875 m fault, not random noise.
+Default cartographic realization: **DE440 dynamics with DE421-aligned ME**. The mean Earth (ME) to principal axes (PA) transform is applied (about 875 m). That size is not an error. That size is not a bias. The residual uncertainty is TBD. The uncertainty is common to all points. A frame mistag is a fault of about 875 m. A mistag means a principal axes product is used as mean Earth, or the transform is skipped. The fault stays out of every 1-sigma.
 
 ## Platform model (quadruped)
 
