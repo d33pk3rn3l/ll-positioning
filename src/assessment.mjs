@@ -382,7 +382,7 @@ export function gravityAssessment(scenario, navResult, survey) {
     { id: "terrain", name: "DEM / terrain (pit-structured)", uGal: terrainTerm },
     { id: "tide", name: "Tide model residual", uGal: tideResidual },
     { id: "grail", name: "Orbital gravity ramp residual", uGal: grailTerm },
-  ];
+  ].map((term) => ({ ...term, unit: "µGal" }));
   const total_uGal = hypot(...terms.map((t) => t.uGal));
   const ranked = [...terms].sort((a, b) => b.uGal - a.uGal);
 
@@ -483,29 +483,40 @@ export function spectrometerAssessment(scenario, navResult) {
 
 /**
  * Ranked error contributions for the active instrument.
+ * Every term has a unit. Terms in one list share that unit.
+ * Gravity values stay in uGal. Other instruments use ratio or score.
  */
 export function rankErrors(instrument, gravity, gpr, spectro, navResult) {
   if (instrument === "gravimeter") return gravity.ranked;
   if (instrument === "gpr") {
     return [
-      { id: "along", name: "Along-track relative pose", uGal: gpr.achievedAlong_m / gpr.alongNeed_m },
-      { id: "elev", name: "Elevation statics", uGal: gpr.achievedElev_m / gpr.elevNeed_m },
-      { id: "belly", name: "Antenna height / gait", uGal: gpr.bellyResidual_m / 0.01 },
-    ].sort((a, b) => b.uGal - a.uGal);
+      { id: "along", name: "Along-track relative pose", ratio: gpr.achievedAlong_m / gpr.alongNeed_m, unit: "m/m" },
+      { id: "elev", name: "Elevation statics", ratio: gpr.achievedElev_m / gpr.elevNeed_m, unit: "m/m" },
+      { id: "belly", name: "Antenna height / gait", ratio: gpr.bellyResidual_m / 0.01, unit: "m/m" },
+    ].sort((a, b) => b.ratio - a.ratio);
   }
   if (instrument === "spectrometer") {
+    const allowed_m = Math.max(spectro.allowedGeo_m, 1e-9);
+    // Divide the map length by the allowed geolocation.
+    // The result uses the same unit as the footprint term.
     return [
       {
         id: "geo",
         name: "Footprint geolocation vs allowed",
-        uGal: spectro.geoSigma_m / Math.max(spectro.allowedGeo_m, 1e-9),
+        ratio: spectro.geoSigma_m / allowed_m,
+        unit: "m/m",
       },
-      { id: "map", name: "Map-relative (if used)", uGal: navResult.summary.midMapHoriz_m },
-    ].sort((a, b) => b.uGal - a.uGal);
+      {
+        id: "map",
+        name: "Map-relative (if used)",
+        ratio: navResult.summary.midMapHoriz_m / allowed_m,
+        unit: "m/m",
+      },
+    ].sort((a, b) => b.ratio - a.ratio);
   }
   return [
-    { id: "local", name: "Local horiz", uGal: navResult.summary.worstLocalHoriz_m },
-    { id: "cart", name: "Cartographic horiz", uGal: navResult.summary.midCartHoriz_m },
+    { id: "local", name: "Local horiz", score: navResult.summary.worstLocalHoriz_m, unit: "m" },
+    { id: "cart", name: "Cartographic horiz", score: navResult.summary.midCartHoriz_m, unit: "m" },
   ];
 }
 

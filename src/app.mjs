@@ -175,14 +175,21 @@ function renderLayers(r) {
   `;
 }
 
+function rankedMagnitude(term) {
+  if (term.uGal != null) return term.uGal;
+  if (term.ratio != null) return term.ratio;
+  return term.score;
+}
+
 function renderBars(r) {
-  const max = Math.max(...r.ranked.map((x) => x.uGal), 1e-9);
+  const max = Math.max(...r.ranked.map(rankedMagnitude), 1e-9);
   $("errorBars").innerHTML = r.ranked
     .slice(0, 8)
     .map((t) => {
-      const pct = Math.min(100, (t.uGal / max) * 100);
-      const unit = r.science.kind === "gravimetry" ? "µGal" : "×";
-      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(t.uGal, 1)} ${unit}</div></div>`;
+      const value = rankedMagnitude(t);
+      const pct = Math.min(100, (value / max) * 100);
+      const unit = t.unit ?? "";
+      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${fmt(value, 1)} ${unit}</div></div>`;
     })
     .join("");
 }
