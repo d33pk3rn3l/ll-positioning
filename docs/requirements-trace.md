@@ -208,14 +208,24 @@ Each row has one layer. Values from different layers are not added.
 - Relation: net height sensitivity = free-air gradient minus the infinite flat slab term.
   - Free-air gradient: 0.187 mGal/m [sourced: mittelholz2026ll; agrees with 2g/R, derived in the note].
   - Slab term: 4.19e-5 mGal/m for each kg/m³ of density [derived: 2 pi G, G = 6.674e-11 m³/(kg s²)].
-- Regolith, 1300 kg/m³ [source in draft PR #27, not reviewed yet]: net 0.133 mGal/m [derived: 0.187 - 0.0545]. Height need 0.38 m [derived: 0.05 / 0.133]. **This is the design value (strict end).**
-- Basalt, 3150 kg/m³ [source in draft PR #27, not reviewed yet]: net 0.055 mGal/m [derived: 0.187 - 0.132]. Height need about 0.9 m [derived: 0.05 / 0.055]. This is the relaxed end. It is not a design value. Fractured basalt can have a lower density, and then the need is stricter.
-- Statistic not stated, as for the 0.05 mGal. So 0.38 m and 0.9 m are not 1-sigma.
+- Regolith model at the surface, 1300 kg/m³ [sourced: carrier1991sourcebook, row carrier1991sourcebook.modelSurfaceDensity; model value at depth zero; statistic not stated]. Net 0.133 mGal/m [derived: 0.187 - 0.0545]. Height need 0.38 m [derived: 0.05 / 0.133]. **This is the design value (strict end).**
+- Measured regolith, top 15 cm, 1500 kg/m³ [sourced: carrier1991sourcebook, row carrier1991sourcebook.bulk0to15; best estimate of the average bulk density; plus or minus 50 kg/m³; statistic not stated]. Height need 0.40 m [derived: 0.05 / (0.187 - 4.19e-5 × 1500) = 0.403]. prof-payload had about 0.41 m. This check gives 0.403 m, about 0.40 m.
+- Measured regolith, top 60 cm, 1660 kg/m³ [sourced: carrier1991sourcebook, row carrier1991sourcebook.bulk0to60; best estimate of the average bulk density; plus or minus 50 kg/m³; statistic not stated]. Height need 0.43 m [derived: 0.05 / (0.187 - 4.19e-5 × 1660) = 0.426]. prof-payload had about 0.43 m. This check gives 0.426 m, about 0.43 m.
+- The design value stays 0.38 m at 1300 kg/m³. It is the strict end. The 1500 kg/m³ case and the 1660 kg/m³ case are less strict.
+- Intact basalt bulk density, 3010 to 3270 kg/m³ [sourced: kiefer2012density, rows kiefer2012density.mareBulkDensity.min and kiefer2012density.mareBulkDensity.max; hand samples; typical porosity 7 percent]. The half-range is 130 kg/m³ [derived: (3270 - 3010) / 2 = 130].
+- Marius Hills basalt, 3150 kg/m³ [sourced: kiefer2013marius, row kiefer2013marius.basaltBulkDensity; adopted model value; statistic not stated]. Net 0.055 mGal/m [derived: 0.187 - 0.132]. Height need about 0.9 m [derived: 0.05 / 0.055]. This is the relaxed end. It is not a design value. Fractured basalt can have a lower density, and then the need is stricter.
+- The plus or minus 130 kg/m³ is an error from basalt type only. It is not the total density error near the pit. Over 20 m the effect is 0.109 mGal [derived: 4.19e-5 × 130 × 20 = 0.109]. That is about 0.11 mGal.
+- The large density uncertainty near the pit comes from the regolith thickness and from a fractured roof. No source gives those values. This is a question for the science team. See section 4.1, item 11.
+- The regolith thickness decides the density layer. It does not come from the density values. carrier1991sourcebook gives 10 m to 30 m over much of the Moon [sourced: rows carrier1991sourcebook.regolithThickness.min and carrier1991sourcebook.regolithThickness.max; tentative]. kiefer2013marius gives at most a few metres at the Marius Hills [sourced: the note text; Campbell 2009 was not opened; no values.csv row]. The two sources disagree. The density layer stays TBD.
+- Statistic not stated, as for the 0.05 mGal. So 0.38 m, 0.40 m, 0.43 m and 0.9 m are not 1-sigma.
 - Timing: needed in post-processing. Real-time need: none known, TBD. Whether the brief's expectation of about 10 times better after post-processing applies here: TBD.
-- Rule from prof-payload: use regolith for height differences of a few metres or less. Use basalt for height differences of tens of metres.
-- Label: derived, infinite flat slab, no terrain correction, density layer TBD.
+- Rule from prof-payload: use regolith for height differences of a few metres or less. Use basalt for height differences of tens of metres. The regolith thickness decides which of these applies.
+- Label: derived, infinite flat slab, no terrain correction, density layer TBD. The word "sourced" applies only to the density values. It does not choose the layer.
 - The old 0.25 m (free-air only) is removed.
 - Note: the camera terrain model height error is 2.05 m [sourced: urbancic2017a17, NAC terrain model; statistic not stated]. This is 8.2 times the old 0.25 m value and 5.4 times the new 0.38 m value [derived]. So the robot's own relative height drives this row, not the map.
+- Vertical linear error at 90 percent: 0.5 to 2 times the image pixel scale [sourced: henriksen2016nac, rows henriksen2016nac.verticalPrecisionToPixelScale.min and henriksen2016nac.verticalPrecisionToPixelScale.max; formal estimate from the stereo software; not compared to independent data]. The note gives image pixel scales of 0.5 m to 2.0 m. There is no values.csv row for the pixel scale.
+- At a 2.0 m pixel, that vertical error is 1 m to 4 m [derived: 0.5 × 2.0 = 1; 2 × 2.0 = 4]. At 1-sigma it is 0.608 m to 2.43 m [derived: 1 / 1.645 = 0.608; 4 / 1.645 = 2.43]. That is about 0.6 m to 2.4 m. The factor 1.645 is the normal-distribution factor for a 90 percent linear error. It is not in the source notes.
+- So the terrain model cannot give station heights to 0.38 m. The 2.05 m line above stays.
 
 **Terrain correction near the pit wall**
 
@@ -270,6 +280,19 @@ Each row has one layer. Values from different layers are not added.
     about 0.42 mGal [derived: 2 pi G x 500 x 20]. This is as large as the
     anomaly (about 0.4 mGal, mittelholz2026ll). This is a science-side error.
     It is not a navigation requirement.
+    The regolith thickness decides which height need applies. A regolith
+    path uses the strict height need. A basalt path uses the relaxed height
+    need. The density values are sourced. The density layer stays TBD.
+    prof-geodesy: if the regolith at the Marius Hills is a few metres thick,
+    a profile with tens of metres of height change is mostly in basalt.
+    carrier1991sourcebook gives 10 m to 30 m over much of the Moon
+    [sourced: rows carrier1991sourcebook.regolithThickness.min and
+    carrier1991sourcebook.regolithThickness.max; tentative].
+    kiefer2013marius gives at most a few metres at the Marius Hills
+    [sourced: the note text; Campbell 2009 was not opened; no values.csv
+    row]. The two sources disagree.
+    This item stays open for the regolith thickness at the pit and for a
+    fractured roof. No source gives those values.
 12. Imager angle. Is 0.25 mrad or 0.34 mrad per pixel (40 deg over 2048
     pixels) correct? This is a camera property, not a navigation need.
     The source gives "0.25 mrad for 5 cm at 100 m". But 0.25 mrad at 100 m
