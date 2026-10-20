@@ -1,13 +1,13 @@
 # STATUS
 
-Last update: 2026-10-19 (ll-lead). A fresh session needs only CHARTER.md,
+Last update: 2026-10-20 (ll-lead). A fresh session needs only CHARTER.md,
 STATUS.md and DECISIONS.md.
 
 ## Phase
 
 Kickoff. Benedikt said GO on 2026-10-19. Next gate: G1 (frame and requirements). Date TBD.
 
-## Merged and open pull requests (update 2026-10-19)
+## Merged and open pull requests (update 2026-10-20)
 
 Merged:
 
@@ -18,13 +18,23 @@ Merged:
 | #23 | `dc22bbc` | Source values format version 2 and its check. Closes issues #22 and #24. |
 | #21 | `ac93f8f` | Source notes, batch 2, and `docs/sources/values.csv`. The table has 388 rows. The check gives 0 errors and 0 warnings. |
 | #28 | `be502b6` | Remove `uGal/sqrt(Hz)` from the averaging-time warning. This is item 3 of issue #26. |
+| #27 | `45739af` | Density source notes. Seven notes. Git log shows a merge commit. The second parent is `c5c1ce1`. This is not a squash merge. Merged by ll-engineer. Reviewer: prof-payload, pass. |
+| #30 | `5a494c0` | Eight source-note fixes from prof-geodesy, plus the new note neumann2016lolardrsis. Git log shows one parent, so this is a squash merge. The pull request head was `dc83381`. Merged by ll-lead. Reviewer: prof-geodesy, pass with no items open. |
 
 Open:
 
 | Item | State | Reviewer |
 |---|---|---|
-| Pull request #27, density source notes | Draft | prof-payload |
 | Issue #26 | Open for item 1 (checked transform direction) and item 2 (split of the other height references). Item 3 is done by pull request #28. | - |
+
+## Next steps
+
+- This pull request: put the sourced density values into the trace table. The density layer stays TBD.
+- ll-scout: a pull request with notes on steep terrain.
+- Issue #26, item 1: check the transform direction. Item 2: split the other height references.
+- A docs pull request for the rename and the glossary.
+- A docs pull request for the driver-tool specification.
+- The G1 package (frame and requirements).
 
 ## This week (week of 2026-10-19)
 
@@ -71,24 +81,29 @@ Also running: cold read of brief and repo by prof-geodesy and prof-payload
 - New questions for the PI or the science team (2026-10-19). The full text is in `docs/requirements-trace.md`, section 4.1, items 9 to 11:
   - Gravity station spacing: about 1 m or 10 m.
   - Gravity product: magnitude or vector. The words "gravity vector" do not answer this.
-  - How the science team gets the rock density near the pit.
+  - How the science team gets the rock density near the pit. Question 11 stays open for the regolith thickness and for a fractured roof. No source gives those values.
 - IMU or inclinometer bias spec TBD. The 33 µg bias is derived from the 0.2 mrad levelling residual assumption [assumption, no source; old value traced to MER sun sensor 0.2 deg, not 0.2 mrad]. IMU north-finding is excluded on the Moon (gyro bias would need to be below 0.0005 deg/h [derived]).
 
 ## Source notes not yet reviewed
 
-These notes are in the repo on main. No value from these seven notes may go into any budget until prof-geodesy has reviewed them on main. Until then they are "not for budget use".
+prof-geodesy has reviewed the notes that were waiting. One reviewed note stays out of the budget.
 
-Not yet reviewed by prof-geodesy:
+Not for budget use:
 
-- archinal2018wgccre
-- fienga2024lunarframes
-- barker2025lolalra
-- henriksen2016nac
-- collins2026nacmosaics
-- ashby2024clock
-- wagner2017anthro
+- archinal2018wgccre. prof-geodesy has reviewed it. It stays "not for budget use".
 
 ## Source notes reviewed
+
+Reviewed by prof-geodesy:
+
+- henriksen2016nac
+- collins2026nacmosaics
+- wagner2017anthro
+- barker2025lolalra
+- ashby2024clock
+- fienga2024lunarframes
+- neumann2016lolardrsis
+- archinal2018wgccre (also "not for budget use")
 
 Reviewed by prof-payload, pass:
 
@@ -98,6 +113,13 @@ Reviewed by prof-payload, pass:
 - noeker2022wpm
 - urbancic2017a17
 - eisenman2001mercam
+- wieczorek2013grail
+- kiefer2012density
+- kiefer2013marius
+- besserer2014grail
+- deutsch2019procellarum
+- chappaz2017lavatubes
+- carrier1991sourcebook
 
 Changes to numbers from that review:
 
