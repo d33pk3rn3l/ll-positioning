@@ -10,7 +10,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 - LRO orbit reconstruction ≈10 m total position, <1 m radial | orbits of the LOLA team in the Planetary Data System (PDS), with GRGM900C (degree and order 600) | LOLA geodetic frame (body-fixed realization not stated in the passage; LOLA products are in mean Earth (ME), not stated here) | approximate; from orbit overlaps and track-to-DEM corrections (DEM = digital elevation model); statistic not stated.
 - Early mission: orbit overlaps better than 20 m with LOLA crossovers | Mazarico et al. 2012 orbits | not stated.
 - LRO requirement 50 m orbit reconstruction | requirement.
-- SLDEM2015 (full name: TBD - check; LOLA + Kaguya Terrain Camera (TC), ±60° lat, 512 pixels per degree): TC co-registration 3-4 m root mean square (RMS) elevation residuals to LOLA; '~3-4 m accuracy and ~60 m resolution' | SLDEM2015 | LOLA frame | RMS.
+- SLDEM2015 (not expanded in this source; Collins et al. 2026 (`collins2026nacmosaics`) expands it as LRO Lunar Orbiter Laser Altimeter digital elevation model coregistered with Selene Data; LOLA + Kaguya Terrain Camera (TC), ±60° lat, 512 pixels per degree): TC co-registration 3-4 m root mean square (RMS) elevation residuals to LOLA; '~3-4 m accuracy and ~60 m resolution' | SLDEM2015 | LOLA frame | RMS.
 - GLD100 (Global Lunar DTM 100 m, DTM = digital terrain model; made from the LRO Camera (LROC) Wide Angle Camera (WAC), ±79°): ~1 km effective resolution, ~10-20 m mean vertical accuracy (Scholten et al. 2012) | GLD100 | statistic not stated.
 - Highlight: 'LOLA-defined shape and reference frame enables accurate (<10m) geolocation globally' | bound.
 

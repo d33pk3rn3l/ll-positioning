@@ -15,7 +15,7 @@ Format: value | product | frame realization | statistic type. "not stated" = the
 Not read (body text not opened).
 
 ## Application to a walking quadruped on the Moon (LunarLeaper)
-This is the formal convention source. Before we cite it for a number, check our mean Earth / principal axis (ME/PA) choice and the 1737.4 km sphere against the body text.
+This is the formal convention source. Not for budget use: only the abstract was read. Before we cite it for a number, check our mean Earth / principal axis (ME/PA) choice and the 1737.4 km sphere against the body text. For the 1737.4 km reference sphere of LOLA heights, use the LOLA data format document (`neumann2016lolardrsis`) instead.
 
 ## Grade
 Model or convention (grade C). Reason: a standards report, not a measurement. The note is incomplete: abstract only.
