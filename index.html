@@ -1,157 +1,297 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LunarLeaper — Navigation × Science Assessment</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <header>
-    <h1>LUNARLEAPER · NAVIGATION × SCIENCE ASSESSMENT</h1>
-    <p>
-      First-order MBSE for a walking quadruped: cross navigation / geodetic ConOps with payload survey design,
-      separate local · map-relative · cartographic · inertial knowledge, and propagate into detectability and 14-day coverage.
-      Defaults are evidence-graded priors — not flight requirements.
-    </p>
-  </header>
-
-  <div class="layout">
-    <aside class="panel controls">
-      <div class="block">
-        <h2>Instrument & ConOps</h2>
-        <label for="instrument">Instrument</label>
-        <select id="instrument"></select>
-        <label for="navConops">Navigation ConOps</label>
-        <select id="navConops"></select>
-        <label for="surveyConops">Survey / acquisition ConOps</label>
-        <select id="surveyConops"></select>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#0d131b" />
+    <title>LunarLeaper · Global position explorer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="./"
+        ><span class="brand-mark">LL</span
+        ><span>LUNARLEAPER <small>MISSION TOOLS</small></span></a
+      >
+      <div class="header-meta">
+        <span class="status-dot"></span> SYNTHETIC MISSION
+        <span class="divider">/</span> SPRINT 01
       </div>
-
-      <div class="block">
-        <h2>Navigation uncertainty</h2>
-        <label class="row"><span>legged odometry prior</span><span class="val" id="odometryPctV"></span></label>
-        <input type="range" id="odometryPct" min="0.5" max="8" step="0.1" value="2" />
-        <label class="row"><span>map-tie σ</span><span class="val" id="mapTieSigmaV"></span></label>
-        <input type="range" id="mapTieSigma_m" min="1" max="30" step="0.5" value="10" />
-        <label class="row"><span id="cartographicSigmaLabel">cartographic σ (H)</span><span class="val" id="cartographicSigmaV"></span></label>
-        <input type="range" id="cartographicSigma_m" min="2" max="40" step="1" value="12" />
-        <label class="check"><input type="checkbox" id="frameMistag" /> Frame mistag: a principal axes (PA) product used as mean Earth (ME), or the transform skipped (fault, about 875 m)</label>
-      </div>
-
-      <div class="block">
-        <h2>Gravity survey design</h2>
-        <label class="row"><span>station spacing</span><span class="val" id="stationSpacingV"></span></label>
-        <input type="range" id="stationSpacing_m" min="5" max="50" step="1" value="25" />
-        <label class="row"><span>settle time</span><span class="val" id="settleV"></span></label>
-        <input type="range" id="settle_s" min="60" max="1200" step="30" value="600" />
-        <label class="row"><span>integration</span><span class="val" id="integrationV"></span></label>
-        <input type="range" id="integration_s" min="60" max="1200" step="30" value="600" />
-        <label class="row"><span>reoccupation cadence</span><span class="val" id="reoccupationV"></span></label>
-        <input type="range" id="reoccupationCadence_h" min="1" max="24" step="0.5" value="6" />
-        <label class="row"><span>MEMS drift prior</span><span class="val" id="driftV"></span></label>
-        <input type="range" id="drift_uGal_per_day" min="50" max="400" step="10" value="200" />
-        <label class="row"><span>DEM differential σ</span><span class="val" id="demV"></span></label>
-        <input type="range" id="demDifferential_m" min="0.2" max="5" step="0.1" value="2" />
-        <label class="row"><span>tube depth (axis)</span><span class="val" id="tubeDepthV"></span></label>
-        <input type="range" id="tubeDepth_m" min="20" max="80" step="1" value="48" />
-        <label class="row"><span>tube radius</span><span class="val" id="tubeRadiusV"></span></label>
-        <input type="range" id="tubeRadius_m" min="10" max="50" step="1" value="30" />
-        <label class="check"><input type="checkbox" id="useBouguerSensitivity" checked /> elev. sens. after simple Bouguer</label>
-        <label class="check"><input type="checkbox" id="activeLeveling" checked /> active body leveling</label>
-        <label class="check"><input type="checkbox" id="lockedStance" checked /> locked gravity stance</label>
-      </div>
-
-      <div class="block">
-        <h2>GPR / spectrometer</h2>
-        <label class="check"><input type="checkbox" id="fixedBellyHeight" checked /> fixed belly-height gait</label>
-        <label class="check"><input type="checkbox" id="gprMode3d" /> force GPR 3D sampling needs</label>
-        <label class="row"><span>spectrometer footprint σ</span><span class="val" id="footV"></span></label>
-        <input type="range" id="footSigma_m" min="0.005" max="0.1" step="0.001" value="0.05" />
-      </div>
-
-      <p class="note" id="assumptions"></p>
-    </aside>
-
-    <main class="results">
-      <div class="kpis">
-        <div class="kpi" id="kpiScience"></div>
-        <div class="kpi" id="kpiCoverage"></div>
-        <div class="kpi" id="kpiLocal"></div>
-        <div class="kpi" id="kpiMap"></div>
-      </div>
-
-      <div class="grid2">
-        <section class="panel">
-          <h2>Knowledge layers</h2>
-          <table>
-            <thead><tr><th>Layer</th><th>1σ</th><th>What it drives</th></tr></thead>
-            <tbody id="layersBody"></tbody>
-          </table>
-          <div id="scienceNote"></div>
+      <a class="source-link" href="https://github.com/d33pk3rn3l/ll-positioning"
+        >Source ↗</a
+      >
+    </header>
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-heading">
+          <span class="eyebrow">SCENARIO SETUP</span
+          ><button id="reset" class="text-button">Reset</button>
+        </div>
+        <label for="scenarioName" class="field-label">Scenario name</label>
+        <input
+          id="scenarioName"
+          class="scenario-name"
+          maxlength="100"
+          value="Ravine traverse"
+        />
+        <div class="save-actions">
+          <button id="save">Save scenario ↓</button
+          ><button id="load">Load ↑</button
+          ><input
+            id="loadFile"
+            type="file"
+            accept=".json,application/json"
+            hidden
+          />
+        </div>
+        <p id="saveStatus" class="subtle" role="status">
+          Versioned JSON · reusable inputs
+        </p>
+        <section class="control-section">
+          <h2><span>01</span> Mission inputs</h2>
+          <div id="missionInputs"></div>
+          <div class="route-summary" id="routeSummary"></div>
         </section>
-        <section class="panel">
-          <h2>Dominant error sources</h2>
-          <div class="bars" id="errorBars"></div>
+        <section class="control-section">
+          <h2><span>02</span> Robot performance</h2>
+          <p class="section-note">
+            Assumed 1σ. Horizontal values are per axis.
+          </p>
+          <div id="robotInputs"></div>
+          <p class="formula">σ²(d) = σ²₁₀₀ × d / 100 m</p>
+          <p class="section-note">
+            Independent motion increments. A reported “1% ATE” is not a standard
+            deviation.
+          </p>
         </section>
-      </div>
-
-      <div class="grid2">
-        <section class="panel">
-          <h2>Traverse envelopes</h2>
-          <canvas class="chart" id="traverseChart"></canvas>
-          <p class="note" id="traverseNote">Local (amber), map-relative (cyan), cartographic (red). Green ticks = anchors.</p>
+        <section class="control-section">
+          <h2><span>03</span> Starting reference</h2>
+          <p class="section-note">
+            Knowledge of the achieved lander position. Landing dispersion is
+            separate.
+          </p>
+          <div id="referenceInputs"></div>
         </section>
-        <section class="panel">
-          <h2>Gravity anomaly vs budget</h2>
-          <canvas class="chart" id="gravityChart"></canvas>
+        <section class="control-section methods">
+          <h2><span>04</span> External observations</h2>
+          <label class="method-toggle"
+            ><input id="uwbEnabled" type="checkbox" /><span
+              ><strong>UWB range</strong
+              ><small>Ultra-wideband · one lander</small></span
+            ><span class="toggle-track"></span
+          ></label>
+          <details id="uwbDetails">
+            <summary>Range assumptions</summary>
+            <div id="uwbInputs"></div>
+            <label class="checkbox-label"
+              ><input id="terrainOcclusion" type="checkbox" checked /> Block
+              link behind ravine bend</label
+            >
+            <p class="section-note">
+              Nominal visibility mask and maximum range. A range constrains its
+              line of sight.
+            </p>
+          </details>
+          <label class="method-toggle"
+            ><input id="mapEnabled" type="checkbox" /><span
+              ><strong>Orbital map matching</strong
+              ><small>Horizontal position · shared control</small></span
+            ><span class="toggle-track"></span
+          ></label>
+          <details id="mapDetails">
+            <summary>Map assumptions</summary>
+            <div id="mapInputs"></div>
+            <label class="checkbox-label"
+              ><input id="mapAvailable" type="checkbox" checked /> Map
+              observations available</label
+            >
+            <p class="section-note">
+              Enabled, available matches succeed at each scheduled point. No
+              direct height or heading measurement. Shared control is
+              independent of the lander prior.
+            </p>
+          </details>
         </section>
-      </div>
-
-      <section class="panel">
-        <h2>Navigation ConOps comparison (same survey)</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ConOps</th>
-              <th>Local H</th>
-              <th>Map H</th>
-              <th>Cart. H</th>
-              <th>Science</th>
-              <th>Dominant term</th>
-            </tr>
-          </thead>
-          <tbody id="compareBody"></tbody>
-        </table>
-      </section>
-
-      <section class="panel">
-        <h2>Geodetic information sources (PDF)</h2>
-        <table>
-          <thead><tr><th>Source</th><th>Assessment</th><th>Usable</th></tr></thead>
-          <tbody id="sourcesBody"></tbody>
-        </table>
-      </section>
-
-      <section class="panel">
-        <h2>PDF question trace</h2>
-        <table>
-          <thead><tr><th>ID</th><th>Question</th><th>Addressed by</th></tr></thead>
-          <tbody id="pdfBody"></tbody>
-        </table>
-      </section>
-    </main>
-  </div>
-
-  <footer>
-    First-order assessment · not a flight estimator ·
-    <a href="./error-explorer.html">legacy 3D error explorer</a> ·
-    <a href="https://github.com/d33pk3rn3l/ll-positioning">source</a>
-  </footer>
-
-  <script type="module" src="./src/app.mjs"></script>
-</body>
+        <div class="demo-box">
+          <span class="eyebrow">REPRODUCIBLE EXAMPLES</span
+          ><button id="blockedDemo">Blocked UWB link <span>↗</span></button
+          ><button id="mapDemo">Shared map error limit <span>↗</span></button>
+        </div>
+        <p class="sidebar-foot">
+          All example performance values are assumed. No flight performance is
+          claimed.
+        </p>
+      </aside>
+      <main>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">GLOBAL LOCALIZATION EXPLORER</div>
+            <h1>Every step adds uncertainty.</h1>
+            <p>
+              Follow one route. Find the main cause. Compare external
+              observations.
+            </p>
+          </div>
+          <span class="model-badge">FIRST-ORDER MODEL</span>
+        </div>
+        <div id="validation" role="alert" hidden></div>
+        <div id="assessment">
+          <section class="viewport-panel">
+            <div class="viewport-toolbar">
+              <div>
+                <span class="status-dot"></span> SYNTHETIC RAVINE
+                <span class="subtle">/ 3D VIEW</span>
+              </div>
+              <div class="segmented" role="group" aria-label="Reference view">
+                <button id="globalView" class="active" aria-pressed="true">
+                  Global</button
+                ><button id="localView" aria-pressed="false">Local</button>
+              </div>
+            </div>
+            <div
+              id="viewport"
+              aria-label="Interactive 3D route, lander and uncertainty ellipsoids"
+            >
+              <div class="view-caption">
+                <span class="eyebrow" id="viewLabel">GLOBAL POSITION</span>
+                <p id="viewExplanation">
+                  Origin and heading knowledge move the route in the lunar
+                  frame.
+                </p>
+              </div>
+              <div class="viewport-stats">
+                <span class="eyebrow">AT THE ROUTE CURSOR</span
+                ><strong id="distanceReadout"></strong>
+                <div id="positionReadout"></div>
+                <span id="linkStatus" class="link-status"></span>
+              </div>
+              <div class="scene-legend">
+                <span><i class="line baseline"></i> Baseline</span
+                ><span><i class="line selected"></i> Selected methods</span
+                ><span>Ellipsoid: 1σ principal axes · true scale</span>
+              </div>
+              <div class="scene-help">
+                Drag to orbit · scroll to zoom · click route to select
+              </div>
+              <div id="viewportError" hidden></div>
+            </div>
+            <div class="cursor-panel">
+              <label for="routeCursor"
+                >ROUTE CURSOR <output id="cursorOutput"></output></label
+              ><input
+                id="routeCursor"
+                type="range"
+                min="0"
+                max="550"
+                step="1"
+                value="330"
+              />
+              <div class="cursor-labels">
+                <span>LANDER · 0 m</span><span id="bendLabel"></span
+                ><span id="endLabel"></span>
+              </div>
+            </div>
+          </section>
+          <section class="plots-section">
+            <div class="section-title">
+              <h2>Global position uncertainty</h2>
+              <span>1σ per axis · metres · distance walked</span>
+            </div>
+            <div class="plots" id="plots"></div>
+          </section>
+          <div class="analysis-grid">
+            <section class="analysis-panel">
+              <div class="section-title">
+                <h2>What drives the uncertainty?</h2>
+                <span id="contributionContext"></span>
+              </div>
+              <p id="dominantText" class="insight"></p>
+              <div id="contributions"></div>
+              <p class="section-note">
+                Contributions use the full filtered covariance. Bar lengths show
+                each source’s share of total position variance.
+              </p>
+            </section>
+            <section class="analysis-panel">
+              <div class="section-title">
+                <h2>Local ≠ global</h2>
+                <span>AT CURSOR</span>
+              </div>
+              <p class="section-note">
+                Local navigation describes motion in a fixed robot frame. Global
+                position also includes the lunar origin and initial heading
+                knowledge.
+              </p>
+              <table class="comparison">
+                <thead>
+                  <tr>
+                    <th>1σ · m</th>
+                    <th>East</th>
+                    <th>North</th>
+                    <th>Up</th>
+                  </tr>
+                </thead>
+                <tbody id="comparisonRows"></tbody>
+              </table>
+              <p class="section-note">
+                Local row: initialization + motion, before external ties, with
+                origin and heading fixed. Other rows: global, using information
+                available so far.
+              </p>
+            </section>
+          </div>
+          <section class="analysis-panel observations">
+            <div class="section-title">
+              <h2>Observation log</h2>
+              <span id="observationCount"></span>
+            </div>
+            <p class="section-note">
+              Observations apply when they occur. Later observations never
+              change earlier results.
+            </p>
+            <div id="observationLog"></div>
+          </section>
+          <details class="model-notes">
+            <summary>Model, reference frame & interpretation</summary>
+            <p>
+              First-order Gaussian covariance model. Gravity-aligned roll and
+              pitch. Initial heading uses the small-angle approximation. Motion
+              variance grows linearly with distance walked. Starting-position,
+              heading, initialization and motion errors remain separate.
+            </p>
+            <p>
+              Global frame: synthetic lander-centred east–north–up aligned to
+              DE421 mean Earth. Up is geometric height above the synthetic
+              tangent plane. No lunar terrain or frame transform is applied.
+              Each plot shows one axis standard deviation; the ellipsoid’s
+              principal semiaxes equal 1σ, without a confidence percentage.
+            </p>
+            <p>
+              UWB measures rover–lander distance. Orbital matching measures
+              horizontal position relative to a map with one shared control
+              offset. The joint covariance retains correlations between rover,
+              heading, lander and map. Strong independent lander knowledge can
+              reduce the map control limit. Both methods can be enabled
+              together.
+            </p>
+            <p>
+              Thin possible trajectories are deterministic
+              one-standard-deviation baseline perturbations, not posterior
+              samples. In local view, nearby terrain and rocks move with the
+              reference frame. Full formulas and research interpretation:
+              <a
+                href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/docs/sprint-1-model.md"
+                >model note ↗</a
+              >.
+            </p>
+          </details>
+        </div>
+        <footer>
+          <span class="status-dot"></span> SPRINT 01
+          <span>One route · causal observations · explicit assumptions</span>
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
 </html>

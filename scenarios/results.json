@@ -1,0 +1,438 @@
+{
+  "blocked-uwb": {
+    "cursor_m": 400,
+    "baseline_sigma_m": [
+      8.438329373055028,
+      15.391196118055264,
+      3.163858403911275
+    ],
+    "selected_sigma_m": [
+      8.258954220854,
+      15.391196118055259,
+      3.1632701879909906
+    ],
+    "local_sigma_m": [
+      2.009975124224178,
+      2.009975124224178,
+      1.004987562112089
+    ],
+    "observations": [
+      {
+        "kind": "uwb",
+        "distance_m": 50,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 100,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 150,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 200,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 250,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 300,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 350,
+        "status": "Blocked by ravine wall",
+        "applied": false
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 400,
+        "status": "Blocked by ravine wall",
+        "applied": false
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 450,
+        "status": "Blocked by ravine wall",
+        "applied": false
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 500,
+        "status": "Blocked by ravine wall",
+        "applied": false
+      },
+      {
+        "kind": "uwb",
+        "distance_m": 550,
+        "status": "Blocked by ravine wall",
+        "applied": false
+      }
+    ]
+  },
+  "shared-map-limit": {
+    "cursor_m": 550,
+    "baseline_sigma_m": [
+      1000.0000199999998,
+      1000.0000199999998,
+      3.222576608864404
+    ],
+    "selected_sigma_m": [
+      5.000392008923921,
+      5.000392008923921,
+      3.222576608864403
+    ],
+    "local_sigma_m": [
+      0.2,
+      0.2,
+      1.176860229593982
+    ],
+    "observations": [
+      {
+        "kind": "map",
+        "distance_m": 10,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 20,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 30,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 40,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 50,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 60,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 70,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 80,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 90,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 100,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 110,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 120,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 130,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 140,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 150,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 160,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 170,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 180,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 190,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 200,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 210,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 220,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 230,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 240,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 250,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 260,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 270,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 280,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 290,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 300,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 310,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 320,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 330,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 340,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 350,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 360,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 370,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 380,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 390,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 400,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 410,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 420,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 430,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 440,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 450,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 460,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 470,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 480,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 490,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 500,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 510,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 520,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 530,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 540,
+        "status": "Available",
+        "applied": true
+      },
+      {
+        "kind": "map",
+        "distance_m": 550,
+        "status": "Available",
+        "applied": true
+      }
+    ]
+  }
+}
