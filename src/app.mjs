@@ -24,7 +24,7 @@ try {
   if (saved) scenario = parseScenario(saved);
 } catch {
   $("saveStatus").textContent =
-    "Stored scenario was invalid. Loaded the example.";
+    "The saved scenario is invalid. The page uses the example.";
 }
 for (const [key, d] of Object.entries(INPUTS)) {
   const row = document.createElement("div");
@@ -111,11 +111,12 @@ $("reset").addEventListener("click", () => replace(defaultScenario(), 330));
 $("blockedDemo").addEventListener("click", () => {
   replace(blockedDemo(), 400);
   $("saveStatus").textContent =
-    "Blocked-link example loaded. Save it to repeat.";
+    "The blocked UWB example is ready. Save the scenario to repeat it.";
 });
 $("mapDemo").addEventListener("click", () => {
   replace(mapDemo(), 550);
-  $("saveStatus").textContent = "Shared-map example loaded. Save it to repeat.";
+  $("saveStatus").textContent =
+    "The shared map control example is ready. Save the scenario to repeat it.";
 });
 $("save").addEventListener("click", () => {
   try {
@@ -131,7 +132,7 @@ $("save").addEventListener("click", () => {
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     $("saveStatus").textContent =
-      "Saved in this browser and downloaded as JSON.";
+      "The scenario is saved in this browser. The file is ready to download.";
   } catch (e) {
     $("saveStatus").textContent = `Could not save: ${e.message}`;
   }
@@ -231,7 +232,7 @@ function render(missionChanged = false) {
     : scenario.mapEnabled
       ? "MAP · " +
         (scenario.mapAvailable
-          ? "Scheduled matches assumed successful"
+          ? "Assume successful scheduled matches"
           : "Observations unavailable")
       : "BASELINE · starting tie only";
   $("linkStatus").classList.toggle(
@@ -242,8 +243,8 @@ function render(missionChanged = false) {
     mode === "global" ? "GLOBAL POSITION" : "LOCAL NAVIGATION";
   $("viewExplanation").textContent =
     mode === "global"
-      ? "Origin and heading knowledge move the route in the lunar frame."
-      : "Origin and heading fixed. Nearby terrain and rocks share this reference.";
+      ? "Origin and heading errors move the route in the lunar frame."
+      : "The origin and heading stay fixed. Nearby terrain and rocks share this reference.";
   for (let i = 0; i < 3; i++) plot(result, p, i);
   const traces = Object.entries(p.contributions)
       .map(([k, c]) => ({ key: k, value: c.reduce((v, r, i) => v + r[i], 0) }))
@@ -317,7 +318,7 @@ function render(missionChanged = false) {
       viewport = new RouteViewport($("viewport"), selectDistance);
     } catch (e) {
       $("viewportError").hidden = false;
-      $("viewportError").textContent = "3D view could not start: " + e.message;
+      $("viewportError").textContent = "Cannot start the 3D view: " + e.message;
     }
   }
   viewport?.update(scenario, result, p, missionChanged);

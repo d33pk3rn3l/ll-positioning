@@ -1,66 +1,197 @@
-# LunarLeaper · Global position explorer
+# LunarLeaper: Global position explorer
 
-Sprint 1 answers one question: **how does global position uncertainty grow along one mission route, and which external observations help?**
+Use this tool to assess global position uncertainty along one mission route.
+Compare the baseline with ultra-wideband (UWB) range and orbital map matching.
+All example performance values are assumptions.
 
-The single page has a synthetic 3D scene, local and global views, one route cursor, east/north/up uncertainty plots, source contributions, and baseline comparison. An LL reviewer can change every scenario input without editing code. UWB range and orbital map matching can run separately or together.
+## Run the page
 
-## Run
+Use Node.js 22 or later.
 
-Requires Node 22 or later.
+1. Run `npm ci` to install the dependencies.
+2. Run `npm run dev` to start the local server.
+3. Open the URL that the server shows.
 
-```sh
-npm ci
-npm run dev
+Run `npm run build` to build the site in `dist/`.
+Run `npm run preview` to view that build.
+GitHub Pages publishes `dist/` after the tests pass on `main`.
+The workflow does not publish a preview for each pull request.
+
+## Use the page
+
+1. Set the ravine distance walked.
+2. Set the ravine climb.
+3. Enter the robot performance assumptions.
+4. Enter the lander position uncertainty.
+5. Enter the initial heading uncertainty.
+6. Enable UWB range or orbital map matching.
+7. Move the route cursor to select a position.
+8. Compare the selected method with the baseline.
+9. Select **Save scenario** to download the scenario file.
+
+The scene has flat landing ground and a 150 m approach.
+The ascending ravine leg is 0–500 m long.
+Distance walked includes the slope.
+Climb cannot exceed the ravine distance walked.
+
+The 3D view, plots, and tables use the same route cursor.
+You can also select a position on a plot, route, or observation log.
+Select **Local** or **Global** to change the reference view.
+If both methods are enabled, the table also shows each method separately.
+
+A saved JSON file contains the inputs, units, statistics, frame, and assumptions.
+Save also keeps the scenario in this browser.
+Refresh the page to restore the last saved scenario.
+Select **Load** to open a scenario file.
+If an essential input is missing, the page shows an incomplete assessment.
+
+## Inputs and terms
+
+Each uncertainty input is one standard deviation, written as σ or 1σ.
+Horizontal values apply separately to the east and north axes.
+All distances are in meters unless the page specifies another unit.
+
+| Input | Definition |
+| --- | --- |
+| Ravine distance and climb | Distance walked and change in up position, in meters |
+| Motion σ at 100 m | Assumed motion error after 100 m, in meters |
+| Rover initialization σ | Rover starting position error relative to the lander, in meters |
+| Lander position σ | Knowledge error of the achieved lander position, in meters |
+| Initial heading σ | Knowledge error of the initial horizontal direction, in degrees |
+| UWB range σ | Independent error of one range measurement, in meters |
+| Maximum range | Assumed limit of the UWB link, in meters |
+| Observation spacing | Distance walked between observations, in meters |
+| Map match σ | Independent error of one horizontal map match, in meters per axis |
+| Shared map control σ | One horizontal map position error shared by all matches, in meters per axis |
+
+**Local navigation** includes rover initialization and motion error in a fixed robot frame.
+The local result holds the origin and heading fixed.
+It uses no external observations.
+
+**Global position** also includes lander position and initial heading knowledge.
+The baseline uses no external observations.
+The selected result uses observations available at the route cursor.
+
+The frame is synthetic east–north–up, with its origin at the lander.
+Its axes align with DE421 mean Earth.
+Up is geometric height above the synthetic tangent plane.
+The model applies no lunar terrain data or geodetic frame transform.
+Lander position knowledge is separate from landing dispersion.
+
+Absolute trajectory error (ATE) depends on the evaluation method.
+A reported “1% ATE” is not automatically a standard deviation.
+The tool does not convert paper results into Gaussian performance inputs.
+
+## Model
+
+The model uses first-order Gaussian error propagation.
+It keeps starting position, initial heading, initialization, and accumulated motion errors separate.
+It assumes gravity-aligned roll and pitch.
+It uses a small-angle approximation for initial heading error.
+
+The joint error state is `x = [rE, rN, rU, ψ, lE, lN, lU, cE, cN]`.
+`r` is rover position error.
+`ψ` is initial heading error.
+`l` is lander position error.
+`c` is map control error.
+Heading error uses radians in the calculation.
+
+At the start, `r = l + initialization`.
+The lander and map control priors are independent.
+Each remains shared along the full route.
+The covariance retains correlations between rover, heading, lander, and map errors.
+
+For displacement `[ΔE, ΔN, ΔU]` and distance walked `Δd`:
+
+```text
+r_next = r + [-ΔN, ΔE, 0] ψ + w
+Q_rover = diag(σH100², σH100², σU100²) × Δd / 100 m
+P_next = F P Fᵀ + Q
 ```
 
-Open the local URL printed by Vite. `npm run build` creates the deployable site in `dist/`. `npm run preview` serves that build. GitHub Pages publishes `dist/` after checks on `main`.
+`w` is an independent motion increment with covariance `Q_rover`.
+`F` is the transition matrix for this state equation.
+The other state variables stay constant during propagation.
+Motion variance grows linearly with distance walked.
+Display subdivision does not change the result.
+Starting position error moves the full trajectory together.
+Position error from initial heading grows with horizontal distance from the origin.
 
-## Reviewer workflow
+### External observations
 
-1. Set ravine distance walked and climb. The flat approach stays 150 m. Ravine distance is 0–500 m and includes the slope. Climb cannot exceed it.
-2. Enter assumed robot motion standard deviations at 100 m and rover initialization error.
-3. Enter lander position knowledge and initial heading knowledge separately.
-4. Enable ultra-wideband (UWB) range, orbital map matching, or both. Open each method's assumptions.
-5. Move the route cursor, click a plot or route, or select an observation in the log. All views select the same distance.
-6. Compare the selected curve with the baseline. The table also compares each method separately when both are enabled.
-7. Save a versioned JSON scenario. Save also stores the scenario in this browser. Load imports JSON. Refresh restores the last saved inputs.
+Schedules start one observation spacing from the origin.
+The calculation applies each observation at its scheduled distance.
+Future observations cannot change earlier results.
+An unavailable observation has no effect.
 
-A missing essential numeric value produces an incomplete assessment and suppresses stale results. Invalid scenario files leave the current scenario intact.
+UWB measures rover–lander distance.
+For the unit line-of-sight vector `u`, the measurement row is:
 
-## Model and input definitions
+```text
+H_range = [uE, uN, uU, 0, -uE, -uN, -uU, 0, 0]
+R_range = σrange²
+```
 
-All performance defaults are **illustrative assumptions**, expressed as one standard deviation. Horizontal uncertainties are **per axis**, with equal independent east/north prior variances. Inputs display units and assumption labels; saved scenarios carry per-input unit, statistic, source and status metadata.
+One range directly constrains only its line of sight.
+It does not provide a complete position fix.
+It cannot remove the shared lander position error.
+The link is unavailable beyond the maximum range.
+When blockage is enabled, the bend blocks the link after 45% of the ravine leg.
+This visibility rule is an assumption.
 
-| Inputs | Meaning |
-| --- | --- |
-| Ravine length / climb | True distance walked / geometric up change, m |
-| Horizontal / up motion σ at 100 m | Independent increment variance grows as `sigma100² × distance_walked / 100 m` |
-| Rover initialization σ | Relative starting-position error, separate from lander knowledge |
-| Lander horizontal / up position σ | Shared knowledge error of the achieved position; excludes landing dispersion |
-| Initial heading σ | Shared small-angle yaw error, degrees; gravity-aligned roll/pitch assumed |
-| UWB range σ / maximum range / spacing | Scalar range noise, nominal availability bound, scheduled distance walked |
-| Map match σ / shared map control σ / spacing | Independent horizontal measurement noise, one persistent horizontal control offset, scheduled distance walked |
+An orbital map match measures horizontal position relative to the map:
 
-The joint state retains covariance between rover position, initial heading, lander position and map control. Starting-position, heading, initialization, motion, map control and measurement noise contributions remain separate. UWB uses the rover–lander range Jacobian. Map matching measures horizontal position relative to the same uncertain map at each observation. Neither provides a direct heading fix; map matching provides no direct height fix.
+```text
+H_E = [1, 0, 0, 0, 0, 0, 0, -1, 0]
+H_N = [0, 1, 0, 0, 0, 0, 0, 0, -1]
+R_map = σmatch² I₂
+```
 
-The baseline is the starting tie plus motion, without external observations. All results are causal: future observations cannot alter previous estimates. Display subdivision does not change the growth model or observation schedule.
+The model assumes that each enabled, available map match succeeds.
+Map matching provides no direct height or heading measurement.
+Horizontal observations can improve heading knowledge through covariance.
+Repeated matches reduce independent match noise.
+They retain the shared map control error.
+Independent lander knowledge can reduce this control limit.
 
-**Local navigation** is initialization plus motion in a robot frame with origin and heading fixed, before external ties. **Global position** additionally carries knowledge of the lunar origin and heading, conditioned on observations available so far. Global axes use a **synthetic lander-centred east–north–up frame aligned to DE421 mean Earth**. No lunar geodetic transform or actual terrain is applied. Up is geometric height above the synthetic tangent plane.
+Each scalar observation uses the Joseph covariance update:
 
-A reported absolute trajectory error (ATE), including “1% ATE”, is not automatically a standard deviation. No attached paper's benchmark error is used as a Gaussian input without an explicit statistical assumption. See [model equations](docs/sprint-1-model.md) and [research interpretation](docs/sources/sprint-1-research.md).
+```text
+S = H P Hᵀ + R
+K = P Hᵀ / S
+A = I - K H
+P_updated = A P Aᵀ + K R Kᵀ
+```
 
-## Reproduce the demonstrations
+Each error source retains its full covariance contribution.
+The contributions sum to the total covariance after each update.
+The largest contribution has the largest sum of rover position variances.
+Zero-information observations and observations with infinite noise have no effect.
 
-Use the sidebar example buttons, or load the committed JSON files:
+### Read the results
 
-- [Blocked UWB](scenarios/blocked-uwb.json): select 400 m. The bend at 330 m blocks later ranges. Prior ranges remain useful, but unavailable ranges have no effect.
-- [Shared map control limit](scenarios/shared-map-limit.json): select the 550 m route end. Many precise map matches retain approximately the declared 5 m horizontal control uncertainty. The weak independent lander prior is declared; a strong independent prior can reduce that limit.
+Each plot shows one axis standard deviation: `sqrt(Pii)`.
+The ellipsoid uses the full position covariance.
+Its principal semiaxes equal one standard deviation at true scale.
+The page assigns no confidence percentage to the ellipsoid.
 
-`node scripts/demonstrations.mjs` regenerates both scenarios and [their numerical results](scenarios/results.json). `npm run check:demos` verifies exact reproduction.
+The faint paths show deterministic baseline error examples.
+They are not random samples from the selected estimate.
+Nearby rocks share the route's starting position and heading errors.
+The terrain, lander, and markers are illustrations.
 
-Ellipsoid semiaxes equal one principal-axis standard deviation, at true scene scale, without a confidence percentage. The faint trajectories are deterministic baseline perturbations, not posterior samples. Terrain, rocks, marker sizes and the lander are illustrations. UWB blockage is an explicit nominal visibility mask behind the synthetic bend, not a radio simulation.
+## Repeat the examples
 
-## Validation
+| Example | Action | Expected result |
+| --- | --- | --- |
+| [Blocked UWB](scenarios/blocked-uwb.json) | Load the file and select 400 m. | The bend at 330 m blocks later ranges. |
+| [Shared map control](scenarios/shared-map-limit.json) | Load the file and select 550 m. | Horizontal uncertainty stays near the assumed 5 m map control error. |
+
+The sidebar buttons load the same examples.
+Run `node scripts/demonstrations.mjs` to generate the files and [results](scenarios/results.json).
+Run `npm run check:demos` to confirm that the saved results match the calculation.
+
+## Run the tests
 
 ```sh
 npm test
@@ -70,18 +201,35 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The browser check uses system Chromium when present or Playwright Chromium otherwise. `CHROMIUM_EXECUTABLE` can select a binary. It starts and stops a local production preview. Screenshots go to ignored `artifacts/`.
+The numerical tests cover growth, geometry, shared errors, covariance, and observation timing.
+A separate seeded Monte Carlo calculation tests the baseline covariance.
+The browser test covers the full workflow and mobile layout.
+It uses system Chromium when available.
+Otherwise, it uses Playwright Chromium.
+Screenshots go to `artifacts/`.
 
-Numerical checks cover shared translation, heading lever arm and covariance, the stated motion law, subdivision invariance, range geometry, shared lander/map error, unavailable and uninformative observations, causal filtering, source attribution, covariance symmetry and eigenvalues, zero uncertainty, invalid inputs, and saved scenario reproduction. A separate seeded Monte Carlo calculation checks the baseline. Existing source-table checks remain intact. Browser checks exercise the complete workflow, both demonstrations, local/global views, imports, incomplete inputs and mobile layout.
+## Files and references
 
-## Architecture and preserved work
+| Path | Purpose |
+| --- | --- |
+| `src/scenario.mjs` | Inputs, validation, saved scenarios, and route geometry |
+| `src/localization.mjs` | Covariance propagation and observation schedules |
+| `src/covariance.mjs` | Matrix operations and ellipsoid axes |
+| `src/app.mjs`, `src/viewport.mjs` | Controls, plots, and the 3D view |
+| `src/values-format.mjs`, `tests/values-schema.json` | Source table format validation for future data import |
+| `scenarios/` | Saved examples and calculated results |
 
-- `src/scenario.mjs`: versioned inputs, metadata, validation and route geometry.
-- `src/localization.mjs`: pure covariance model and observation schedule.
-- `src/covariance.mjs`: matrix operations and ellipsoid eigensystem.
-- `src/app.mjs`, `src/viewport.mjs`: controls, plots and one Three.js viewport.
-- `scenarios/`: saved demonstrations and reproducible outputs.
+The following papers provide research context, not performance specifications:
 
-The old science/navigation assessment, legacy gravimetry page and their tests were removed. The source notes, bibliography, frame notes, science trace, motion audit and source-table validator remain as research. Earlier `CHARTER.md`, `DECISIONS.md` entries and status text describe the broader research programme; this Sprint 1 does not claim to approve those gates. See [issue reconciliation](docs/sprint-1-issues.md).
+- [Censible, Nash et al. (2024)](https://doi.org/10.1109/ICRA57147.2024.10611697): rover image registration to an orbital map on Mars.
+- [WARG, Chen et al. (2026)](https://arxiv.org/abs/2606.10602v1): rover image registration to lunar orbital images.
+- Li and Jiang (2009), *Lunar Rover Positioning Based on TOA Estimation for UWB Signal Using Unitary-ESPRIT*: simulated UWB positioning with additional geometry.
 
-Deferred: LRO terrain import, image matching algorithms, radio simulation, loop closure, post-mission reconstruction and science models.
+The [earlier research records](https://github.com/d33pk3rn3l/ll-positioning/tree/219c9b0054d931a88e22ea8aaf9dd9d8262b6119) retain source notes, source values, and review history.
+[GitHub issues](https://github.com/d33pk3rn3l/ll-positioning/issues) track unresolved defects, including #19 and #26.
+
+LRO terrain import, image algorithms, radio simulation, loop closure, reconstruction, and science models remain outside this scope.
+
+Use [ASD-STE100 writing rules](https://asd-ste100.org/STE_faq.html) for project instructions.
+Use short sentences, active voice, and the technical terms defined above.
+Give one instruction in each procedure step.
