@@ -45,7 +45,7 @@
           />
         </div>
         <p id="saveStatus" class="subtle" role="status">
-          Versioned JSON · reusable inputs
+          Scenario file · inputs and assumptions
         </p>
         <section class="control-section">
           <h2><span>01</span> Mission inputs</h2>
@@ -55,7 +55,7 @@
         <section class="control-section">
           <h2><span>02</span> Robot performance</h2>
           <p class="section-note">
-            Assumed 1σ. Horizontal values are per axis.
+            Assumed 1σ. Each horizontal value applies to one axis.
           </p>
           <div id="robotInputs"></div>
           <p class="formula">σ²(d) = σ²₁₀₀ × d / 100 m</p>
@@ -67,8 +67,8 @@
         <section class="control-section">
           <h2><span>03</span> Starting reference</h2>
           <p class="section-note">
-            Knowledge of the achieved lander position. Landing dispersion is
-            separate.
+            Enter uncertainty in the achieved lander position. Landing dispersion
+            is separate.
           </p>
           <div id="referenceInputs"></div>
         </section>
@@ -88,8 +88,8 @@
               link behind ravine bend</label
             >
             <p class="section-note">
-              Nominal visibility mask and maximum range. A range constrains its
-              line of sight.
+              The visibility rule and maximum range control link availability. A
+              range directly constrains only its line of sight.
             </p>
           </details>
           <label class="method-toggle"
@@ -106,9 +106,9 @@
               observations available</label
             >
             <p class="section-note">
-              Enabled, available matches succeed at each scheduled point. No
-              direct height or heading measurement. Shared control is
-              independent of the lander prior.
+              The model assumes that each available map match succeeds. Map
+              matches provide no direct height or heading measurement. Lander
+              and map control errors are independent at the start.
             </p>
           </details>
         </section>
@@ -118,18 +118,18 @@
           ><button id="mapDemo">Shared map error limit <span>↗</span></button>
         </div>
         <p class="sidebar-foot">
-          All example performance values are assumed. No flight performance is
-          claimed.
+          The example values are assumptions. They do not specify flight
+          performance.
         </p>
       </aside>
       <main>
         <div class="page-heading">
           <div>
             <div class="eyebrow">GLOBAL LOCALIZATION EXPLORER</div>
-            <h1>Every step adds uncertainty.</h1>
+            <h1>Assess uncertainty along the route.</h1>
             <p>
-              Follow one route. Find the main cause. Compare external
-              observations.
+              Set the inputs. Compare the methods. Find the largest error
+              source.
             </p>
           </div>
           <span class="model-badge">FIRST-ORDER MODEL</span>
@@ -155,8 +155,7 @@
               <div class="view-caption">
                 <span class="eyebrow" id="viewLabel">GLOBAL POSITION</span>
                 <p id="viewExplanation">
-                  Origin and heading knowledge move the route in the lunar
-                  frame.
+                  Origin and heading errors move the route in the lunar frame.
                 </p>
               </div>
               <div class="viewport-stats">
@@ -171,7 +170,8 @@
                 ><span>Ellipsoid: 1σ principal axes · true scale</span>
               </div>
               <div class="scene-help">
-                Drag to orbit · scroll to zoom · click route to select
+                Drag to rotate the view. Scroll to zoom. Click the route to
+                select a position.
               </div>
               <div id="viewportError" hidden></div>
             </div>
@@ -195,32 +195,31 @@
           <section class="plots-section">
             <div class="section-title">
               <h2>Global position uncertainty</h2>
-              <span>1σ per axis · metres · distance walked</span>
+              <span>1σ per axis · meters · distance walked</span>
             </div>
             <div class="plots" id="plots"></div>
           </section>
           <div class="analysis-grid">
             <section class="analysis-panel">
               <div class="section-title">
-                <h2>What drives the uncertainty?</h2>
+                <h2>Largest error sources</h2>
                 <span id="contributionContext"></span>
               </div>
               <p id="dominantText" class="insight"></p>
               <div id="contributions"></div>
               <p class="section-note">
-                Contributions use the full filtered covariance. Bar lengths show
-                each source’s share of total position variance.
+                Each bar shows one source’s share of total position variance.
+                The calculation retains the full covariance.
               </p>
             </section>
             <section class="analysis-panel">
               <div class="section-title">
-                <h2>Local ≠ global</h2>
+                <h2>Local and global position</h2>
                 <span>AT CURSOR</span>
               </div>
               <p class="section-note">
-                Local navigation describes motion in a fixed robot frame. Global
-                position also includes the lunar origin and initial heading
-                knowledge.
+                Local navigation uses a fixed robot frame. Global position also
+                includes lander position and initial heading knowledge.
               </p>
               <table class="comparison">
                 <thead>
@@ -234,9 +233,9 @@
                 <tbody id="comparisonRows"></tbody>
               </table>
               <p class="section-note">
-                Local row: initialization + motion, before external ties, with
-                origin and heading fixed. Other rows: global, using information
-                available so far.
+                The local row includes initialization and motion error with
+                origin and heading fixed. Global rows use the observations
+                available at the cursor.
               </p>
             </section>
           </div>
@@ -246,49 +245,47 @@
               <span id="observationCount"></span>
             </div>
             <p class="section-note">
-              Observations apply when they occur. Later observations never
-              change earlier results.
+              The calculation applies observations in route order. Future
+              observations cannot change earlier results.
             </p>
             <div id="observationLog"></div>
           </section>
           <details class="model-notes">
-            <summary>Model, reference frame & interpretation</summary>
+            <summary>Model and assumptions</summary>
             <p>
-              First-order Gaussian covariance model. Gravity-aligned roll and
-              pitch. Initial heading uses the small-angle approximation. Motion
-              variance grows linearly with distance walked. Starting-position,
-              heading, initialization and motion errors remain separate.
+              The model uses first-order Gaussian error propagation. Motion
+              variance grows linearly with distance walked. Starting position,
+              initial heading, initialization, and motion errors stay separate.
             </p>
             <p>
-              Global frame: synthetic lander-centred east–north–up aligned to
-              DE421 mean Earth. Up is geometric height above the synthetic
-              tangent plane. No lunar terrain or frame transform is applied.
-              Each plot shows one axis standard deviation; the ellipsoid’s
-              principal semiaxes equal 1σ, without a confidence percentage.
+              The synthetic east–north–up frame has its origin at the lander.
+              Its axes align with DE421 mean Earth. Up is geometric height above
+              the synthetic tangent plane. Each plot shows one axis standard
+              deviation. The ellipsoid uses 1σ principal semiaxes at true scale.
             </p>
             <p>
-              UWB measures rover–lander distance. Orbital matching measures
-              horizontal position relative to a map with one shared control
-              offset. The joint covariance retains correlations between rover,
-              heading, lander and map. Strong independent lander knowledge can
-              reduce the map control limit. Both methods can be enabled
-              together.
+              UWB measures rover–lander distance. Orbital map matching measures
+              horizontal position relative to a shared map control error.
+              Repeated matches retain this shared error. The faint paths show
+              baseline error examples, not random samples from the selected
+              estimate.
             </p>
             <p>
-              Thin possible trajectories are deterministic
-              one-standard-deviation baseline perturbations, not posterior
-              samples. In local view, nearby terrain and rocks move with the
-              reference frame. Full formulas and research interpretation:
+              Read the
               <a
-                href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/docs/sprint-1-model.md"
-                >model note ↗</a
-              >.
+                href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/README.md#model"
+                >README</a
+              >
+              for the model equations and research references.
             </p>
           </details>
         </div>
         <footer>
           <span class="status-dot"></span> SPRINT 01
-          <span>One route · causal observations · explicit assumptions</span>
+          <span
+            >One route · observations in route order · declared
+            assumptions</span
+          >
         </footer>
       </main>
     </div>
