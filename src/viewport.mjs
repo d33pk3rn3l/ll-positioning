@@ -7,8 +7,8 @@ import {
   uwbAvailability,
 } from "./scenario.mjs";
 import { eigenSymmetric } from "./covariance.mjs";
-const CYAN = 0x62ddce,
-  AMBER = 0xe4b477;
+const CYAN = 0x64d5c6,
+  AMBER = 0xd6b181;
 const v3 = (p) => new THREE.Vector3(p[0], p[2], -p[1]);
 function line(points, color, opacity = 1, dashed = false) {
   const geometry = new THREE.BufferGeometry().setFromPoints(points.map(v3));
@@ -126,7 +126,8 @@ export class RouteViewport {
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.render();
+    if (this.p) this.frameCamera();
+    else this.render();
   }
   render() {
     this.renderer.render(this.scene, this.camera);
@@ -140,11 +141,48 @@ export class RouteViewport {
     if (this.mode === "local") {
       const t = v3(this.p.position);
       this.controls.target.copy(t);
-      this.camera.position.copy(t).add(new THREE.Vector3(57, 45, 63));
+      this.camera.position
+        .copy(t)
+        .add(
+          new THREE.Vector3(57, 45, 63).multiplyScalar(
+            Math.max(1, 1 / this.camera.aspect),
+          ),
+        );
     } else {
-      const t = v3(routePoint(this.s, totalDistance(this.s) * 0.52));
-      this.controls.target.copy(t);
-      this.camera.position.copy(t).add(new THREE.Vector3(290, 330, 440));
+      const bounds = new THREE.Box3()
+        .setFromPoints(
+          [0, 150, bendDistance(this.s), totalDistance(this.s)].map((d) =>
+            v3(routePoint(this.s, d)),
+          ),
+        )
+        .expandByScalar(18);
+      const target = bounds.getCenter(new THREE.Vector3());
+      const direction = new THREE.Vector3(290, 330, 440).normalize();
+      const right = new THREE.Vector3()
+        .crossVectors(this.camera.up, direction)
+        .normalize();
+      const up = new THREE.Vector3().crossVectors(direction, right).normalize();
+      const tanVertical = Math.tan(
+        THREE.MathUtils.degToRad(this.camera.fov / 2),
+      );
+      const tanHorizontal = tanVertical * this.camera.aspect;
+      let distance = 80;
+      // Fit the route to both viewport dimensions, including portrait screens.
+      for (const x of [bounds.min.x, bounds.max.x])
+        for (const y of [bounds.min.y, bounds.max.y])
+          for (const z of [bounds.min.z, bounds.max.z]) {
+            const corner = new THREE.Vector3(x, y, z).sub(target);
+            distance = Math.max(
+              distance,
+              corner.dot(direction) +
+                Math.abs(corner.dot(right)) / tanHorizontal,
+              corner.dot(direction) + Math.abs(corner.dot(up)) / tanVertical,
+            );
+          }
+      this.controls.target.copy(target);
+      this.camera.position
+        .copy(target)
+        .addScaledVector(direction, distance * 1.1);
     }
     this.controls.update();
     this.render();
@@ -253,10 +291,10 @@ export class RouteViewport {
       ),
     );
     for (const [d, title] of [
-      [0, "LANDER / ORIGIN"],
+      [0, "LANDER"],
       [150, "RAVINE ENTRY"],
-      [bendDistance(s), "VISIBILITY BEND"],
-      [total, "ROUTE END"],
+      [bendDistance(s), "BEND"],
+      [total, "END"],
     ]) {
       const pos = routePoint(s, d),
         l = label(title);
@@ -338,8 +376,12 @@ export class RouteViewport {
     const localCov = p.localSigma.map((v, i) =>
       p.localSigma.map((_, j) => (i === j ? v * v : 0)),
     );
-    this.ellipsoid(pos, local ? localCov : p.baseline, AMBER, 0.4);
-    this.ellipsoid(pos, local ? localCov : p.selected, CYAN, 0.85);
+    if (local) this.ellipsoid(pos, localCov, CYAN, 0.85);
+    else {
+      this.ellipsoid(pos, p.baseline, AMBER, 0.65);
+      if (s.uwbEnabled || s.mapEnabled)
+        this.ellipsoid(pos, p.selected, CYAN, 0.85);
+    }
     const rover = new THREE.Group();
     rover.position.copy(v3(pos));
     const body = new THREE.Mesh(
@@ -430,7 +472,7 @@ export class RouteViewport {
       const e = result.events.find(
         (e) => e.kind === "uwb" && Math.abs(e.distance - p.distance) < 1e-7,
       );
-      if (e) {
+      if (e?.applied) {
         const shell = new THREE.LineSegments(
           new THREE.WireframeGeometry(
             new THREE.SphereGeometry(Math.hypot(...pos), 40, 16),

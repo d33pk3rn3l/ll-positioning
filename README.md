@@ -19,6 +19,8 @@ The workflow does not publish a preview for each pull request.
 
 ## Use the page
 
+Select **Inputs** on a small screen.
+
 1. Set the ravine distance walked.
 2. Set the ravine climb.
 3. Enter the robot performance assumptions.
@@ -27,7 +29,7 @@ The workflow does not publish a preview for each pull request.
 6. Enable UWB range or orbital map matching.
 7. Move the route cursor to select a position.
 8. Compare the selected method with the baseline.
-9. Select **Save scenario** to download the scenario file.
+9. Select **Save** to download the scenario file.
 
 The scene has flat landing ground and a 150 m approach.
 The ascending ravine leg is 0–500 m long.
@@ -55,7 +57,7 @@ All distances are in meters unless the page specifies another unit.
 | --- | --- |
 | Ravine distance and climb | Distance walked and change in up position, in meters |
 | Motion σ at 100 m | Assumed motion error after 100 m, in meters |
-| Rover initialization σ | Rover starting position error relative to the lander, in meters |
+| Rover start σ | Rover starting position error relative to the lander, in meters |
 | Lander position σ | Knowledge error of the achieved lander position, in meters |
 | Initial heading σ | Knowledge error of the initial horizontal direction, in degrees |
 | UWB range σ | Independent error of one range measurement, in meters |
@@ -64,7 +66,7 @@ All distances are in meters unless the page specifies another unit.
 | Map match σ | Independent error of one horizontal map match, in meters per axis |
 | Shared map control σ | One horizontal map position error shared by all matches, in meters per axis |
 
-**Local navigation** includes rover initialization and motion error in a fixed robot frame.
+**Local navigation** includes rover start and motion error in a fixed robot frame.
 The local result holds the origin and heading fixed.
 It uses no external observations.
 
@@ -187,7 +189,7 @@ The terrain, lander, and markers are illustrations.
 | [Blocked UWB](scenarios/blocked-uwb.json) | Load the file and select 400 m. | The bend at 330 m blocks later ranges. |
 | [Shared map control](scenarios/shared-map-limit.json) | Load the file and select 550 m. | Horizontal uncertainty stays near the assumed 5 m map control error. |
 
-The sidebar buttons load the same examples.
+Open **Examples** to load these scenarios.
 Run `node scripts/demonstrations.mjs` to generate the files and [results](scenarios/results.json).
 Run `npm run check:demos` to confirm that the saved results match the calculation.
 
