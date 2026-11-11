@@ -54,16 +54,32 @@ try {
   const checkSigma = async (s, d) => {
     const p = selectedPoint(assess(s, { distances: [d] }), d);
     await page.waitForFunction(
-      ({ v }) =>
+      ({ v, distance }) =>
+        document.getElementById("distanceReadout").textContent ===
+          `${distance} m` &&
         v.every(
           (x, i) =>
             Math.abs(
               Number(document.getElementById(`sigma${i}`).dataset.value) - x,
             ) < 1e-7,
         ),
-      { v: p.selectedSigma },
+      { v: p.selectedSigma, distance: d },
     );
     assert.equal(await page.locator("#distanceReadout").innerText(), `${d} m`);
+  };
+  // Button state changes immediately; the caption updates on the queued render.
+  const checkView = async (view) => {
+    await page.waitForFunction(
+      ({ view, label }) =>
+        document
+          .getElementById(`${view}View`)
+          .getAttribute("aria-pressed") === "true" &&
+        document.getElementById("viewLabel").textContent === label,
+      {
+        view,
+        label: view === "local" ? "LOCAL NAVIGATION" : "GLOBAL POSITION",
+      },
+    );
   };
   const set = async (id, value) => {
     await page.locator("#" + id).evaluate((e, value) => {
@@ -90,13 +106,10 @@ try {
   await checkSigma(s, 423);
   assert.match(await page.locator("#contributionContext").innerText(), /423 m/);
   await page.locator("#localView").click();
-  assert.equal(
-    await page.locator("#localView").getAttribute("aria-pressed"),
-    "true",
-  );
-  assert.match(await page.locator("#viewLabel").innerText(), /LOCAL/);
+  await checkView("local");
   await checkSigma(s, 423);
   await page.locator("#globalView").click();
+  await checkView("global");
   await page.locator("#reset").click();
   await checkSigma(defaultScenario(), 330);
   await page
