@@ -29,3 +29,7 @@ These appear in the old repo. They have no status until reviewed:
 - Heights as center-of-mass radius, h = r - 1,737,400 m.
 - Rover tracks rejected as a geodetic source.
 - Assumptions A1, A3-A6 in `src/mission-model.mjs` marked "baseline".
+
+## Sprint 1 implementation scope · 2026-11-11
+
+The current user request authorizes replacing the active application with the focused global-position workflow. The declared Sprint 1 model is documented in `docs/sprint-1-model.md`. It uses independent distance-proportional motion variance, separate initial heading and lander position knowledge, causal scalar UWB range and horizontal map observations, and retained shared control covariance. Example performance inputs are assumed. Science models, imported lunar terrain, image algorithms, radio simulation, loop closure and reconstruction are deferred. Earlier programme decisions above remain historical and are not silently reapproved or edited.

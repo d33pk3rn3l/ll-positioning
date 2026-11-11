@@ -1,5 +1,13 @@
 # STATUS
 
+## Sprint 1 implementation · 2026-11-11
+
+The user requested a focused global-position explorer. The active page now uses the new joint covariance core, synthetic route, UWB range, horizontal orbital map matching, linked local/global 3D views and east/north/up plots. Saved JSON scenarios reproduce the blocked-UWB and shared-map-control demonstrations. Science calculations and the legacy page are removed. Research notes and source-table checks remain.
+
+Work items: #32–#36. See `docs/sprint-1-model.md`, `docs/sprint-1-issues.md` and the current README. Earlier status entries below are retained as programme history; this implementation does not approve research gates.
+
+---
+
 Last update: 2026-10-19 (ll-lead). A fresh session needs only CHARTER.md,
 STATUS.md and DECISIONS.md.
 

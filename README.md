@@ -1,106 +1,87 @@
-# LunarLeaper — Navigation × Science Assessment
+# LunarLeaper · Global position explorer
 
-First-order **model-based systems engineering** tool for LunarLeaper positioning and geodesy.
-It answers the questions in *Project: Navigation Reference Frame for LunarLeaper* by crossing:
+Sprint 1 answers one question: **how does global position uncertainty grow along one mission route, and which external observations help?**
 
-1. **Navigation / geodetic ConOps** (what knowledge the walking quadruped can achieve)
-2. **Payload survey ConOps** (how instruments acquire data within one lunar day)
+The single page has a synthetic 3D scene, local and global views, one route cursor, east/north/up uncertainty plots, source contributions, and baseline comparison. An LL reviewer can change every scenario input without editing code. UWB range and orbital map matching can run separately or together.
 
-…and propagating both into **science detectability, coverage, and ranked error budgets**.
+## Run
 
-Live (GitHub Pages): repository root → [`index.html`](index.html).
+Requires Node 22 or later.
 
-Legacy 3D gravimetry toy: [`error-explorer.html`](error-explorer.html).
-
-## What this is / is not
-
-| Is | Is not |
-|---|---|
-| Evidence-graded first-order approximation | Flight navigation filter / SLAM |
-| Local vs map vs cartographic vs inertial layers | Single “position accuracy” scalar |
-| Science-down + navigation-up trades | Full geophysical inversion |
-| Explicit TBDs and negative source assessments | Invented requirements laundered as facts |
-
-## Architecture
-
-```
-src/mission-model.mjs   declarative MBSE: frames, ConOps, sources, assumptions, presets
-src/assessment.mjs      pure deterministic engines (nav, gravity, GPR, spectrometer)
-src/app.mjs             decision UI
-styles.css              layout
-tests/assessment.test.mjs
+```sh
+npm ci
+npm run dev
 ```
 
-No build step. ES modules in the browser and Node.
+Open the local URL printed by Vite. `npm run build` creates the deployable site in `dist/`. `npm run preview` serves that build. GitHub Pages publishes `dist/` after checks on `main`.
 
-## Knowledge layers (do not collapse)
+## Reviewer workflow
 
-1. **Local / relative** — autonomy, station spacing, GPR migration, footprint co-registration  
-2. **Map-relative** — trajectory-to-DEM / NAC co-registration (drives terrain corrections)  
-3. **Cartographic absolute (mean Earth, ME)** — archive / interoperability  
-4. **Inertial / ephemeris (principal axes, PA, ICRF)** — tides, celestial azimuth  
+1. Set ravine distance walked and climb. The flat approach stays 150 m. Ravine distance is 0–500 m and includes the slope. Climb cannot exceed it.
+2. Enter assumed robot motion standard deviations at 100 m and rover initialization error.
+3. Enter lander position knowledge and initial heading knowledge separately.
+4. Enable ultra-wideband (UWB) range, orbital map matching, or both. Open each method's assumptions.
+5. Move the route cursor, click a plot or route, or select an observation in the log. All views select the same distance.
+6. Compare the selected curve with the baseline. The table also compares each method separately when both are enabled.
+7. Save a versioned JSON scenario. Save also stores the scenario in this browser. Load imports JSON. Refresh restores the last saved inputs.
 
-Over a few-hundred-metre traverse, GRAIL-scale lunar potential is a smooth ramp. Differentiating a cave signal is usually limited by **map-relative DEM registration and radial knowledge**, not metre-class ME absolute.
+A missing essential numeric value produces an incomplete assessment and suppresses stale results. Invalid scenario files leave the current scenario intact.
 
-Height convention: canonical **center-of-mass radius**; geometric `h = r − 1,737,400 m`. Do not mix with potential-referenced heights.
+## Model and input definitions
 
-Default cartographic realization: **DE440 dynamics with DE421-aligned ME**. The mean Earth (ME) to principal axes (PA) transform is applied (about 875 m). That size is not an error. That size is not a bias. The residual uncertainty is TBD. The uncertainty is common to all points. A frame mistag is a fault of about 875 m. A mistag means a principal axes product is used as mean Earth, or the transform is skipped. The fault stays out of every 1-sigma.
+All performance defaults are **illustrative assumptions**, expressed as one standard deviation. Horizontal uncertainties are **per axis**, with equal independent east/north prior variances. Inputs display units and assumption labels; saved scenarios carry per-input unit, statistic, source and status metadata.
 
-## Platform model (quadruped)
+| Inputs | Meaning |
+| --- | --- |
+| Ravine length / climb | True distance walked / geometric up change, m |
+| Horizontal / up motion σ at 100 m | Independent increment variance grows as `sigma100² × distance_walked / 100 m` |
+| Rover initialization σ | Relative starting-position error, separate from lander knowledge |
+| Lander horizontal / up position σ | Shared knowledge error of the achieved position; excludes landing dispersion |
+| Initial heading σ | Shared small-angle yaw error, degrees; gravity-aligned roll/pitch assumed |
+| UWB range σ / maximum range / spacing | Scalar range noise, nominal availability bound, scheduled distance walked |
+| Map match σ / shared map control σ / spacing | Independent horizontal measurement noise, one persistent horizontal control offset, scheduled distance walked |
 
-- Continuous **walking** contact-aided visual-inertial estimation (not wheel odometry, not hopping).
-- **Stance-correlated** slip / sinkage / settlement are first-class; lunar performance is **TBD**.
-- Terrestrial 1–2% drift is an evidence-graded **prior for sweeps only**.
-- Active mitigations are executable parameters: body leveling, locked gravity stance, fixed belly height, base reoccupation.
-- Gravity is **stop-and-go** (gait accelerations ≫ µGal). Settle + integration time trade against 14-day coverage.
-- Individual footprints are **not** a NAC geodetic source at 0.5–1 m/px (explicit negative assessment).
+The joint state retains covariance between rover position, initial heading, lander position and map control. Starting-position, heading, initialization, motion, map control and measurement noise contributions remain separate. UWB uses the rover–lander range Jacobian. Map matching measures horizontal position relative to the same uncertain map at each observation. Neither provides a direct heading fix; map matching provides no direct height fix.
 
-## Instruments
+The baseline is the starting tie plus motion, without external observations. All results are causal: future observations cannot alter previous estimates. Display subdivision does not change the growth model or observation schedule.
 
-### Gravimeter
-- Infinite/finite cylinder lava-tube forward model → peak signal and SNR.
-- Reduction awareness: free-air (~187 µGal/m) vs simple Bouguer residual (~103 µGal/m at 2000 kg/m³).
-- Budget terms: instrument, drift after network adjustment, elevation, horizontal×gradient, tilt (level + knowledge + creep), DEM/terrain, tide residual, weak GRAIL ramp.
-- Survey design: spacing, settle, integration, reoccupation cadence, walk-back cost.
+**Local navigation** is initialization plus motion in a robot frame with origin and heading fixed, before external ties. **Global position** additionally carries knowledge of the lunar origin and heading, conditioned on observations available so far. Global axes use a **synthetic lander-centred east–north–up frame aligned to DE421 mean Earth**. No lunar geodetic transform or actual terrain is applied. Up is geometric height above the synthetic tangent plane.
 
-### GPR
-- Continuous walking acquisition; 2D vs 3D sampling.
-- At 500 MHz, εr≈3–4 → λ≈0.30–0.35 m; along-track / elevation needs scale with λ.
-- Gait-phase antenna height and coherent vibration; fixed-belly-height mitigation.
+A reported absolute trajectory error (ATE), including “1% ATE”, is not automatically a standard deviation. No attached paper's benchmark error is used as a Gaussian input without an explicit statistical assumption. See [model equations](docs/sprint-1-model.md) and [research interpretation](docs/sources/sprint-1-research.md).
 
-### Spectrometer (parametric / aspirational)
-- Footprint vs geolocation: `σ_eff² = σ_foot² + σ_geo²`.
-- Stop-and-stare default; scene-relative co-registration, rarely global.
+## Reproduce the demonstrations
 
-## Geodetic sources (PDF)
+Use the sidebar example buttons, or load the committed JSON files:
 
-| Source | Assessment |
-|---|---|
-| Lander in NAC/LOLA | Primary recoverable object |
-| Orbital landmarks | Useful map-relative; absolute limited by control |
-| Visual landmarks | Local consistency unless surveyed |
-| Quadruped tracks | **Negative** — sub-pixel / unreliable |
-| Active beacons | Optional, high ops cost |
-| Passive retroreflectors | Need external laser geometry; legacy LLR ≠ DE421-only forever |
+- [Blocked UWB](scenarios/blocked-uwb.json): select 400 m. The bend at 330 m blocks later ranges. Prior ranges remain useful, but unavailable ranges have no effect.
+- [Shared map control limit](scenarios/shared-map-limit.json): select the 550 m route end. Many precise map matches retain approximately the declared 5 m horizontal control uncertainty. The weak independent lander prior is declared; a strong independent prior can reduce that limit.
 
-## Run tests
+`node scripts/demonstrations.mjs` regenerates both scenarios and [their numerical results](scenarios/results.json). `npm run check:demos` verifies exact reproduction.
 
-```bash
-node --test tests/assessment.test.mjs
+Ellipsoid semiaxes equal one principal-axis standard deviation, at true scene scale, without a confidence percentage. The faint trajectories are deterministic baseline perturbations, not posterior samples. Terrain, rocks, marker sizes and the lander are illustrations. UWB blockage is an explicit nominal visibility mask behind the synthetic bend, not a radio simulation.
+
+## Validation
+
+```sh
+npm test
+npm run check:demos
+npm run build
+npx playwright install chromium
+npm run test:browser
 ```
 
-GitHub Pages deploy runs the same tests before publishing.
+The browser check uses system Chromium when present or Playwright Chromium otherwise. `CHROMIUM_EXECUTABLE` can select a binary. It starts and stops a local production preview. Screenshots go to ignored `artifacts/`.
 
-## Interpreting results
+Numerical checks cover shared translation, heading lever arm and covariance, the stated motion law, subdivision invariance, range geometry, shared lander/map error, unavailable and uninformative observations, causal filtering, source attribution, covariance symmetry and eigenvalues, zero uncertainty, invalid inputs, and saved scenario reproduction. A separate seeded Monte Carlo calculation checks the baseline. Existing source-table checks remain intact. Browser checks exercise the complete workflow, both demonstrations, local/global views, imports, incomplete inputs and mobile layout.
 
-- **SNR ≥ 3** is a screening detectability rule for the tube forward model, not a geometry-recovery guarantee.
-- MEMS drift examples (≈153 / 268 µGal/day) are published prototypes, not a LunarLeaper spec.
-- Map-matching &lt;5 m / &lt;3° is a literature *goal*, not demonstrated flight performance here; UI defaults are more conservative.
-- Changing cartographic σ must not change purely local relative metrics — if it does, the model is wrong.
+## Architecture and preserved work
 
-## Extending
+- `src/scenario.mjs`: versioned inputs, metadata, validation and route geometry.
+- `src/localization.mjs`: pure covariance model and observation schedule.
+- `src/covariance.mjs`: matrix operations and ellipsoid eigensystem.
+- `src/app.mjs`, `src/viewport.mjs`: controls, plots and one Three.js viewport.
+- `scenarios/`: saved demonstrations and reproducible outputs.
 
-1. Add instruments / ConOps in `mission-model.mjs`.
-2. Add physics in `assessment.mjs` (keep pure / unit-explicit).
-3. Add a test that locks the new limiting behavior.
-4. Wire controls in `src/app.mjs` only if the trade is decision-relevant.
+The old science/navigation assessment, legacy gravimetry page and their tests were removed. The source notes, bibliography, frame notes, science trace, motion audit and source-table validator remain as research. Earlier `CHARTER.md`, `DECISIONS.md` entries and status text describe the broader research programme; this Sprint 1 does not claim to approve those gates. See [issue reconciliation](docs/sprint-1-issues.md).
+
+Deferred: LRO terrain import, image matching algorithms, radio simulation, loop closure, post-mission reconstruction and science models.

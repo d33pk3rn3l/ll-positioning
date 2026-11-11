@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "model": "linear-gaussian-distance-random-walk-v1",
+  "name": "Demo · blocked UWB link",
+  "frame": "Synthetic lander-centred east-north-up, aligned to DE421 mean Earth",
+  "approach_m": 150,
+  "ravineLength_m": 400,
+  "climb_m": 80,
+  "motionH_m": 1,
+  "motionU_m": 0.5,
+  "initH_m": 0.2,
+  "initU_m": 0.1,
+  "landerH_m": 8,
+  "landerU_m": 3,
+  "heading_deg": 2,
+  "rangeSigma_m": 0.2,
+  "maxRange_m": 650,
+  "uwbSpacing_m": 50,
+  "matchSigma_m": 1,
+  "mapControl_m": 5,
+  "mapSpacing_m": 50,
+  "inputMetadata": {
+    "ravineLength_m": {
+      "unit": "m",
+      "statistic": "not_applicable",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "climb_m": {
+      "unit": "m",
+      "statistic": "not_applicable",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "motionH_m": {
+      "unit": "m / axis",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "motionU_m": {
+      "unit": "m",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "initH_m": {
+      "unit": "m / axis",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "initU_m": {
+      "unit": "m",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "landerH_m": {
+      "unit": "m / axis",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "landerU_m": {
+      "unit": "m",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "heading_deg": {
+      "unit": "deg",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "rangeSigma_m": {
+      "unit": "m",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "maxRange_m": {
+      "unit": "m",
+      "statistic": "not_applicable",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "uwbSpacing_m": {
+      "unit": "m walked",
+      "statistic": "not_applicable",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "matchSigma_m": {
+      "unit": "m / axis",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "mapControl_m": {
+      "unit": "m / axis",
+      "statistic": "one_sigma",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    },
+    "mapSpacing_m": {
+      "unit": "m walked",
+      "statistic": "not_applicable",
+      "status": "assumed",
+      "source": "Sprint 1 illustrative scenario"
+    }
+  },
+  "uwbEnabled": true,
+  "mapEnabled": false,
+  "terrainOcclusion": true,
+  "mapAvailable": true,
+  "assumptions": {
+    "status": "assumed",
+    "source": "Sprint 1 illustrative inputs; no flight performance claim",
+    "statistic": "one standard deviation; horizontal values per axis",
+    "growth": "Independent motion increments: variance = sigma100^2 * distance_walked / 100 m",
+    "attitude": "Gravity-aligned roll and pitch; first-order initial yaw error",
+    "control": "Lander position and orbital map control priors are independent; each is shared across the route",
+    "availability": "UWB blocked behind the synthetic ravine bend; enabled available map matches succeed",
+    "height": "Geometric up from the synthetic local tangent plane; no lunar terrain or frame transform applied",
+    "landing": "Lander position knowledge describes the achieved position, not landing dispersion"
+  }
+}

@@ -1,462 +1,326 @@
-/**
- * Decision UI for LunarLeaper navigation × science assessment.
- */
-
 import {
-  assess,
-  comparePresets,
-  NAV_CONOPS,
-  SURVEY_CONOPS,
-  INSTRUMENTS,
-  DEFAULT_SCENARIO,
-  PRESETS,
-  freeAirGradient,
-  formatCartographicSigmaText,
-  CARTOGRAPHIC_SIGMA_EXCLUSION,
-} from "./assessment.mjs";
-
-const $ = (id) => document.getElementById(id);
-
-function fmt(v, digits = 2, unit = "") {
-  if (!Number.isFinite(v)) return "—";
-  const n = Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(digits);
-  return unit ? `${n} ${unit}` : n;
+  INPUTS,
+  defaultScenario,
+  validateScenario,
+  totalDistance,
+  bendDistance,
+  serializeScenario,
+  parseScenario,
+  uwbAvailability,
+} from "./scenario.mjs";
+import { assess, selectedPoint, SOURCE_NAMES } from "./localization.mjs";
+import { RouteViewport } from "./viewport.mjs";
+import { blockedDemo, mapDemo } from "./demonstrations.mjs";
+const $ = (id) => document.getElementById(id),
+  fmt = (n, d = 2) => n.toFixed(d);
+let scenario = defaultScenario(),
+  cursor = 330,
+  mode = "global",
+  viewport = null,
+  scheduled = false,
+  pendingMissionChange = false;
+try {
+  const saved = localStorage.getItem("ll-sprint-1");
+  if (saved) scenario = parseScenario(saved);
+} catch {
+  $("saveStatus").textContent =
+    "Stored scenario was invalid. Loaded the example.";
 }
-
-function cls(ok) {
-  return ok ? "ok" : "bad";
-}
-
-function bindControls() {
-  const ids = [
-    "instrument",
-    "navConops",
-    "surveyConops",
-    "odometryPct",
-    "mapTieSigma_m",
-    "cartographicSigma_m",
-    "stationSpacing_m",
-    "settle_s",
-    "integration_s",
-    "reoccupationCadence_h",
-    "drift_uGal_per_day",
-    "demDifferential_m",
-    "footSigma_m",
-    "tubeDepth_m",
-    "tubeRadius_m",
-    "activeLeveling",
-    "lockedStance",
-    "fixedBellyHeight",
-    "useBouguerSensitivity",
-    "frameMistag",
-    "gprMode3d",
-  ];
-  ids.forEach((id) => {
-    const el = $(id);
-    if (!el) return;
-    el.addEventListener("input", render);
-    el.addEventListener("change", render);
+for (const [key, d] of Object.entries(INPUTS)) {
+  const row = document.createElement("div");
+  row.className = "input-row";
+  const range = d.group === "mission";
+  row.innerHTML = `<label class="input-label" for="${key}"><span>${d.label}</span><span class="unit">${d.unit}</span></label><div class="input-with-unit ${range ? "range-row" : ""}"><input id="${key}" type="${range ? "range" : "number"}" min="${d.min}" max="${d.max}" step="${d.step}" aria-describedby="${key}Assumption">${range ? `<output id="${key}Value" for="${key}"></output>` : ""}</div><span id="${key}Assumption" class="subtle">Assumed${["robot", "reference", "uwb", "map"].includes(d.group) ? " · 1σ" + (key.includes("Spacing") || key === "maxRange_m" ? " schedule / geometry" : "") : ""}</span>`;
+  // Spacing and maximum range are geometry assumptions, not uncertainty statistics.
+  if (key.includes("Spacing") || key === "maxRange_m")
+    row.querySelector(".subtle").textContent = "Assumed · observation geometry";
+  $(`${d.group}Inputs`).append(row);
+  $(key).addEventListener("input", () => {
+    scenario[key] = $(key).value === "" ? null : Number($(key).value);
+    if (range) $(`${key}Value`).textContent = `${scenario[key]} m`;
+    queueRender(d.group === "mission");
   });
 }
-
-function readScenario() {
-  const num = (id, fallback) => {
-    const el = $(id);
-    if (!el) return fallback;
-    const v = +el.value;
-    return Number.isFinite(v) ? v : fallback;
-  };
-  const chk = (id, fallback = false) => {
-    const el = $(id);
-    return el ? !!el.checked : fallback;
-  };
-  return {
-    ...DEFAULT_SCENARIO,
-    instrument: $("instrument").value,
-    navConops: $("navConops").value,
-    surveyConops: $("surveyConops").value,
-    odometryPct: num("odometryPct", DEFAULT_SCENARIO.odometryPct),
-    mapTieSigma_m: num("mapTieSigma_m", DEFAULT_SCENARIO.mapTieSigma_m),
-    cartographicSigma_m: num("cartographicSigma_m", DEFAULT_SCENARIO.cartographicSigma_m),
-    stationSpacing_m: num("stationSpacing_m", DEFAULT_SCENARIO.stationSpacing_m),
-    settle_s: num("settle_s", DEFAULT_SCENARIO.settle_s),
-    integration_s: num("integration_s", DEFAULT_SCENARIO.integration_s),
-    reoccupationCadence_h: num("reoccupationCadence_h", DEFAULT_SCENARIO.reoccupationCadence_h),
-    drift_uGal_per_day: num("drift_uGal_per_day", DEFAULT_SCENARIO.drift_uGal_per_day),
-    demDifferential_m: num("demDifferential_m", DEFAULT_SCENARIO.demDifferential_m),
-    footSigma_m: num("footSigma_m", DEFAULT_SCENARIO.footSigma_m),
-    tubeDepth_m: num("tubeDepth_m", DEFAULT_SCENARIO.tubeDepth_m),
-    tubeRadius_m: num("tubeRadius_m", DEFAULT_SCENARIO.tubeRadius_m),
-    activeLeveling: chk("activeLeveling", true),
-    lockedStance: chk("lockedStance", true),
-    fixedBellyHeight: chk("fixedBellyHeight", true),
-    useBouguerSensitivity: chk("useBouguerSensitivity", true),
-    frameMistag: chk("frameMistag", false),
-    gprMode3d: chk("gprMode3d", false) || $("surveyConops").value === "gpr_3d",
-  };
+function syncControls() {
+  $("scenarioName").value = scenario.name;
+  for (const k of Object.keys(INPUTS)) {
+    $(k).value = scenario[k] ?? "";
+    if ($(`${k}Value`)) $(`${k}Value`).textContent = `${scenario[k]} m`;
+  }
+  for (const k of [
+    "uwbEnabled",
+    "mapEnabled",
+    "terrainOcclusion",
+    "mapAvailable",
+  ])
+    $(k).checked = scenario[k];
+  $("uwbDetails").open = scenario.uwbEnabled;
+  $("mapDetails").open = scenario.mapEnabled;
 }
-
-function syncLabels(s) {
-  $("odometryPctV").textContent = `${s.odometryPct.toFixed(1)} %`;
-  $("mapTieSigmaV").textContent = `${s.mapTieSigma_m.toFixed(1)} m`;
-  $("cartographicSigmaLabel").textContent = `cartographic σ (H), ${CARTOGRAPHIC_SIGMA_EXCLUSION}`;
-  $("cartographicSigmaV").textContent = `${s.cartographicSigma_m.toFixed(0)} m`;
-  $("stationSpacingV").textContent = `${s.stationSpacing_m.toFixed(0)} m`;
-  $("settleV").textContent = `${s.settle_s.toFixed(0)} s`;
-  $("integrationV").textContent = `${s.integration_s.toFixed(0)} s`;
-  $("reoccupationV").textContent = `${s.reoccupationCadence_h.toFixed(1)} h`;
-  $("driftV").textContent = `${s.drift_uGal_per_day.toFixed(0)} µGal/d`;
-  $("demV").textContent = `${s.demDifferential_m.toFixed(1)} m`;
-  $("footV").textContent = `${(s.footSigma_m * 1000).toFixed(0)} mm`;
-  $("tubeDepthV").textContent = `${s.tubeDepth_m.toFixed(0)} m`;
-  $("tubeRadiusV").textContent = `${s.tubeRadius_m.toFixed(0)} m`;
+function queueRender(missionChanged = false) {
+  pendingMissionChange ||= missionChanged;
+  if (scheduled) return;
+  scheduled = true;
+  requestAnimationFrame(() => {
+    scheduled = false;
+    render(pendingMissionChange);
+    pendingMissionChange = false;
+  });
 }
-
-function fillSelects() {
-  const nav = $("navConops");
-  nav.innerHTML = Object.values(NAV_CONOPS)
-    .map((c) => `<option value="${c.id}">${c.name}</option>`)
-    .join("");
-  nav.value = DEFAULT_SCENARIO.navConops;
-
-  const survey = $("surveyConops");
-  survey.innerHTML = Object.values(SURVEY_CONOPS)
-    .map((c) => `<option value="${c.id}">${c.name}</option>`)
-    .join("");
-  survey.value = DEFAULT_SCENARIO.surveyConops;
-
-  const inst = $("instrument");
-  inst.innerHTML = Object.values(INSTRUMENTS)
-    .map((c) => `<option value="${c.id}">${c.name}</option>`)
-    .join("");
-  inst.value = DEFAULT_SCENARIO.instrument;
+function selectDistance(d) {
+  cursor = Math.max(0, Math.min(totalDistance(scenario), Math.round(d)));
+  $("routeCursor").value = cursor;
+  queueRender();
 }
-
-function renderKpis(r) {
-  const pass = r.science.pass;
-  const sciVal =
-    r.science.kind === "gravimetry"
-      ? `SNR ${fmt(r.science.value, 1)}`
-      : r.science.kind === "gpr"
-        ? (pass ? "sampling OK" : "sampling short")
-        : pass
-          ? "geo OK"
-          : "geo short";
-
-  $("kpiScience").innerHTML = `
-    <div class="label">Science</div>
-    <div class="value ${pass ? "" : "bad"}">${sciVal}</div>
-    <div class="sub">${r.science.metric}${
-      r.science.signal_uGal != null ? ` · signal ${fmt(r.science.signal_uGal, 0)} µGal` : ""
-    }</div>`;
-
-  $("kpiCoverage").innerHTML = `
-    <div class="label">14-day coverage</div>
-    <div class="value ${r.resources.fits ? "" : "warn"}">${fmt(r.resources.fraction * 100, 0)}%</div>
-    <div class="sub">${r.resources.label}${
-      r.survey ? ` · ${r.survey.achievableStations}/${r.survey.nStations} sta` : ""
-    }</div>`;
-
-  $("kpiLocal").innerHTML = `
-    <div class="label">Local / relative</div>
-    <div class="value">${fmt(r.layers.local.horiz_m, 2)} m</div>
-    <div class="sub">vert ${fmt(r.layers.local.vert_m, 2)} m · pair Δ ${fmt(r.nav.summary.relativePostHoriz_m, 2)} m</div>`;
-
-  const cartographicText = formatCartographicSigmaText(r.layers.cartographic.horiz_m, undefined, 1);
-  const fault = r.nav.frameMistagFault;
-  $("kpiMap").innerHTML = `
-    <div class="label">Map / cartographic</div>
-    <div class="value">${fmt(r.layers.map.horiz_m, 1)} / ${cartographicText}</div>
-    <div class="sub">${
-      fault
-        ? `Frame mistag fault ${fmt(r.nav.frameMistagFault_m, 0)} m. Not a 1-sigma.`
-        : "map-relative · absolute"
-    }</div>`;
-}
-
-function renderLayers(r) {
-  $("layersBody").innerHTML = `
-    <tr><td>Local / relative</td><td class="num">${fmt(r.layers.local.horiz_m)} m H / ${fmt(r.layers.local.vert_m)} m V</td><td>${r.layers.local.drives}</td></tr>
-    <tr><td>Map-relative</td><td class="num">${fmt(r.layers.map.horiz_m)} m</td><td>${r.layers.map.drives}</td></tr>
-    <tr><td>Cartographic absolute</td><td class="num">${r.layers.cartographic.text}</td><td>${r.layers.cartographic.drives}</td></tr>
-    ${
-      r.nav.frameMistagFault
-        ? `<tr><td>Mean Earth to principal axes frame mistag (fault)</td><td class="num">fault</td><td>${fmt(r.nav.frameMistagFault_m, 0)} m fault size. Not a 1-sigma and not a bias.</td></tr>`
-        : ""
+$("scenarioName").addEventListener("input", () => {
+  scenario.name = $("scenarioName").value;
+  queueRender();
+});
+for (const k of [
+  "uwbEnabled",
+  "mapEnabled",
+  "terrainOcclusion",
+  "mapAvailable",
+])
+  $(k).addEventListener("change", () => {
+    scenario[k] = $(k).checked;
+    if (k === "uwbEnabled") $("uwbDetails").open = scenario[k];
+    if (k === "mapEnabled") $("mapDetails").open = scenario[k];
+    queueRender();
+  });
+$("routeCursor").addEventListener("input", () =>
+  selectDistance(Number($("routeCursor").value)),
+);
+for (const view of ["local", "global"])
+  $(`${view}View`).addEventListener("click", () => {
+    mode = view;
+    for (const v of ["local", "global"]) {
+      $(`${v}View`).classList.toggle("active", v === mode);
+      $(`${v}View`).setAttribute("aria-pressed", v === mode);
     }
-    <tr><td>Inertial / ephemeris</td><td class="num">${fmt(r.layers.inertial.azimuth_mrad, 2)} mrad az</td><td>${r.layers.inertial.drives}</td></tr>
-    <tr><td>Observability</td><td class="num">${r.observability.fullPose ? "6-DoF" : "partial"}</td><td>${r.observability.notes}</td></tr>
-  `;
+    viewport?.setMode(mode);
+    queueRender();
+  });
+function replace(s, d) {
+  scenario = s;
+  cursor = Math.min(d, totalDistance(s));
+  syncControls();
+  queueRender(true);
 }
-
-function rankedMagnitude(term) {
-  if (term.uGal != null) return term.uGal;
-  if (term.ratio != null) return term.ratio;
-  return term.value_m;
-}
-
-function unitLabel(term) {
-  if (term.unit === "m/m") return "ratio to need";
-  return term.unit ?? "";
-}
-
-function renderBars(r) {
-  const max = Math.max(...r.ranked.map(rankedMagnitude), 1e-9);
-  const bars = r.ranked
-    .slice(0, 8)
-    .map((t) => {
-      const value = rankedMagnitude(t);
-      const pct = Math.min(100, (value / max) * 100);
-      const shown =
-        t.id === "cart"
-          ? formatCartographicSigmaText(value, undefined, 1)
-          : `${fmt(value, 1)} ${unitLabel(t)}`;
-      return `<div class="bar-row"><div>${t.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="num">${shown}</div></div>`;
-    })
-    .join("");
-  const context = (r.context ?? [])
-    .map((t) => {
-      return `<div class="bar-row"><div>${t.name}<div class="note">context only</div></div><div></div><div class="num">${fmt(t.value_m, 1)} ${unitLabel(t)}</div></div>`;
-    })
-    .join("");
-  const label = r.ranked.find((t) => t.label)?.label ?? "";
-  const note = label ? `<p class="note">${label}</p>` : "";
-  $("errorBars").innerHTML = bars + context + note;
-}
-
-function renderControls(r) {
-  $("sourcesBody").innerHTML = r.controlSources
-    .map((c) => {
-      const tag =
-        c.assessment === "negative"
-          ? "neg"
-          : c.usable
-            ? "ok"
-            : "tbd";
-      return `<tr>
-        <td>${c.name}<div class="note">${c.notes}</div></td>
-        <td><span class="tag ${tag}">${c.assessment}</span></td>
-        <td class="num">${c.usable ? "yes" : "no"}</td>
-      </tr>`;
-    })
-    .join("");
-}
-
-function renderCompare(base) {
-  const rows = comparePresets(base);
-  $("compareBody").innerHTML = rows
-    .map((row) => {
-      const sci =
-        row.science.kind === "gravimetry"
-          ? `SNR ${fmt(row.science.value, 1)}`
-          : row.science.pass
-            ? "pass"
-            : "short";
-      return `<tr>
-        <td>${row.name}</td>
-        <td class="num">${fmt(row.layers.local.horiz_m)}</td>
-        <td class="num">${fmt(row.layers.map.horiz_m)}</td>
-        <td class="num">${formatCartographicSigmaText(row.layers.cartographic.horiz_m)}</td>
-        <td class="num">${sci}</td>
-        <td>${row.dominant?.name ?? "—"}</td>
-      </tr>`;
-    })
-    .join("");
-}
-
-function drawTraverse(r) {
-  const canvas = $("traverseChart");
-  const dpr = Math.min(devicePixelRatio || 1, 2);
-  const W = canvas.clientWidth;
-  const H = canvas.clientHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-
-  const sts = r.nav.stations;
-  const L = sts[sts.length - 1].s || 1;
-  const ymax = Math.max(...sts.map((s) => s.cartographic.horiz), 1) * 1.15;
-  const pad = { l: 42, r: 10, t: 12, b: 24 };
-  const x = (s) => pad.l + (s / L) * (W - pad.l - pad.r);
-  const y = (v) => pad.t + (1 - v / ymax) * (H - pad.t - pad.b);
-
-  ctx.strokeStyle = "#243044";
-  ctx.beginPath();
-  ctx.moveTo(pad.l, pad.t);
-  ctx.lineTo(pad.l, H - pad.b);
-  ctx.lineTo(W - pad.r, H - pad.b);
-  ctx.stroke();
-
-  ctx.fillStyle = "#6b7788";
-  ctx.font = "10px IBM Plex Mono, monospace";
-  ctx.textAlign = "right";
-  ctx.fillText("0", pad.l - 4, H - pad.b);
-  ctx.fillText(fmt(ymax, 0), pad.l - 4, pad.t + 8);
-  ctx.textAlign = "center";
-  ctx.fillText("0 m", x(0), H - 6);
-  ctx.fillText(`${fmt(L, 0)} m`, x(L), H - 6);
-  ctx.fillText("σ horiz [m]", W / 2, 10);
-
-  const series = [
-    { key: (s) => s.local.horiz, color: "#e6b35a", label: "local" },
-    { key: (s) => s.map.horiz, color: "#6ec6e8", label: "map" },
-    { key: (s) => s.cartographic.horiz, color: "#e88787", label: "cartographic" },
-  ];
-  for (const ser of series) {
-    ctx.strokeStyle = ser.color;
-    ctx.beginPath();
-    sts.forEach((st, i) => {
-      const X = x(st.s);
-      const Y = y(ser.key(st));
-      if (i === 0) ctx.moveTo(X, Y);
-      else ctx.lineTo(X, Y);
-    });
-    ctx.stroke();
+$("reset").addEventListener("click", () => replace(defaultScenario(), 330));
+$("blockedDemo").addEventListener("click", () => {
+  replace(blockedDemo(), 400);
+  $("saveStatus").textContent =
+    "Blocked-link example loaded. Save it to repeat.";
+});
+$("mapDemo").addEventListener("click", () => {
+  replace(mapDemo(), 550);
+  $("saveStatus").textContent = "Shared-map example loaded. Save it to repeat.";
+});
+$("save").addEventListener("click", () => {
+  try {
+    const json = serializeScenario(scenario);
+    localStorage.setItem("ll-sprint-1", json);
+    const url = URL.createObjectURL(
+        new Blob([json], { type: "application/json" }),
+      ),
+      a = document.createElement("a");
+    a.href = url;
+    a.download =
+      scenario.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    $("saveStatus").textContent =
+      "Saved in this browser and downloaded as JSON.";
+  } catch (e) {
+    $("saveStatus").textContent = `Could not save: ${e.message}`;
   }
-
-  // anchors
-  ctx.fillStyle = "#8fd39a";
-  r.nav.anchors.forEach((a) => {
-    ctx.beginPath();
-    ctx.arc(x(a.s), H - pad.b - 4, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+});
+$("load").addEventListener("click", () => $("loadFile").click());
+$("loadFile").addEventListener("change", async () => {
+  const file = $("loadFile").files[0];
+  if (!file) return;
+  try {
+    if (file.size > 100000)
+      throw new Error("Scenario file must be smaller than 100 kB.");
+    replace(parseScenario(await file.text()), cursor);
+    $("saveStatus").textContent = `Loaded ${file.name}.`;
+  } catch (e) {
+    $("saveStatus").textContent = `Could not load: ${e.message}`;
+  }
+  $("loadFile").value = "";
+});
+for (const [i, axis] of ["East", "North", "Up"].entries()) {
+  const card = document.createElement("div");
+  card.className = "plot";
+  card.innerHTML = `<div class="plot-top"><span class="plot-name">${axis.toUpperCase()} <span class="subtle">/ ${["E", "N", "U"][i]}</span></span><div><div class="plot-value" id="sigma${i}"></div><div class="plot-baseline" id="baseline${i}"></div></div></div><svg id="plot${i}" viewBox="0 0 320 162" role="img" aria-label="${axis} global uncertainty versus distance walked"></svg>`;
+  $("plots").append(card);
+  const choose = (e) => {
+    const r = $(`plot${i}`).getBoundingClientRect(),
+      x = ((e.clientX - r.left) / r.width) * 320;
+    selectDistance(((x - 34) / 274) * totalDistance(scenario));
+  };
+  $(`plot${i}`).addEventListener("pointerdown", (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    choose(e);
+  });
+  $(`plot${i}`).addEventListener("pointermove", (e) => {
+    if (e.buttons === 1) choose(e);
   });
 }
-
-function drawGravity(r) {
-  const canvas = $("gravityChart");
-  const dpr = Math.min(devicePixelRatio || 1, 2);
-  const W = canvas.clientWidth;
-  const H = canvas.clientHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-
-  if (r.scenario.instrument !== "gravimeter") {
-    ctx.fillStyle = "#6b7788";
-    ctx.font = "12px IBM Plex Sans, sans-serif";
-    ctx.fillText("Switch instrument to Gravimeter for anomaly / budget view.", 16, 28);
-    return;
+function plot(result, p, i) {
+  const max =
+      Math.max(1, ...result.points.map((p) => p.baselineSigma[i])) * 1.12,
+    total = totalDistance(scenario),
+    x = (d) => 34 + (274 * d) / total,
+    y = (v) => 132 - (115 * v) / max;
+  const path = (key) =>
+    result.points
+      .map(
+        (p, j) =>
+          `${j ? "L" : "M"}${x(p.distance).toFixed(2)},${y(p[key][i]).toFixed(2)}`,
+      )
+      .join(" ");
+  let svg = "";
+  for (let j = 0; j < 4; j++) {
+    const v = (max * j) / 3,
+      yy = y(v);
+    svg += `<line class="gridline" x1="34" x2="308" y1="${yy}" y2="${yy}"/><text x="27" y="${yy + 3}" text-anchor="end">${v < 10 ? v.toFixed(1) : v.toFixed(0)}</text>`;
   }
-
-  const depth = r.scenario.tubeDepth_m;
-  const rad = r.scenario.tubeRadius_m;
-  const dens = r.scenario.tubeDensityContrast;
-  const xs = [];
-  const gs = [];
-  for (let i = 0; i <= 80; i++) {
-    const x = -150 + (300 * i) / 80;
-    xs.push(x);
-    // reuse assessment import via dynamic — compute here simply
-    gs.push(r.gravity.peak_uGal * (-depth * depth) / (x * x + depth * depth)); // same shape as infinite cyl peak-normalized
-  }
-  // Better: use peak and shape from model already in r — approximate with exact formula inline
-  const G = 6.6743e-11;
-  for (let i = 0; i <= 80; i++) {
-    const x = -150 + (300 * i) / 80;
-    const A = Math.PI * rad * rad;
-    const num = 2 * G * dens * A * depth;
-    const den = x * x + depth * depth;
-    gs[i] = -(num / den) * 1e8;
-    xs[i] = x;
-  }
-
-  const pad = { l: 48, r: 12, t: 14, b: 24 };
-  const gmin = Math.min(...gs, -r.gravity.total_uGal);
-  const gmax = Math.max(...gs.map(Math.abs), r.gravity.total_uGal) * 0.15;
-  const yMin = gmin * 1.15;
-  const yMax = Math.max(20, gmax);
-  const xOf = (x) => pad.l + ((x + 150) / 300) * (W - pad.l - pad.r);
-  const yOf = (g) => pad.t + (1 - (g - yMin) / (yMax - yMin)) * (H - pad.t - pad.b);
-
-  ctx.strokeStyle = "#243044";
-  ctx.beginPath();
-  ctx.moveTo(pad.l, yOf(0));
-  ctx.lineTo(W - pad.r, yOf(0));
-  ctx.stroke();
-
-  // ±1σ band around 0 as noise floor marker
-  ctx.fillStyle = "rgba(110,198,232,0.12)";
-  ctx.fillRect(pad.l, yOf(r.gravity.total_uGal), W - pad.l - pad.r, yOf(-r.gravity.total_uGal) - yOf(r.gravity.total_uGal));
-
-  ctx.strokeStyle = "#e88787";
-  ctx.beginPath();
-  gs.forEach((g, i) => {
-    const X = xOf(xs[i]);
-    const Y = yOf(g);
-    if (i === 0) ctx.moveTo(X, Y);
-    else ctx.lineTo(X, Y);
-  });
-  ctx.stroke();
-
-  ctx.fillStyle = "#6b7788";
-  ctx.font = "10px IBM Plex Mono, monospace";
-  ctx.textAlign = "right";
-  ctx.fillText(`${fmt(yMax, 0)}`, pad.l - 4, pad.t + 8);
-  ctx.fillText(`${fmt(yMin, 0)}`, pad.l - 4, H - pad.b);
-  ctx.textAlign = "center";
-  ctx.fillText("tube Δg [µGal] vs cross-track x; band = RSS budget", W / 2, 10);
+  for (const d of [0, total / 2, total])
+    svg += `<text x="${x(d)}" y="153" text-anchor="middle">${Math.round(d)} m</text>`;
+  for (const e of result.events)
+    svg += `<line x1="${x(e.distance)}" x2="${x(e.distance)}" y1="132" y2="${e.applied ? 126 : 129}" stroke="${e.applied ? "#62ddce" : "#e4b477"}" opacity=".65"/>`;
+  svg += `<path class="baseline-line" d="${path("baselineSigma")}"/><path class="selected-line" d="${path("selectedSigma")}"/><line class="cursor-line" x1="${x(cursor)}" x2="${x(cursor)}" y1="10" y2="132"/><circle cx="${x(cursor)}" cy="${y(p.selectedSigma[i])}" r="3" fill="#62ddce"/>`;
+  $(`plot${i}`).innerHTML = svg;
+  $(`sigma${i}`).innerHTML = `${fmt(p.selectedSigma[i])} <small>m</small>`;
+  $(`sigma${i}`).dataset.value = p.selectedSigma[i];
+  const reduction =
+    p.baselineSigma[i] > 0
+      ? 100 * (1 - p.selectedSigma[i] / p.baselineSigma[i])
+      : 0;
+  $(`baseline${i}`).textContent =
+    `${fmt(p.baselineSigma[i])} baseline · ${Math.max(0, reduction).toFixed(0)}% lower σ`;
 }
-
-function renderScienceNote(r) {
-  let html = "";
-  if (r.science.kind === "gravimetry") {
-    html = `<p class="note">Free-air ${fmt(freeAirGradient(), 2)} µGal/m · elev. sensitivity ${fmt(r.gravity.elevSens, 1)} µGal/m
-      (${r.scenario.useBouguerSensitivity ? "after simple Bouguer" : "free-air only"}).
-      Drift adjusted ${fmt(r.survey.adjustedDrift_uGal, 1)} µGal · tide radial component ±0.1 m → ${fmt(r.gravity.tideRadialComponent_uGal, 1)} µGal.
-      Detectable (SNR≥3): <span class="tag ${cls(r.gravity.detectable)}">${r.gravity.detectable ? "yes" : "no"}</span></p>`;
-  } else if (r.science.kind === "gpr") {
-    html = `<p class="note">λ = ${fmt(r.gpr.lambda_m, 3)} m @ ${r.scenario.gprFreq_MHz} MHz, εr=${r.scenario.gprEps}.
-      Need along ≤ ${fmt(r.gpr.alongNeed_m, 3)} m, elev ≤ ${fmt(r.gpr.elevNeed_m, 3)} m.
-      Achieved ${fmt(r.gpr.achievedAlong_m, 3)} / ${fmt(r.gpr.achievedElev_m, 3)} m.
-      ${r.gpr.coverageNote}. Belly residual ${fmt(r.gpr.bellyResidual_m * 100, 1)} cm → ~${fmt(r.gpr.heightPhase_deg, 0)}° phase @ f₀.</p>`;
-  } else if (r.science.kind === "spectrometer") {
-    const stareText = r.spectro.stopAndStare ? "Stop-and-stare default. " : "";
-    html = `<p class="note">Footprint σ ${fmt(r.spectro.footSigma_m * 1000, 0)} mm · geo ${fmt(r.spectro.geoSigma_m * 1000, 0)} mm ·
-      allowed ${fmt(r.spectro.allowedGeo_m * 1000, 0)} mm for 10% broadening.
-      ${stareText}Global rarely required.</p>`;
-  } else {
-    html = `<p class="note">Imaging uses local pose for reconstruction; map tie for orbital context.</p>`;
-  }
-  $("scienceNote").innerHTML = html;
-}
-
-function renderPdf(r) {
-  $("pdfBody").innerHTML = r.pdfTrace
-    .map((q) => `<tr><td class="mono">${q.id}</td><td>${q.text}</td><td>${q.addressedBy}</td></tr>`)
-    .join("");
-}
-
-function render() {
-  const s = readScenario();
-  syncLabels(s);
-  const r = assess(s);
-  renderKpis(r);
-  renderLayers(r);
-  renderBars(r);
-  renderControls(r);
-  renderCompare(s);
-  renderScienceNote(r);
-  renderPdf(r);
-  drawTraverse(r);
-  drawGravity(r);
-  const applied = r.nav.meanEarthToPrincipalAxesAppliedText
-    ? ` · ${r.nav.meanEarthToPrincipalAxesAppliedText}`
+function render(missionChanged = false) {
+  const errors = validateScenario(scenario);
+  $("validation").hidden = !errors.length;
+  $("validation").textContent = errors.length
+    ? "Assessment incomplete. " + errors.join(" ")
     : "";
-  $("assumptions").textContent = `FA ${fmt(freeAirGradient(), 2)} µGal/m · odometry prior TBD (${PRESETS.odometry.evidence})${applied}`;
-  $("traverseNote").textContent =
-    `Local (amber), map-relative (cyan), cartographic (red; ${CARTOGRAPHIC_SIGMA_EXCLUSION}). Green ticks = anchors.`;
+  $("assessment").hidden = !!errors.length;
+  $("save").disabled = !!errors.length;
+  if (errors.length) return;
+  cursor = Math.min(cursor, totalDistance(scenario));
+  $("routeCursor").max = totalDistance(scenario);
+  $("routeCursor").value = cursor;
+  const result = assess(scenario, { distances: [cursor] }),
+    p = selectedPoint(result, cursor);
+  $("routeSummary").innerHTML =
+    `<div><strong>150 m</strong><span>APPROACH</span></div><div><strong>${scenario.ravineLength_m} m</strong><span>RAVINE</span></div><div><strong>${totalDistance(scenario)} m</strong><span>TOTAL</span></div>`;
+  $("distanceReadout").textContent = `${cursor} m`;
+  $("positionReadout").textContent =
+    `E ${fmt(p.position[0], 1)} · N ${fmt(p.position[1], 1)} · U ${fmt(p.position[2], 1)} m`;
+  $("cursorOutput").textContent =
+    `${cursor} / ${totalDistance(scenario)} m walked`;
+  $("bendLabel").textContent = `BEND · ${fmt(bendDistance(scenario), 0)} m`;
+  $("endLabel").textContent = `END · ${totalDistance(scenario)} m`;
+  const status = uwbAvailability(scenario, cursor);
+  $("linkStatus").textContent = scenario.uwbEnabled
+    ? `UWB · ${status}`
+    : scenario.mapEnabled
+      ? "MAP · " +
+        (scenario.mapAvailable
+          ? "Scheduled matches assumed successful"
+          : "Observations unavailable")
+      : "BASELINE · starting tie only";
+  $("linkStatus").classList.toggle(
+    "blocked",
+    scenario.uwbEnabled && status !== "Available",
+  );
+  $("viewLabel").textContent =
+    mode === "global" ? "GLOBAL POSITION" : "LOCAL NAVIGATION";
+  $("viewExplanation").textContent =
+    mode === "global"
+      ? "Origin and heading knowledge move the route in the lunar frame."
+      : "Origin and heading fixed. Nearby terrain and rocks share this reference.";
+  for (let i = 0; i < 3; i++) plot(result, p, i);
+  const traces = Object.entries(p.contributions)
+      .map(([k, c]) => ({ key: k, value: c.reduce((v, r, i) => v + r[i], 0) }))
+      .sort((a, b) => b.value - a.value),
+    trace = traces.reduce((v, t) => v + t.value, 0);
+  $("dominantText").innerHTML =
+    trace > 1e-12
+      ? `<strong>${SOURCE_NAMES[traces[0].key]}</strong> contributes ${Math.round((100 * traces[0].value) / trace)}% of the selected position variance.`
+      : "All declared uncertainty is zero.";
+  $("contributionContext").textContent = `${cursor} m`;
+  $("contributions").innerHTML = traces
+    .filter((t) => t.value > 1e-10)
+    .map(
+      (t) =>
+        `<div class="contribution"><span>${SOURCE_NAMES[t.key]}</span><div class="bar-track"><div class="bar-fill" style="width:${(100 * t.value) / trace}%"></div></div><span>${Math.round((100 * t.value) / trace)}%</span></div>`,
+    )
+    .join("");
+  const label =
+    scenario.uwbEnabled && scenario.mapEnabled
+      ? "UWB + map"
+      : scenario.uwbEnabled
+        ? "UWB range"
+        : scenario.mapEnabled
+          ? "Orbital map"
+          : "Selected (= baseline)";
+  const rows = [
+    ["Local navigation", p.localSigma],
+    ["Global baseline", p.baselineSigma],
+  ];
+  if (scenario.uwbEnabled && scenario.mapEnabled) {
+    rows.push([
+      "UWB only",
+      selectedPoint(
+        assess({ ...scenario, mapEnabled: false }, { distances: [cursor] }),
+        cursor,
+      ).selectedSigma,
+    ]);
+    rows.push([
+      "Map only",
+      selectedPoint(
+        assess({ ...scenario, uwbEnabled: false }, { distances: [cursor] }),
+        cursor,
+      ).selectedSigma,
+    ]);
+  }
+  rows.push([label, p.selectedSigma]);
+  $("comparisonRows").innerHTML = rows
+    .map(
+      ([label, v]) =>
+        `<tr><td>${label}</td>${v.map((n) => `<td>${fmt(n)}</td>`).join("")}</tr>`,
+    )
+    .join("");
+  const past = result.events.filter((e) => e.distance <= cursor),
+    applied = past.filter((e) => e.applied);
+  $("observationCount").textContent =
+    `${applied.length} APPLIED / ${past.length} SCHEDULED SO FAR`;
+  $("observationLog").innerHTML = result.events.length
+    ? result.events
+        .map(
+          (e) =>
+            `<button class="event ${e.applied ? "" : "blocked"} ${e.distance > cursor ? "future" : ""} ${e.distance === cursor ? "current" : ""}" data-distance="${e.distance}">${e.kind === "uwb" ? "UWB" : "MAP"} · ${e.distance} m<small>${e.distance > cursor ? "Future · " : ""}${e.status}</small></button>`,
+        )
+        .join("")
+    : '<p class="section-note">Enable UWB range or orbital map matching to compare observations with the baseline.</p>';
+  for (const b of $("observationLog").querySelectorAll("button"))
+    b.addEventListener("click", () =>
+      selectDistance(Number(b.dataset.distance)),
+    );
+  if (!viewport) {
+    try {
+      viewport = new RouteViewport($("viewport"), selectDistance);
+    } catch (e) {
+      $("viewportError").hidden = false;
+      $("viewportError").textContent = "3D view could not start: " + e.message;
+    }
+  }
+  viewport?.update(scenario, result, p, missionChanged);
 }
-
-function main() {
-  fillSelects();
-  bindControls();
-  render();
-  addEventListener("resize", render);
-}
-
-main();
+syncControls();
+render(true);
