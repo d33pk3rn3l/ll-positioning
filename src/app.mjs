@@ -48,7 +48,10 @@ function setStatus(message, error = false) {
 }
 try {
   const saved = localStorage.getItem("ll-sprint-1");
-  if (saved) scenario = parseScenario(saved);
+  if (saved) {
+    scenario = parseScenario(saved);
+    setStatus("Loaded saved inputs. Reset loads the planning defaults.");
+  }
 } catch {
   setStatus("Saved scenario is invalid. Using default inputs.", true);
 }
@@ -85,6 +88,7 @@ function syncControls() {
     "mapEnabled",
     "terrainOcclusion",
     "mapAvailable",
+    "landerFromMap",
   ])
     $(k).checked = scenario[k];
   $("uwbDetails").open = scenario.uwbEnabled;
@@ -113,6 +117,7 @@ for (const k of [
   "mapEnabled",
   "terrainOcclusion",
   "mapAvailable",
+  "landerFromMap",
 ])
   $(k).addEventListener("change", () => {
     scenario[k] = $(k).checked;
@@ -363,7 +368,9 @@ function render() {
   for (const [key, d] of Object.entries(INPUTS)) {
     const invalid = errors.some(
       (e) =>
-        e.startsWith(d.label) || (key === "climb_m" && e.startsWith("Climb")),
+        e.startsWith(d.label) ||
+        (key === "mapControl_m" && e.includes("must include the shared")) ||
+        (key === "climb_m" && e.startsWith("Climb")),
     );
     $(key).setAttribute("aria-invalid", invalid);
     if (invalid && $(key).closest("details"))

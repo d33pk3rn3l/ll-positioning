@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   defaultScenario,
   validateScenario,
@@ -141,6 +142,7 @@ test("lander-relative ranges cannot remove shared global translation", () => {
   s.uwbEnabled = true;
   s.terrainOcclusion = false;
   s.uwbSpacing_m = 5;
+  s.maxRange_m = 650;
   assert.deepEqual(end(s).selectedSigma, [8, 8, 3]);
 });
 test("repeated map matches retain shared map control error", () => {
@@ -288,7 +290,7 @@ test("saved scenarios reproduce outputs and reject invalid, missing and unsuppor
   }
   for (const bad of [
     { ...s, climb_m: 500 },
-    { ...s, version: 2 },
+    { ...s, version: 99 },
     { ...s, frame: "unknown" },
     { ...s, mapEnabled: "yes" },
     { ...s, assumptions: {} },
@@ -311,5 +313,55 @@ test("near-identical floating point grid locations apply each observation once",
   matrixClose(
     selectedPoint(a, 60.6).stateCovariance,
     selectedPoint(b, 60.6).stateCovariance,
+  );
+});
+
+test("same-map lander and matches retain their common horizontal control error", () => {
+  const s = zero();
+  s.landerH_m = s.mapControl_m = 30;
+  s.initH_m = 2;
+  s.motionH_m = 1;
+  s.uwbEnabled = s.mapEnabled = true;
+  s.terrainOcclusion = false;
+  s.maxRange_m = 650;
+  s.uwbSpacing_m = s.mapSpacing_m = 5;
+  for (const p of assess(s, { step: 17 }).points) {
+    for (let i = 0; i < 2; i++) {
+      close(p.contributions.control[i][i], 900);
+      close(p.stateCovariance[i][i + 7], 900);
+      assert.ok(p.selectedSigma[i] >= 30 - 1e-8);
+    }
+  }
+});
+test("independent lander knowledge can reduce map control error; shared prior rejects inconsistent totals", () => {
+  const s = zero();
+  s.landerFromMap = false;
+  s.landerH_m = 1;
+  s.mapControl_m = 30;
+  s.mapEnabled = true;
+  s.matchSigma_m = 0;
+  assert.ok(end(s).selectedSigma[0] < 1);
+  s.landerFromMap = true;
+  assert.throws(() => assess(s), /must include the shared/);
+  assert.throws(() => serializeScenario(s), /must include the shared/);
+});
+test("version 1 saved inputs retain independent priors, sources and numerical results", () => {
+  const { scenario: legacy, expectedEndCovariance } = JSON.parse(
+    readFileSync(
+      new URL("./fixtures/scenario-v1.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const restored = parseScenario(JSON.stringify(legacy));
+  assert.equal(restored.version, 2);
+  assert.equal(restored.landerFromMap, false);
+  assert.deepEqual(restored.inputMetadata, legacy.inputMetadata);
+  matrixClose(end(restored).stateCovariance, expectedEndCovariance);
+  assert.deepEqual(
+    assess(parseScenario(serializeScenario(restored))),
+    assess(restored),
+  );
+  assert.throws(() =>
+    parseScenario(JSON.stringify({ ...legacy, assumptions: {} })),
   );
 });

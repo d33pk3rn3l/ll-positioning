@@ -45,6 +45,8 @@ A saved JSON file contains the inputs, units, statistics, frame, and assumptions
 Save also keeps the scenario in this browser.
 Refresh the page to restore the last saved scenario.
 Select **Load** to open a scenario file.
+Version 1 files keep their original numeric inputs and independent reference errors.
+Select **Reset** to use the new planning defaults.
 If an essential input is missing, the page shows an incomplete assessment.
 
 ## Inputs and terms
@@ -53,18 +55,55 @@ Each uncertainty input is one standard deviation, written as σ or 1σ.
 Horizontal values apply separately to the east and north axes.
 All distances are in meters unless the page specifies another unit.
 
-| Input | Definition |
-| --- | --- |
-| Ravine distance and climb | Distance walked and change in up position, in meters |
-| Motion σ at 100 m | Assumed motion error after 100 m, in meters |
-| Rover start σ | Rover starting position error relative to the lander, in meters |
-| Lander position σ | Knowledge error of the achieved lander position, in meters |
-| Initial heading σ | Knowledge error of the initial horizontal direction, in degrees |
-| UWB range σ | Independent error of one range measurement, in meters |
-| Maximum range | Assumed limit of the UWB link, in meters |
-| Observation spacing | Distance walked between observations, in meters |
-| Map match σ | Independent error of one horizontal map match, in meters per axis |
-| Shared map control σ | One horizontal map position error shared by all matches, in meters per axis |
+| Input                            | Default            | Basis                                                                                                      |
+| -------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Approach; ravine; climb          | 150 m; 400 m; 80 m | Synthetic route; 550 m total distance walked                                                               |
+| Motion σ at 100 m                | 4 m on each axis   | Planning allowance; see the ATE interpretation below                                                       |
+| Rover start σ relative to lander | 0.5 m on each axis | Deployment allowance; no LL measurement supplied                                                           |
+| Lander horizontal position σ     | 40 m per axis      | Includes 30 m shared map error and a separate lander location error                                        |
+| Lander up position σ             | 15 m               | Height allowance; published DTM registration errors are not absolute height σ [2]                          |
+| Initial heading σ                | 3°                 | Allowance conditional on an external direction reference; aligned ATE does not measure this error [3]      |
+| UWB range σ                      | 0.5 m              | Allowance for accepted clear links; terrestrial LOS errors were 0.05–0.10 m RMSE [4]                       |
+| UWB maximum range; spacing       | 75 m; 50 m walked  | Provisional cap below the published sensor's 80 m range; assumed observation spacing [4]                   |
+| Horizontal map match σ           | 5 m per axis       | Allowance above WARG's reported 1.68 m real-data and 3.63 m domain-transfer errors [5]                     |
+| Shared horizontal map control σ  | 30 m per axis      | Allowance above published latitude offset spreads up to 22.4 m; reference positions are also uncertain [1] |
+| Map observation spacing          | 100 m walked       | Assumed operating interval                                                                                 |
+| Lander position from this map    | On                 | Lander and map matches retain the same horizontal control error                                            |
+| UWB; map matching                | Off; off           | Start with the baseline                                                                                    |
+
+These are provisional planning values, not flight specifications or statistical bounds.
+The research guides the allowances. Its reported errors are not converted to per-axis σ.
+The 40 m lander input assumes that the achieved position is identified in a controlled orbital map.
+A landing ellipse alone does not establish this knowledge.
+The 3° heading input requires a separate direction measurement, such as a calibrated Sun or star observation.
+If no such measurement is available, heading uncertainty remains to be specified.
+The 75 m radio cap requires an LL link budget before mission use.
+The range noise excludes blocked links and rejected measurements.
+No radio hardware, antenna, clock, or map product has been specified for LL.
+
+### Robot team's 1% ATE
+
+The team reports ATE divided by trajectory length as 1%.
+The planning comparison assumes RMSE. The statistic, evaluation length, dimensions, alignment, and sampling need confirmation.
+If it is trajectory RMSE on a 550 m test, the reported error is 5.5 m.
+It is not an endpoint error or a per-axis standard deviation.
+The standard ATE method first aligns the trajectories [3].
+This can remove the initial position and heading errors that affect global position.
+
+The 4 m inputs are explicit allowances. They do not come from an automatic ATE conversion.
+For this model, with a fixed origin and heading and uniform sampling by distance:
+
+```text
+sqrt(E[mean squared 3D motion error])
+  = sqrt((2 σH100² + σU100²) × L / (2 × 100 m))
+  = 11.49 m for L = 550 m and σH100 = σU100 = 4 m
+```
+
+This is about 2.1% of the example route length.
+It is a model comparison, not a prediction of aligned test ATE.
+One trajectory statistic cannot establish a growth law.
+Keep these motion inputs fixed when the route length changes.
+Use trajectory residuals from repeated tests to replace the allowances and check the growth law.
 
 **Local navigation** includes rover start and motion error in a fixed robot frame.
 The local result holds the origin and heading fixed.
@@ -79,10 +118,6 @@ Its axes align with DE421 mean Earth.
 Up is geometric height above the synthetic tangent plane.
 The model applies no lunar terrain data or geodetic frame transform.
 Lander position knowledge is separate from landing dispersion.
-
-Absolute trajectory error (ATE) depends on the evaluation method.
-A reported “1% ATE” is not automatically a standard deviation.
-The tool does not convert paper results into Gaussian performance inputs.
 
 ## Model
 
@@ -99,8 +134,15 @@ The joint error state is `x = [rE, rN, rU, ψ, lE, lN, lU, cE, cN]`.
 Heading error uses radians in the calculation.
 
 At the start, `r = l + initialization`.
-The lander and map control priors are independent.
-Each remains shared along the full route.
+By default, the lander position comes from the same map as the orbital matches.
+The horizontal lander error is `l = c + a`, where `a` is independent location error.
+The lander input is the total σ: `var(a) = σlander² − σcontrol²`.
+The lander σ must be at least the shared control σ.
+The initial covariances `cov(r,c)` and `cov(l,c)` equal `σcontrol²` on each horizontal axis.
+Vertical lander error remains separate.
+Clear **Lander position from this map** only when the lander fix uses an independent reference.
+That option retains the original independent lander and map priors.
+Each common error remains shared along the full route.
 The covariance retains correlations between rover, heading, lander, and map errors.
 
 For displacement `[ΔE, ΔN, ΔU]` and distance walked `Δd`:
@@ -154,7 +196,8 @@ Map matching provides no direct height or heading measurement.
 Horizontal observations can improve heading knowledge through covariance.
 Repeated matches reduce independent match noise.
 They retain the shared map control error.
-Independent lander knowledge can reduce this control limit.
+An independent lander fix can reduce this control limit.
+A lander fix from the same map cannot remove the common map error.
 
 Each scalar observation uses the Joseph covariance update:
 
@@ -186,12 +229,15 @@ Faint markers show future observations.
 
 ## Repeat the examples
 
-| Example | Action | Expected result |
-| --- | --- | --- |
-| [Blocked UWB](scenarios/blocked-uwb.json) | Load the file and select 400 m. | The bend at 330 m blocks later ranges. |
-| [Shared map control](scenarios/shared-map-limit.json) | Load the file and select 550 m. | Horizontal uncertainty stays near the assumed 5 m map control error. |
+| Example                                               | Action                          | Expected result                                                       |
+| ----------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------- |
+| [Blocked UWB](scenarios/blocked-uwb.json)             | Load the file and select 400 m. | The bend at 330 m blocks later ranges.                                |
+| [Shared map control](scenarios/shared-map-limit.json) | Load the file and select 550 m. | Horizontal uncertainty stays near the assumed 30 m map control error. |
 
 Open **Examples** to load these scenarios.
+The blocked-link example uses a synthetic 650 m range cap to isolate wall blockage.
+It does not specify radio performance.
+The map example uses 1,000 m lander uncertainty and no horizontal motion or heading error to isolate shared map control.
 Run `node scripts/demonstrations.mjs` to generate the files and [results](scenarios/results.json).
 Run `npm run check:demos` to confirm that the saved results match the calculation.
 
@@ -214,20 +260,25 @@ Screenshots go to `artifacts/`.
 
 ## Files and references
 
-| Path | Purpose |
-| --- | --- |
-| `src/scenario.mjs` | Inputs, validation, saved scenarios, and route geometry |
-| `src/localization.mjs` | Covariance propagation and observation schedules |
-| `src/covariance.mjs` | Matrix operations and covariance checks |
-| `src/app.mjs` | Controls, uncertainty plots, and observation markers |
-| `src/values-format.mjs`, `tests/values-schema.json` | Source table format validation for future data import |
-| `scenarios/` | Saved examples and calculated results |
+| Path                                                | Purpose                                                 |
+| --------------------------------------------------- | ------------------------------------------------------- |
+| `src/scenario.mjs`                                  | Inputs, validation, saved scenarios, and route geometry |
+| `src/localization.mjs`                              | Covariance propagation and observation schedules        |
+| `src/covariance.mjs`                                | Matrix operations and covariance checks                 |
+| `src/app.mjs`                                       | Controls, uncertainty plots, and observation markers    |
+| `src/values-format.mjs`, `tests/values-schema.json` | Source table format validation for future data import   |
+| `scenarios/`                                        | Saved examples and calculated results                   |
 
-The following papers provide research context, not performance specifications:
+The numbered sources support the planning rationale above:
 
-- [Censible, Nash et al. (2024)](https://doi.org/10.1109/ICRA57147.2024.10611697): rover image registration to an orbital map on Mars.
-- [WARG, Chen et al. (2026)](https://arxiv.org/abs/2606.10602v1): rover image registration to lunar orbital images.
-- Li and Jiang (2009), *Lunar Rover Positioning Based on TOA Estimation for UWB Signal Using Unitary-ESPRIT*: simulated UWB positioning with additional geometry.
+1. [Collins et al. (2026), controlled LROC NAC mosaics](https://doi.org/10.3390/rs18030525), Table 4. Comparisons include error in the reference images. The 30 m control allowance is not a measured absolute lunar map σ.
+2. [Henriksen et al. (2016), LROC NAC stereo DTMs](https://doi.org/10.5194/isprsarchives-XLI-B4-397-2016). DTM-to-LOLA vertical RMSE averages 2.36 m across the products studied. This is registration agreement, not independent absolute height accuracy. The 15 m height allowance also covers an unspecified LL product.
+3. [Sturm et al. (2012), trajectory evaluation](https://jsturm.de/publications/data/sturm12iros.pdf). Defines aligned trajectory error and translation RMSE. It supplies no LL heading or motion specification.
+4. [Chen et al. (2022), UWB and LiDAR experiments](https://doi.org/10.3390/rs14174258), Tables 1–2. Sensor range is below 80 m; blocked measurements have much larger errors than clear links. These are terrestrial tests.
+5. [WARG, Chen et al. (2026)](https://arxiv.org/abs/2606.10602v1). Reports lunar image registration errors. The 5 m match allowance adds a planning margin; it excludes shared global map control.
+
+[Censible, Nash et al. (2024)](https://doi.org/10.1109/ICRA57147.2024.10611697) also reports accurate rover-to-orbital registration on Mars. Its map-relative accuracy does not establish lunar global accuracy.
+The supplied Li and Jiang (2009) UWB study uses simulation and additional geometry. It does not establish LL hardware range or single-range position accuracy.
 
 The [earlier research records](https://github.com/d33pk3rn3l/ll-positioning/tree/219c9b0054d931a88e22ea8aaf9dd9d8262b6119) retain source notes, source values, and review history.
 [GitHub issues](https://github.com/d33pk3rn3l/ll-positioning/issues) track unresolved defects, including #19 and #26.

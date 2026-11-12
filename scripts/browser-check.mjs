@@ -234,7 +234,7 @@ try {
     "Shared map error must not appear as a complete uncertainty reduction",
   );
   assert.ok(
-    Number(await page.locator("#sigma0").getAttribute("data-value")) > 4.999,
+    Number(await page.locator("#sigma0").getAttribute("data-value")) > 29.999,
   );
   await top();
   await page.screenshot({ path: "artifacts/desktop-shared-map-limit.png" });
@@ -257,6 +257,41 @@ try {
     await page.locator("#linkStatus").innerText(),
     /Map: unavailable/,
   );
+  // The shared-reference option changes the comparison and validates total uncertainty.
+  await page.locator("#reset").click();
+  await page.locator("#mapEnabled").check();
+  const mapDefault = { ...defaultScenario(), mapEnabled: true };
+  await checkSigma(mapDefault, 330);
+  await page.locator("#landerFromMap").uncheck();
+  await checkSigma({ ...mapDefault, landerFromMap: false }, 330);
+  await set("landerH_m", 10);
+  await checkSigma({ ...mapDefault, landerFromMap: false, landerH_m: 10 }, 330);
+  await page.locator("#landerFromMap").check();
+  await page.waitForSelector("#validation:not([hidden])");
+  assert.match(
+    await page.locator("#validation").innerText(),
+    /must include the shared/,
+  );
+  assert.equal(await page.locator("#save").isDisabled(), true);
+  assert.equal(
+    await page.locator("#mapControl_m").getAttribute("aria-invalid"),
+    "true",
+  );
+  await set("landerH_m", 40);
+  await checkSigma(mapDefault, 330);
+  // Old files preserve the earlier independent priors in the browser too.
+  const legacy = JSON.parse(
+    readFileSync("tests/fixtures/scenario-v1.json", "utf8"),
+  ).scenario;
+  await page
+    .locator("#loadFile")
+    .setInputFiles({
+      name: "scenario-v1.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(legacy)),
+    });
+  await checkSigma(parseScenario(JSON.stringify(legacy)), 330);
+  assert.equal(await page.locator("#landerFromMap").isChecked(), false);
   const mobile = await browser.newPage({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,

@@ -60,7 +60,7 @@
         </div>
         <p id="saveStatus" class="status-message" role="status" hidden></p>
         <p id="inputAssumptions" class="input-note">
-          Assumed inputs. σ = one standard deviation.<br />Horizontal σ applies
+          Planning inputs. σ = one standard deviation.<br />Horizontal σ applies
           to each axis.
         </p>
         <section class="control-section">
@@ -81,6 +81,14 @@
         <section class="control-section">
           <h2>Starting reference</h2>
           <div id="referenceInputs"></div>
+          <label class="checkbox-label"
+            ><input id="landerFromMap" type="checkbox" checked /> Lander
+            position from this map</label
+          >
+          <p class="input-note">
+            Lander σ includes shared map σ.<br />Heading needs a measured
+            direction.
+          </p>
         </section>
         <section class="control-section methods">
           <h2>Observations</h2>
@@ -97,7 +105,9 @@
                 ><input id="terrainOcclusion" type="checkbox" checked /> Block
                 at ravine bend</label
               >
-              <p class="input-note">Ultra-wideband range to one lander.</p>
+              <p class="input-note">
+                Ultra-wideband range to one lander. Clear links only.
+              </p>
             </details>
           </div>
           <div class="method">
@@ -129,14 +139,15 @@
           <p class="input-note">
             Lander σ describes position knowledge after landing. It excludes
             landing dispersion. Motion variance grows linearly with distance
-            walked.
+            walked. The motion input is a planning allowance, not a conversion
+            of 1% ATE.
           </p>
           <a
             class="documentation-link"
             href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/README.md#inputs-and-terms"
             target="_blank"
             rel="noreferrer"
-            >All definitions</a
+            >Definitions and sources</a
           >
         </details>
       </aside>
