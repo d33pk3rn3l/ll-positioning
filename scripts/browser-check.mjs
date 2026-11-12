@@ -36,13 +36,7 @@ try {
     executablePath:
       process.env.CHROMIUM_EXECUTABLE ||
       (existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined),
-    args: [
-      "--no-sandbox",
-      "--enable-webgl",
-      "--use-gl=angle",
-      "--use-angle=swiftshader",
-      "--enable-unsafe-swiftshader",
-    ],
+    args: ["--no-sandbox"],
   });
   const context = await browser.newContext({
     viewport: { width: 1600, height: 1100 },
@@ -70,17 +64,29 @@ try {
       `${d} m`,
     );
   };
-  // Button state changes immediately; the caption updates on the queued render.
-  const checkView = async (view) => {
-    await page.waitForFunction(
-      ({ view, label }) =>
-        document.getElementById(`${view}View`).getAttribute("aria-pressed") ===
-          "true" && document.getElementById("viewLabel").textContent === label,
-      {
-        view,
-        label: view === "local" ? "LOCAL NAVIGATION" : "GLOBAL POSITION",
-      },
-    );
+  const aligned = async (target = page) => {
+    await target.waitForFunction(() => {
+      const elements = [
+        ...document.querySelectorAll("#plots svg, #observationTracks svg"),
+      ];
+      if (!elements.length) return false;
+      const positions = elements.map(
+        (svg) =>
+          svg.getBoundingClientRect().left +
+          Number(svg.querySelector(".cursor-line")?.getAttribute("x1")),
+      );
+      return (
+        elements.every(
+          (svg) =>
+            Math.abs(
+              svg.viewBox.baseVal.width - svg.getBoundingClientRect().width,
+            ) < 1,
+        ) &&
+        positions.every(
+          (x) => Number.isFinite(x) && Math.abs(x - positions[0]) < 1,
+        )
+      );
+    });
   };
   const set = async (id, value) => {
     await page.locator("#" + id).evaluate((e, value) => {
@@ -96,8 +102,9 @@ try {
   mkdirSync("artifacts", { recursive: true });
   await page.goto(url);
   await checkSigma(defaultScenario(), 330);
-  assert.equal(await page.locator("#viewport canvas").count(), 1);
-  assert.equal(await page.locator("#viewportError").isVisible(), false);
+  assert.equal(await page.locator("canvas").count(), 0);
+  assert.equal(await page.locator("#plots svg").count(), 3);
+  await aligned();
   const mapBounds = await page.locator("#mapEnabled").boundingBox();
   assert.ok(
     mapBounds.y + mapBounds.height < 1100,
@@ -108,7 +115,34 @@ try {
     2,
     "Do not repeat the baseline when methods are off",
   );
-  await page.locator("#resetView").click();
+  await page.locator("#yScale").selectOption("shared");
+  await page.waitForFunction(
+    () =>
+      new Set(
+        [...document.querySelectorAll("#plots svg")].map(
+          (svg) => svg.dataset.yMax,
+        ),
+      ).size === 1,
+  );
+  await checkSigma(defaultScenario(), 330);
+  await page.locator("#yScale").selectOption("axis");
+  await page.waitForFunction(
+    () =>
+      new Set(
+        [...document.querySelectorAll("#plots svg")].map(
+          (svg) => svg.dataset.yMax,
+        ),
+      ).size > 1,
+  );
+  await page.locator("#yScale").selectOption("shared");
+  await page.waitForFunction(
+    () =>
+      new Set(
+        [...document.querySelectorAll("#plots svg")].map(
+          (svg) => svg.dataset.yMax,
+        ),
+      ).size === 1,
+  );
   await page.screenshot({ path: "artifacts/desktop-baseline.png" });
   const s = defaultScenario();
   s.ravineLength_m = 500;
@@ -122,15 +156,11 @@ try {
   s.ravineLength_m = 450;
   await checkSigma(s, 330);
   assert.equal(await page.locator("#ravineLength_m").inputValue(), "450");
-  // All three views and readouts use the same exact requested distance.
+  // Every plot and readout uses the same exact requested distance.
   await set("routeCursor", 423);
   await checkSigma(s, 423);
   assert.match(await page.locator("#contributionContext").innerText(), /423 m/);
-  await page.locator("#localView").click();
-  await checkView("local");
-  await checkSigma(s, 423);
-  await page.locator("#globalView").click();
-  await checkView("global");
+  await aligned();
   await page.locator("#reset").click();
   await checkSigma(defaultScenario(), 330);
   await page.locator("#motionH_m").fill("");
@@ -167,6 +197,11 @@ try {
   await page.locator("#blockedDemo").click();
   await checkSigma(blockedDemo(), 400);
   assert.match(await page.locator("#linkStatus").innerText(), /blocked/i);
+  assert.equal(
+    await page.locator("#uwbTrack .observation-unavailable").count(),
+    5,
+  );
+  await aligned();
   await openDetails("observationPanel");
   await page.locator(".event").filter({ hasText: "UWB · 450 m" }).click();
   await checkSigma(blockedDemo(), 450);
@@ -237,8 +272,8 @@ try {
   );
   assert.equal(await mobile.locator("#inputsPanel").isVisible(), false);
   assert.ok(
-    (await mobile.locator("#viewport").boundingBox()).y < 150,
-    "Show the route before the mobile form",
+    (await mobile.locator("#plot0").boundingBox()).y < 380,
+    "Show uncertainty graphs before the mobile form",
   );
   await mobile.locator("#toggleInputs").click();
   assert.equal(
@@ -262,7 +297,7 @@ try {
     ),
     "The 320 px layout must not overflow",
   );
-  await mobile.locator("#resetView").click();
+  await aligned(mobile);
   await mobile.screenshot({ path: "artifacts/mobile-narrow.png" });
   await mobile.locator("#toggleInputs").click();
   await mobile
@@ -286,11 +321,12 @@ try {
     ),
     "Both methods must fit the narrow layout",
   );
+  await aligned(mobile);
   await mobile.screenshot({ path: "artifacts/mobile-methods.png" });
   await mobile.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser workflow passed: inputs, linked cursor/views/plots, both methods, blocked link, map limit, save/reload/import, TBD state, unavailable map, mobile layout, and no page errors.",
+    "Browser workflow passed: inputs, aligned graphs, shared scales and cursor, both methods, blocked link, map limit, save/reload/import, TBD state, unavailable map, mobile layout, and no page errors.",
   );
 } finally {
   await browser?.close();

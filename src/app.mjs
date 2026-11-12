@@ -9,7 +9,6 @@ import {
   uwbAvailability,
 } from "./scenario.mjs";
 import { assess, selectedPoint } from "./localization.mjs";
-import { RouteViewport } from "./viewport.mjs";
 import { blockedDemo, mapDemo } from "./demonstrations.mjs";
 const $ = (id) => document.getElementById(id),
   fmt = (n, d = 2) => n.toFixed(d);
@@ -41,10 +40,7 @@ const SOURCE_LABELS = {
 };
 let scenario = defaultScenario(),
   cursor = 330,
-  mode = "global",
-  viewport = null,
-  scheduled = false,
-  pendingMissionChange = false;
+  scheduled = false;
 function setStatus(message, error = false) {
   $("saveStatus").hidden = !message;
   $("saveStatus").textContent = message;
@@ -70,7 +66,7 @@ for (const [key, d] of Object.entries(INPUTS)) {
     if (fromRange) $(key).value = value;
     else if (range) $(`${key}Range`).value = value;
     setStatus("");
-    queueRender(range);
+    queueRender();
   };
   $(key).addEventListener("input", () => update($(key).value));
   if (range)
@@ -94,14 +90,12 @@ function syncControls() {
   $("uwbDetails").open = scenario.uwbEnabled;
   $("mapDetails").open = scenario.mapEnabled;
 }
-function queueRender(missionChanged = false) {
-  pendingMissionChange ||= missionChanged;
+function queueRender() {
   if (scheduled) return;
   scheduled = true;
   requestAnimationFrame(() => {
     scheduled = false;
-    render(pendingMissionChange);
-    pendingMissionChange = false;
+    render();
   });
 }
 function selectDistance(d) {
@@ -135,22 +129,12 @@ $("toggleInputs").addEventListener("click", () => {
 $("routeCursor").addEventListener("input", () =>
   selectDistance(Number($("routeCursor").value)),
 );
-for (const view of ["local", "global"])
-  $(`${view}View`).addEventListener("click", () => {
-    mode = view;
-    for (const v of ["local", "global"]) {
-      $(`${v}View`).classList.toggle("active", v === mode);
-      $(`${v}View`).setAttribute("aria-pressed", v === mode);
-    }
-    viewport?.setMode(mode);
-    queueRender();
-  });
-$("resetView").addEventListener("click", () => viewport?.frameCamera());
+$("yScale").addEventListener("change", queueRender);
 function replace(s, d) {
   scenario = s;
   cursor = Math.min(d, totalDistance(s));
   syncControls();
-  queueRender(true);
+  queueRender();
 }
 $("reset").addEventListener("click", () => {
   replace(defaultScenario(), 330);
@@ -196,62 +180,128 @@ $("loadFile").addEventListener("change", async () => {
   }
   $("loadFile").value = "";
 });
-for (const [i, axis] of ["East", "North", "Up"].entries()) {
-  const card = document.createElement("div");
-  card.className = "plot";
-  card.id = `plotCard${i}`;
-  card.innerHTML = `<div class="plot-top"><span class="plot-name">${axis}</span><span class="plot-value" id="sigma${i}"></span></div><div class="plot-baseline" id="baseline${i}"></div><svg id="plot${i}" viewBox="0 0 320 162" role="img" aria-label="${axis} global uncertainty by distance walked"></svg>`;
-  $("plots").append(card);
-  const choose = (e) => {
-    const r = $(`plot${i}`).getBoundingClientRect(),
-      x = ((e.clientX - r.left) / r.width) * 320;
-    selectDistance(((x - 34) / 274) * totalDistance(scenario));
-  };
-  $(`plot${i}`).addEventListener("pointerdown", (e) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    choose(e);
+const BLUE = "#2364ad";
+const BASELINE = "#66717c";
+const chartHeight = 144;
+const left = 46,
+  right = 16,
+  top = 24,
+  bottom = 20;
+function choosePoint(event) {
+  const box = event.currentTarget.getBoundingClientRect();
+  selectDistance(
+    ((event.clientX - box.left - left) / (box.width - left - right)) *
+      totalDistance(scenario),
+  );
+}
+function linkPlot(element) {
+  element.addEventListener("pointerdown", (event) => {
+    element.setPointerCapture(event.pointerId);
+    choosePoint(event);
   });
-  $(`plot${i}`).addEventListener("pointermove", (e) => {
-    if (e.buttons === 1) choose(e);
+  element.addEventListener("pointermove", (event) => {
+    if (event.buttons === 1) choosePoint(event);
   });
 }
+for (const [i, axis] of ["East", "North", "Up"].entries()) {
+  const figure = document.createElement("figure");
+  figure.className = "plot";
+  figure.id = `plotCard${i}`;
+  figure.innerHTML = `<figcaption><h3>${axis}</h3><output id="sigma${i}" class="plot-value"></output><span id="baseline${i}" class="plot-baseline"></span></figcaption><svg id="plot${i}" role="img" aria-label="${axis} position uncertainty versus distance walked"></svg>`;
+  $("plots").append(figure);
+  linkPlot($(`plot${i}`));
+}
+new ResizeObserver(queueRender).observe($("plots"));
 function legend(method) {
   return `<span><i class="line baseline"></i>Baseline</span>${method ? `<span><i class="line"></i>${method}</span>` : ""}`;
 }
-function plot(result, p, i, hasMethod) {
-  const max =
-      Math.max(1, ...result.points.map((p) => p.baselineSigma[i])) * 1.12,
-    total = totalDistance(scenario),
-    x = (d) => 34 + (274 * d) / total,
-    y = (v) => 132 - (115 * v) / max;
+function tickLabel(value) {
+  if (value === 0) return "0";
+  return Math.abs(value) < 0.01
+    ? value.toExponential(1)
+    : String(Number(value.toPrecision(3)));
+}
+function yDomain(peak) {
+  if (peak === 0) return { max: 1, step: 0.25 };
+  const raw = peak * 1.08,
+    target = raw / 4;
+  const power = 10 ** Math.floor(Math.log10(target));
+  const step = [1, 2, 2.5, 5, 10]
+    .map((n) => n * power)
+    .find((n) => n >= target);
+  return { max: Math.ceil(raw / step) * step, step };
+}
+function xTicks(total, width) {
+  const count = Math.max(3, Math.min(7, Math.floor(width / 80)));
+  const raw = total / (count - 1),
+    power = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10]
+    .map((n) => n * power)
+    .reduce((best, n) => (Math.abs(n - raw) < Math.abs(best - raw) ? n : best));
+  const ticks = [];
+  for (let d = 0; d <= total; d += step) ticks.push(d);
+  return ticks;
+}
+function plot(result, point, axis, hasMethod, domain) {
+  const max = domain.max;
+  const element = $(`plot${axis}`),
+    width = element.getBoundingClientRect().width;
+  if (width <= left + right) return;
+  const total = totalDistance(scenario),
+    height = chartHeight;
+  const x = (d) => left + ((width - left - right) * d) / total;
+  const y = (v) => height - bottom - ((height - top - bottom) * v) / max;
+  element.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  element.dataset.yMax = max;
+  let svg = "";
+  for (let i = 0; i <= Math.round(max / domain.step); i++) {
+    const value = i * domain.step,
+      yy = y(value);
+    svg += `<line class="gridline" x1="${left}" x2="${width - right}" y1="${yy}" y2="${yy}"/><text x="${left - 9}" y="${yy + 4}" text-anchor="end">${tickLabel(value)}</text>`;
+  }
+  for (const d of xTicks(total, width - left - right)) {
+    svg += `<line class="x-grid" x1="${x(d)}" x2="${x(d)}" y1="${top}" y2="${height - bottom}"/>`;
+    if (axis === 2)
+      svg += `<text x="${x(d)}" y="${height - 3}" text-anchor="middle">${tickLabel(d)}</text>`;
+  }
+  let previousLabel = -Infinity;
+  for (const [d, label] of scenario.ravineLength_m > 0
+    ? [
+        [150, "Ravine"],
+        [bendDistance(scenario), "Bend"],
+      ]
+    : []) {
+    svg += `<line class="route-marker" x1="${x(d)}" x2="${x(d)}" y1="${top}" y2="${height - bottom}"/>`;
+    if (axis === 0 && x(d) - previousLabel > 65) {
+      svg += `<text class="route-label" x="${Math.min(width - right - 36, x(d) + 4)}" y="13">${label}</text>`;
+      previousLabel = x(d);
+    }
+  }
   const path = (key) =>
     result.points
       .map(
         (p, j) =>
-          `${j ? "L" : "M"}${x(p.distance).toFixed(2)},${y(p[key][i]).toFixed(2)}`,
+          `${j ? "L" : "M"}${x(p.distance).toFixed(2)},${y(p[key][axis]).toFixed(2)}`,
       )
       .join(" ");
-  let svg = "";
-  for (let j = 0; j < 4; j++) {
-    const v = (max * j) / 3,
-      yy = y(v);
-    svg += `<line class="gridline" x1="34" x2="308" y1="${yy}" y2="${yy}"/><text x="27" y="${yy + 3}" text-anchor="end">${v < 10 ? v.toFixed(1) : v.toFixed(0)}</text>`;
-  }
-  for (const d of [0, total / 2, total])
-    svg += `<text x="${x(d)}" y="153" text-anchor="middle">${Math.round(d)}</text>`;
-  for (const e of result.events)
-    svg += `<line x1="${x(e.distance)}" x2="${x(e.distance)}" y1="132" y2="${e.applied ? 126 : 129}" stroke="${e.applied ? "#64d5c6" : "#d6b181"}" opacity=".65"/>`;
-  svg += `<path class="baseline-line" d="${path("baselineSigma")}"/>${hasMethod ? `<path class="selected-line" d="${path("selectedSigma")}"/>` : ""}<line class="cursor-line" x1="${x(cursor)}" x2="${x(cursor)}" y1="10" y2="132"/><circle cx="${x(cursor)}" cy="${y(p.selectedSigma[i])}" r="3" fill="${hasMethod ? "#64d5c6" : "#d6b181"}"/>`;
-  $(`plot${i}`).innerHTML = svg;
-  $(`plotCard${i}`).classList.toggle("has-method", hasMethod);
-  $(`sigma${i}`).innerHTML = `${fmt(p.selectedSigma[i])} <small>m</small>`;
-  $(`sigma${i}`).dataset.value = p.selectedSigma[i];
+  svg += `<path class="baseline-line" d="${path("baselineSigma")}"/>`;
+  if (hasMethod)
+    svg += `<path class="selected-line" d="${path("selectedSigma")}"/>`;
+  svg += `<line class="cursor-line" x1="${x(cursor)}" x2="${x(cursor)}" y1="${top}" y2="${height - bottom}"/><circle cx="${x(cursor)}" cy="${y(point.selectedSigma[axis])}" r="3" fill="${hasMethod ? BLUE : BASELINE}"/>`;
+  element.innerHTML = svg;
+  $(`plotCard${axis}`).classList.toggle("has-method", hasMethod);
+  $(`sigma${axis}`).innerHTML =
+    `${fmt(point.selectedSigma[axis])}<small> m</small>`;
+  $(`sigma${axis}`).dataset.value = point.selectedSigma[axis];
   const reduction =
-    p.baselineSigma[i] > 0
-      ? Math.max(0, 100 * (1 - p.selectedSigma[i] / p.baselineSigma[i]))
+    point.baselineSigma[axis] > 0
+      ? Math.max(
+          0,
+          100 * (1 - point.selectedSigma[axis] / point.baselineSigma[axis]),
+        )
       : 0;
   const percent = (
-    p.selectedSigma[i] > 0 ? Math.min(99.9, reduction) : reduction
+    point.selectedSigma[axis] > 0 ? Math.min(99.9, reduction) : reduction
   )
     .toFixed(1)
     .replace(/\.0$/, "");
@@ -261,11 +311,50 @@ function plot(result, p, i, hasMethod) {
       : reduction < 0.1
         ? "<0.1% lower"
         : `${percent}% lower`;
-  $(`baseline${i}`).textContent = hasMethod
-    ? `${fmt(p.baselineSigma[i])} baseline · ${change}`
+  $(`baseline${axis}`).textContent = hasMethod
+    ? `${fmt(point.baselineSigma[axis])} baseline
+${change}`
     : "";
 }
-function render(missionChanged = false) {
+function drawObservations(result) {
+  const tracks = $("observationTracks");
+  tracks.hidden = !scenario.uwbEnabled && !scenario.mapEnabled;
+  const kinds = [
+    ["uwb", scenario.uwbEnabled, "UWB"],
+    ["map", scenario.mapEnabled, "Map"],
+  ].filter(([, enabled]) => enabled);
+  tracks.innerHTML = kinds
+    .map(
+      ([kind, , label]) =>
+        `<div class="observation-track"><span>${label}</span><svg id="${kind}Track" role="img" aria-label="${label} observation locations"></svg></div>`,
+    )
+    .join("");
+  for (const [kind] of kinds) {
+    const svg = $(`${kind}Track`),
+      width = svg.getBoundingClientRect().width;
+    const x = (d) =>
+      left + ((width - left - right) * d) / totalDistance(scenario);
+    svg.setAttribute("viewBox", `0 0 ${width} 26`);
+    svg.innerHTML =
+      `<line class="track-line" x1="${left}" x2="${width - right}" y1="13" y2="13"/>` +
+      result.events
+        .filter((e) => e.kind === kind)
+        .map((e) =>
+          e.applied
+            ? `<circle cx="${x(e.distance)}" cy="13" r="3" class="observation-applied" opacity="${e.distance <= cursor ? 1 : 0.35}"/>`
+            : `<path d="M${x(e.distance) - 3},10 l6,6 M${x(e.distance) - 3},16 l6,-6" class="observation-unavailable" opacity="${e.distance <= cursor ? 1 : 0.4}"/>`,
+        )
+        .join("") +
+      `<line class="cursor-line" x1="${x(cursor)}" x2="${x(cursor)}" y1="2" y2="24"/>`;
+    linkPlot(svg);
+  }
+  if (kinds.length)
+    tracks.insertAdjacentHTML(
+      "beforeend",
+      '<p class="track-key"><span>● Available</span><span>× Unavailable</span><span>Faint: future</span></p>',
+    );
+}
+function render() {
   const errors = validateScenario(scenario);
   $("validation").hidden = !errors.length;
   $("validation").textContent = errors.join(" ");
@@ -302,9 +391,6 @@ function render(missionChanged = false) {
   $("routeSummary").innerHTML =
     `<span>Approach <strong>150 m</strong></span><span>Total <strong>${totalDistance(scenario)} m</strong></span>`;
   $("distanceReadout").textContent = `${cursor} m`;
-  $("positionReadout").textContent =
-    `E ${fmt(p.position[0], 1)} · N ${fmt(p.position[1], 1)} · U ${fmt(p.position[2], 1)} m`;
-  $("bendLabel").textContent = `Bend ${fmt(bendDistance(scenario), 0)} m`;
   $("endLabel").textContent = `${totalDistance(scenario)} m`;
   const status = uwbAvailability(scenario, cursor),
     link = [];
@@ -336,14 +422,20 @@ function render(missionChanged = false) {
         `<span class="${blocked ? "blocked" : ""}" title="${title}">${name}: ${message}</span>`,
     )
     .join("");
-  $("viewLabel").textContent =
-    mode === "global" ? "GLOBAL POSITION" : "LOCAL NAVIGATION";
   $("plotLegend").innerHTML = legend(method);
-  $("sceneLegend").innerHTML =
-    mode === "global"
-      ? legend(method)
-      : '<span><i class="line"></i>Rover start + motion</span>';
-  for (let i = 0; i < 3; i++) plot(result, p, i, hasMethod);
+  const peaks = [0, 1, 2].map((i) =>
+    Math.max(...result.points.map((p) => p.baselineSigma[i])),
+  );
+  const sharedDomain = yDomain(Math.max(...peaks));
+  for (let i = 0; i < 3; i++)
+    plot(
+      result,
+      p,
+      i,
+      hasMethod,
+      $("yScale").value === "shared" ? sharedDomain : yDomain(peaks[i]),
+    );
+  drawObservations(result);
   const traces = Object.entries(p.contributions)
       .map(([k, c]) => ({ key: k, value: c.reduce((v, r, i) => v + r[i], 0) }))
       .sort((a, b) => b.value - a.value),
@@ -405,15 +497,6 @@ function render(missionChanged = false) {
     b.addEventListener("click", () =>
       selectDistance(Number(b.dataset.distance)),
     );
-  if (!viewport) {
-    try {
-      viewport = new RouteViewport($("viewport"), selectDistance);
-    } catch (e) {
-      $("viewportError").hidden = false;
-      $("viewportError").textContent = `Cannot start the 3D view. ${e.message}`;
-    }
-  }
-  viewport?.update(scenario, result, p, missionChanged);
 }
 syncControls();
 render(true);

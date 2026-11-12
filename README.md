@@ -31,14 +31,14 @@ Select **Inputs** on a small screen.
 8. Compare the selected method with the baseline.
 9. Select **Save** to download the scenario file.
 
-The scene has flat landing ground and a 150 m approach.
+The synthetic route starts with a 150 m flat approach.
 The ascending ravine leg is 0–500 m long.
 Distance walked includes the slope.
 Climb cannot exceed the ravine distance walked.
 
-The 3D view, plots, and tables use the same route cursor.
-You can also select a position on a plot, route, or observation log.
-Select **Local** or **Global** to change the reference view.
+The plots and tables use the same distance cursor.
+Click or drag a plot to select a distance.
+Select **Same range** to compare all axes with equal y-axis limits.
 If both methods are enabled, the table also shows each method separately.
 
 A saved JSON file contains the inputs, units, statistics, frame, and assumptions.
@@ -173,14 +173,16 @@ Zero-information observations and observations with infinite noise have no effec
 ### Read the results
 
 Each plot shows one axis standard deviation: `sqrt(Pii)`.
-The ellipsoid uses the full position covariance.
-Its principal semiaxes equal one standard deviation at true scale.
-The page assigns no confidence percentage to the ellipsoid.
+Gray dashed curves show the baseline.
+Blue curves show the selected method.
+The three plots share one distance axis and cursor.
 
-The faint paths show deterministic baseline error examples.
-They are not random samples from the selected estimate.
-Nearby rocks share the route's starting position and heading errors.
-The terrain, lander, and markers are illustrations.
+Plots use the same y-axis range by default.
+Select **Per axis** to inspect smaller changes on each axis.
+The markers below the plots show observation availability.
+A dot marks an available observation.
+A cross marks an unavailable observation.
+Faint markers show future observations.
 
 ## Repeat the examples
 
@@ -216,8 +218,8 @@ Screenshots go to `artifacts/`.
 | --- | --- |
 | `src/scenario.mjs` | Inputs, validation, saved scenarios, and route geometry |
 | `src/localization.mjs` | Covariance propagation and observation schedules |
-| `src/covariance.mjs` | Matrix operations and ellipsoid axes |
-| `src/app.mjs`, `src/viewport.mjs` | Controls, plots, and the 3D view |
+| `src/covariance.mjs` | Matrix operations and covariance checks |
+| `src/app.mjs` | Controls, uncertainty plots, and observation markers |
 | `src/values-format.mjs`, `tests/values-schema.json` | Source table format validation for future data import |
 | `scenarios/` | Saved examples and calculated results |
 

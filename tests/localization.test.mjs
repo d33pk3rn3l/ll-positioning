@@ -227,7 +227,7 @@ test("joint and source covariance remain symmetric and positive semidefinite; so
     assert.ok(Math.min(...eigenSymmetric(improvement).values) > -1e-7);
   }
 });
-test("Jacobi eigensystem reconstructs correlated ellipsoid covariance", () => {
+test("Jacobi eigensystem reconstructs correlated position covariance", () => {
   const p = end(defaultScenario()).selected,
     { values, vectors } = eigenSymmetric(p);
   const d = values.map((v, i) => values.map((_, j) => (i === j ? v : 0)));

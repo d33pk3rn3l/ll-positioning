@@ -13,7 +13,7 @@ export const scale = (a, k) => a.map((r) => r.map((x) => x * k));
 export const sum = (parts) => parts.reduce(add, zeros(parts[0].length));
 export const symmetrize = (p) =>
   p.map((r, i) => r.map((v, j) => (v + p[j][i]) / 2));
-/** Jacobi eigensystem for symmetric matrices, used for ellipsoid geometry and checks. */
+/** Jacobi eigensystem for symmetric matrices, used for covariance checks. */
 export function eigenSymmetric(matrix) {
   const a = matrix.map((r) => [...r]),
     n = a.length,

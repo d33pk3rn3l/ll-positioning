@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#101419" />
+    <meta name="theme-color" content="#ffffff" />
     <title>LunarLeaper · Position uncertainty</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -143,36 +143,29 @@
       <main>
         <div id="validation" role="alert" hidden></div>
         <div id="assessment">
-          <section class="viewport-panel" aria-label="Route view">
-            <div class="viewport-toolbar">
-              <div class="viewport-title">
-                <h2>Route</h2>
-                <span>Synthetic terrain</span>
+          <section class="charts" aria-label="Uncertainty plots">
+            <div class="chart-heading">
+              <div>
+                <h2>Global position uncertainty</h2>
+                <p>1σ (m)</p>
               </div>
-              <div class="view-actions">
-                <button id="resetView" class="text-button">Reset view</button>
-                <div class="segmented" role="group" aria-label="Reference view">
-                  <button id="globalView" class="active" aria-pressed="true">
-                    Global</button
-                  ><button id="localView" aria-pressed="false">Local</button>
-                </div>
-              </div>
+              <label class="scale-control" for="yScale"
+                >Y-axis
+                <select id="yScale">
+                  <option value="axis">Per axis</option>
+                  <option value="shared" selected>Same range</option>
+                </select></label
+              >
             </div>
-            <div id="viewport" aria-label="3D route and position uncertainty">
-              <span id="viewLabel" class="view-label">GLOBAL POSITION</span
-              ><span id="linkStatus" class="link-status" hidden></span>
-              <div class="scene-legend" id="sceneLegend"></div>
-              <span class="scene-scale">Ellipsoids: 1σ · true scale</span>
-              <div id="positionReadout" class="position-readout"></div>
-              <div id="viewportError" role="alert" hidden></div>
-            </div>
+            <div id="plotLegend" class="comparison-legend"></div>
             <div class="cursor-panel">
               <label for="routeCursor"
                 >Distance walked<output
                   id="distanceReadout"
                   for="routeCursor"
-                ></output></label
-              ><input
+                ></output
+              ></label>
+              <input
                 id="routeCursor"
                 type="range"
                 min="0"
@@ -181,18 +174,13 @@
                 value="330"
               />
               <div class="cursor-labels">
-                <span>0 m</span><span id="bendLabel"></span
-                ><span id="endLabel"></span>
+                <span>0 m</span><span id="endLabel"></span>
               </div>
-            </div>
-          </section>
-          <section class="plots-section" aria-label="Uncertainty plots">
-            <div class="section-title">
-              <h2>Global uncertainty <span class="unit-label">1σ · m</span></h2>
-              <div id="plotLegend" class="comparison-legend"></div>
             </div>
             <div id="plots" class="plots"></div>
             <p class="axis-label">Distance walked (m)</p>
+            <div id="observationTracks" class="observation-tracks" hidden></div>
+            <div id="linkStatus" class="link-status" hidden></div>
           </section>
           <div class="analysis-grid">
             <section class="analysis-panel">
@@ -232,13 +220,6 @@
               <span>Observations</span><span id="observationCount"></span>
             </summary>
             <div id="observationLog"></div>
-          </details>
-          <details class="view-help">
-            <summary>View controls</summary>
-            <p>
-              Drag to rotate. Scroll or pinch to zoom. Click a route, plot, or
-              observation to select a position.
-            </p>
           </details>
         </div>
       </main>
