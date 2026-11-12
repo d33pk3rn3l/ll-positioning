@@ -34,7 +34,8 @@ export function initialParts(s) {
     Object.keys(SOURCE_NAMES).map((k) => [k, zeros(N)]),
   );
   for (let i = 0; i < 3; i++) {
-    const v = (i === 2 ? s.landerU_m : s.landerH_m) ** 2;
+    const common = i < 2 && s.landerFromMap ? s.mapControl_m ** 2 : 0;
+    const v = (i === 2 ? s.landerU_m : s.landerH_m) ** 2 - common;
     parts.start[i][i] =
       parts.start[i + 4][i + 4] =
       parts.start[i][i + 4] =
@@ -43,7 +44,12 @@ export function initialParts(s) {
     parts.initialization[i][i] = (i === 2 ? s.initU_m : s.initH_m) ** 2;
   }
   parts.heading[3][3] = ((s.heading_deg * Math.PI) / 180) ** 2;
-  parts.control[7][7] = parts.control[8][8] = s.mapControl_m ** 2;
+  for (let i = 0; i < 2; i++) {
+    const h = Array(N).fill(0);
+    h[i + 7] = 1;
+    if (s.landerFromMap) h[i] = h[i + 4] = 1;
+    parts.control = add(parts.control, scale(outer(h), s.mapControl_m ** 2));
+  }
   return parts;
 }
 function propagate(parts, s, previous, d) {

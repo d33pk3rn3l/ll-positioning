@@ -3,40 +3,54 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#0d131b" />
-    <title>LunarLeaper · Global position explorer</title>
+    <meta name="theme-color" content="#ffffff" />
+    <title>LunarLeaper · Position uncertainty</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="app-header">
-      <a class="brand" href="./"
-        ><span class="brand-mark">LL</span
-        ><span>LUNARLEAPER <small>MISSION TOOLS</small></span></a
-      >
-      <div class="header-meta">
-        <span class="status-dot"></span> SYNTHETIC MISSION
-        <span class="divider">/</span> SPRINT 01
+      <div class="app-title">
+        <a class="brand" href="./">LunarLeaper</a>
+        <h1>Position uncertainty</h1>
       </div>
-      <a class="source-link" href="https://github.com/d33pk3rn3l/ll-positioning"
-        >Source ↗</a
-      >
+      <nav aria-label="Page controls">
+        <button
+          id="toggleInputs"
+          class="mobile-only"
+          aria-controls="inputsPanel"
+          aria-expanded="false"
+        >
+          Inputs
+        </button>
+        <a
+          href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/README.md#model"
+          target="_blank"
+          rel="noreferrer"
+          >Model</a
+        >
+        <a
+          class="source-link"
+          href="https://github.com/d33pk3rn3l/ll-positioning"
+          target="_blank"
+          rel="noreferrer"
+          >Source</a
+        >
+      </nav>
     </header>
-    <div class="workspace">
-      <aside class="sidebar">
-        <div class="sidebar-heading">
-          <span class="eyebrow">SCENARIO SETUP</span
-          ><button id="reset" class="text-button">Reset</button>
+    <div class="workspace" id="workspace">
+      <aside id="inputsPanel" class="sidebar" aria-label="Scenario inputs">
+        <div class="section-title">
+          <h2>Scenario</h2>
+          <button id="reset" class="text-button">Reset</button>
         </div>
-        <label for="scenarioName" class="field-label">Scenario name</label>
-        <input
-          id="scenarioName"
-          class="scenario-name"
-          maxlength="100"
-          value="Ravine traverse"
-        />
-        <div class="save-actions">
-          <button id="save">Save scenario ↓</button
-          ><button id="load">Load ↑</button
+        <label for="scenarioName" class="sr-only">Scenario name</label>
+        <div class="scenario-actions">
+          <input
+            id="scenarioName"
+            maxlength="100"
+            value="Ravine traverse"
+          /><button id="save" aria-label="Save scenario">Save</button
+          ><button id="load" aria-label="Load scenario">Load</button
           ><input
             id="loadFile"
             type="file"
@@ -44,141 +58,125 @@
             hidden
           />
         </div>
-        <p id="saveStatus" class="subtle" role="status">
-          Scenario file · inputs and assumptions
+        <p id="saveStatus" class="status-message" role="status" hidden></p>
+        <p id="inputAssumptions" class="input-note">
+          Planning inputs. σ = one standard deviation.<br />Horizontal σ applies
+          to each axis.
         </p>
         <section class="control-section">
-          <h2><span>01</span> Mission inputs</h2>
+          <h2>Route</h2>
           <div id="missionInputs"></div>
-          <div class="route-summary" id="routeSummary"></div>
+          <div id="routeSummary" class="route-summary"></div>
         </section>
         <section class="control-section">
-          <h2><span>02</span> Robot performance</h2>
-          <p class="section-note">
-            Assumed 1σ. Each horizontal value applies to one axis.
-          </p>
+          <h2>Robot</h2>
+          <p class="group-label">Motion σ at 100 m</p>
           <div id="robotInputs"></div>
-          <p class="formula">σ²(d) = σ²₁₀₀ × d / 100 m</p>
-          <p class="section-note">
-            Independent motion increments. A reported “1% ATE” is not a standard
-            deviation.
-          </p>
+          <details class="input-details">
+            <summary>Rover start error</summary>
+            <div id="initializationInputs"></div>
+            <p class="input-note">Relative to the lander.</p>
+          </details>
         </section>
         <section class="control-section">
-          <h2><span>03</span> Starting reference</h2>
-          <p class="section-note">
-            Enter uncertainty in the achieved lander position. Landing dispersion
-            is separate.
-          </p>
+          <h2>Starting reference</h2>
           <div id="referenceInputs"></div>
+          <label class="checkbox-label"
+            ><input id="landerFromMap" type="checkbox" checked /> Lander
+            position from this map</label
+          >
+          <p class="input-note">
+            Lander σ includes shared map σ.<br />Heading needs a measured
+            direction.
+          </p>
         </section>
         <section class="control-section methods">
-          <h2><span>04</span> External observations</h2>
-          <label class="method-toggle"
-            ><input id="uwbEnabled" type="checkbox" /><span
-              ><strong>UWB range</strong
-              ><small>Ultra-wideband · one lander</small></span
-            ><span class="toggle-track"></span
-          ></label>
-          <details id="uwbDetails">
-            <summary>Range assumptions</summary>
-            <div id="uwbInputs"></div>
-            <label class="checkbox-label"
-              ><input id="terrainOcclusion" type="checkbox" checked /> Block
-              link behind ravine bend</label
+          <h2>Observations</h2>
+          <div class="method">
+            <label class="method-toggle"
+              ><input id="uwbEnabled" type="checkbox" /><span
+                >UWB range</span
+              ></label
             >
-            <p class="section-note">
-              The visibility rule and maximum range control link availability. A
-              range directly constrains only its line of sight.
-            </p>
-          </details>
-          <label class="method-toggle"
-            ><input id="mapEnabled" type="checkbox" /><span
-              ><strong>Orbital map matching</strong
-              ><small>Horizontal position · shared control</small></span
-            ><span class="toggle-track"></span
-          ></label>
-          <details id="mapDetails">
-            <summary>Map assumptions</summary>
-            <div id="mapInputs"></div>
-            <label class="checkbox-label"
-              ><input id="mapAvailable" type="checkbox" checked /> Map
-              observations available</label
+            <details id="uwbDetails">
+              <summary>Settings</summary>
+              <div id="uwbInputs"></div>
+              <label class="checkbox-label"
+                ><input id="terrainOcclusion" type="checkbox" checked /> Block
+                at ravine bend</label
+              >
+              <p class="input-note">
+                Ultra-wideband range to one lander. Clear links only.
+              </p>
+            </details>
+          </div>
+          <div class="method">
+            <label class="method-toggle"
+              ><input id="mapEnabled" type="checkbox" /><span
+                >Orbital map matching</span
+              ></label
             >
-            <p class="section-note">
-              The model assumes that each available map match succeeds. Map
-              matches provide no direct height or heading measurement. Lander
-              and map control errors are independent at the start.
-            </p>
-          </details>
+            <details id="mapDetails">
+              <summary>Settings</summary>
+              <div id="mapInputs"></div>
+              <label class="checkbox-label"
+                ><input id="mapAvailable" type="checkbox" checked /> Map
+                available</label
+              >
+              <p class="input-note">Assume each available match succeeds.</p>
+            </details>
+          </div>
         </section>
-        <div class="demo-box">
-          <span class="eyebrow">REPRODUCIBLE EXAMPLES</span
-          ><button id="blockedDemo">Blocked UWB link <span>↗</span></button
-          ><button id="mapDemo">Shared map error limit <span>↗</span></button>
-        </div>
-        <p class="sidebar-foot">
-          The example values are assumptions. They do not specify flight
-          performance.
-        </p>
+        <details id="examples" class="sidebar-details">
+          <summary>Examples</summary>
+          <div class="example-actions">
+            <button id="blockedDemo">Blocked UWB</button
+            ><button id="mapDemo">Shared map error</button>
+          </div>
+        </details>
+        <details class="sidebar-details">
+          <summary>Input definitions</summary>
+          <p class="input-note">
+            Lander σ describes position knowledge after landing. It excludes
+            landing dispersion. Motion variance grows linearly with distance
+            walked. The motion input is a planning allowance, not a conversion
+            of 1% ATE.
+          </p>
+          <a
+            class="documentation-link"
+            href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/README.md#inputs-and-terms"
+            target="_blank"
+            rel="noreferrer"
+            >Definitions and sources</a
+          >
+        </details>
       </aside>
       <main>
-        <div class="page-heading">
-          <div>
-            <div class="eyebrow">GLOBAL LOCALIZATION EXPLORER</div>
-            <h1>Assess uncertainty along the route.</h1>
-            <p>
-              Set the inputs. Compare the methods. Find the largest error
-              source.
-            </p>
-          </div>
-          <span class="model-badge">FIRST-ORDER MODEL</span>
-        </div>
         <div id="validation" role="alert" hidden></div>
         <div id="assessment">
-          <section class="viewport-panel">
-            <div class="viewport-toolbar">
+          <section class="charts" aria-label="Uncertainty plots">
+            <div class="chart-heading">
               <div>
-                <span class="status-dot"></span> SYNTHETIC RAVINE
-                <span class="subtle">/ 3D VIEW</span>
+                <h2>Global position uncertainty</h2>
+                <p>1σ (m)</p>
               </div>
-              <div class="segmented" role="group" aria-label="Reference view">
-                <button id="globalView" class="active" aria-pressed="true">
-                  Global</button
-                ><button id="localView" aria-pressed="false">Local</button>
-              </div>
+              <label class="scale-control" for="yScale"
+                >Y-axis
+                <select id="yScale">
+                  <option value="axis">Per axis</option>
+                  <option value="shared" selected>Same range</option>
+                </select></label
+              >
             </div>
-            <div
-              id="viewport"
-              aria-label="Interactive 3D route, lander and uncertainty ellipsoids"
-            >
-              <div class="view-caption">
-                <span class="eyebrow" id="viewLabel">GLOBAL POSITION</span>
-                <p id="viewExplanation">
-                  Origin and heading errors move the route in the lunar frame.
-                </p>
-              </div>
-              <div class="viewport-stats">
-                <span class="eyebrow">AT THE ROUTE CURSOR</span
-                ><strong id="distanceReadout"></strong>
-                <div id="positionReadout"></div>
-                <span id="linkStatus" class="link-status"></span>
-              </div>
-              <div class="scene-legend">
-                <span><i class="line baseline"></i> Baseline</span
-                ><span><i class="line selected"></i> Selected methods</span
-                ><span>Ellipsoid: 1σ principal axes · true scale</span>
-              </div>
-              <div class="scene-help">
-                Drag to rotate the view. Scroll to zoom. Click the route to
-                select a position.
-              </div>
-              <div id="viewportError" hidden></div>
-            </div>
+            <div id="plotLegend" class="comparison-legend"></div>
             <div class="cursor-panel">
               <label for="routeCursor"
-                >ROUTE CURSOR <output id="cursorOutput"></output></label
-              ><input
+                >Distance walked<output
+                  id="distanceReadout"
+                  for="routeCursor"
+                ></output
+              ></label>
+              <input
                 id="routeCursor"
                 type="range"
                 min="0"
@@ -187,40 +185,27 @@
                 value="330"
               />
               <div class="cursor-labels">
-                <span>LANDER · 0 m</span><span id="bendLabel"></span
-                ><span id="endLabel"></span>
+                <span>0 m</span><span id="endLabel"></span>
               </div>
             </div>
-          </section>
-          <section class="plots-section">
-            <div class="section-title">
-              <h2>Global position uncertainty</h2>
-              <span>1σ per axis · meters · distance walked</span>
-            </div>
-            <div class="plots" id="plots"></div>
+            <div id="plots" class="plots"></div>
+            <p class="axis-label">Distance walked (m)</p>
+            <div id="observationTracks" class="observation-tracks" hidden></div>
+            <div id="linkStatus" class="link-status" hidden></div>
           </section>
           <div class="analysis-grid">
             <section class="analysis-panel">
               <div class="section-title">
-                <h2>Largest error sources</h2>
-                <span id="contributionContext"></span>
+                <h2>Error sources</h2>
+                <span>Share of position variance</span>
               </div>
-              <p id="dominantText" class="insight"></p>
               <div id="contributions"></div>
-              <p class="section-note">
-                Each bar shows one source’s share of total position variance.
-                The calculation retains the full covariance.
-              </p>
             </section>
             <section class="analysis-panel">
               <div class="section-title">
-                <h2>Local and global position</h2>
-                <span>AT CURSOR</span>
+                <h2>At route cursor</h2>
+                <span id="contributionContext"></span>
               </div>
-              <p class="section-note">
-                Local navigation uses a fixed robot frame. Global position also
-                includes lander position and initial heading knowledge.
-              </p>
               <table class="comparison">
                 <thead>
                   <tr>
@@ -232,61 +217,22 @@
                 </thead>
                 <tbody id="comparisonRows"></tbody>
               </table>
-              <p class="section-note">
-                The local row includes initialization and motion error with
-                origin and heading fixed. Global rows use the observations
-                available at the cursor.
-              </p>
+              <details class="definitions">
+                <summary>Local and baseline</summary>
+                <p>
+                  Local holds the origin and heading fixed. Baseline uses no
+                  external observations.
+                </p>
+              </details>
             </section>
           </div>
-          <section class="analysis-panel observations">
-            <div class="section-title">
-              <h2>Observation log</h2>
-              <span id="observationCount"></span>
-            </div>
-            <p class="section-note">
-              The calculation applies observations in route order. Future
-              observations cannot change earlier results.
-            </p>
+          <details id="observationPanel" class="observations" hidden>
+            <summary>
+              <span>Observations</span><span id="observationCount"></span>
+            </summary>
             <div id="observationLog"></div>
-          </section>
-          <details class="model-notes">
-            <summary>Model and assumptions</summary>
-            <p>
-              The model uses first-order Gaussian error propagation. Motion
-              variance grows linearly with distance walked. Starting position,
-              initial heading, initialization, and motion errors stay separate.
-            </p>
-            <p>
-              The synthetic east–north–up frame has its origin at the lander.
-              Its axes align with DE421 mean Earth. Up is geometric height above
-              the synthetic tangent plane. Each plot shows one axis standard
-              deviation. The ellipsoid uses 1σ principal semiaxes at true scale.
-            </p>
-            <p>
-              UWB measures rover–lander distance. Orbital map matching measures
-              horizontal position relative to a shared map control error.
-              Repeated matches retain this shared error. The faint paths show
-              baseline error examples, not random samples from the selected
-              estimate.
-            </p>
-            <p>
-              Read the
-              <a
-                href="https://github.com/d33pk3rn3l/ll-positioning/blob/main/README.md#model"
-                >README</a
-              >
-              for the model equations and research references.
-            </p>
           </details>
         </div>
-        <footer>
-          <span class="status-dot"></span> SPRINT 01
-          <span
-            >One route · observations in route order · declared
-            assumptions</span
-          >
-        </footer>
       </main>
     </div>
     <script type="module" src="./src/app.mjs"></script>

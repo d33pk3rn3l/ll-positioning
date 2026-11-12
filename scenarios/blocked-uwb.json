@@ -1,127 +1,128 @@
 {
-  "version": 1,
+  "version": 2,
   "model": "linear-gaussian-distance-random-walk-v1",
   "name": "Demo · blocked UWB link",
   "frame": "Synthetic lander-centred east-north-up, aligned to DE421 mean Earth",
   "approach_m": 150,
   "ravineLength_m": 400,
   "climb_m": 80,
-  "motionH_m": 1,
-  "motionU_m": 0.5,
-  "initH_m": 0.2,
-  "initU_m": 0.1,
-  "landerH_m": 8,
-  "landerU_m": 3,
-  "heading_deg": 2,
-  "rangeSigma_m": 0.2,
+  "motionH_m": 4,
+  "motionU_m": 4,
+  "initH_m": 0.5,
+  "initU_m": 0.5,
+  "landerH_m": 40,
+  "landerU_m": 15,
+  "heading_deg": 3,
+  "rangeSigma_m": 0.5,
   "maxRange_m": 650,
   "uwbSpacing_m": 50,
-  "matchSigma_m": 1,
-  "mapControl_m": 5,
-  "mapSpacing_m": 50,
+  "matchSigma_m": 5,
+  "mapControl_m": 30,
+  "mapSpacing_m": 100,
   "inputMetadata": {
     "ravineLength_m": {
       "unit": "m",
       "statistic": "not_applicable",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Synthetic route or assumed observation spacing"
     },
     "climb_m": {
       "unit": "m",
       "statistic": "not_applicable",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Synthetic route or assumed observation spacing"
     },
     "motionH_m": {
       "unit": "m / axis",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; LL reports ATE / trajectory length = 1%, RMSE and alignment unconfirmed. No automatic conversion."
     },
     "motionU_m": {
       "unit": "m",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; no separate vertical test statistic supplied."
     },
     "initH_m": {
       "unit": "m / axis",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; rover deployment measurement is unspecified."
     },
     "initU_m": {
       "unit": "m",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; rover deployment measurement is unspecified."
     },
     "landerH_m": {
       "unit": "m / axis",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance including shared map control; Collins et al. 2026, doi:10.3390/rs18030525."
     },
     "landerU_m": {
       "unit": "m",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; Henriksen et al. 2016, doi:10.5194/isprsarchives-XLI-B4-397-2016. Not a reported absolute sigma."
     },
     "heading_deg": {
       "unit": "deg",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance conditional on an independent initial heading measurement. Aligned ATE does not specify heading accuracy."
     },
     "rangeSigma_m": {
       "unit": "m",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Accepted line-of-sight range allowance; Chen et al. 2022, doi:10.3390/rs14174258. Not a conversion from paper RMSE."
     },
     "maxRange_m": {
       "unit": "m",
       "statistic": "not_applicable",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Synthetic demonstration input; no performance claim"
     },
     "uwbSpacing_m": {
       "unit": "m walked",
       "statistic": "not_applicable",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Synthetic route or assumed observation spacing"
     },
     "matchSigma_m": {
       "unit": "m / axis",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Planning allowance; WARG (arXiv:2606.10602) reports 1.68 m real-data and 3.63 m domain-transfer errors, not per-axis sigma."
     },
     "mapControl_m": {
       "unit": "m / axis",
       "statistic": "one_sigma",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Shared horizontal control allowance; Collins et al. 2026 reports latitude offset spreads up to 22.4 m against uncertain references."
     },
     "mapSpacing_m": {
       "unit": "m walked",
       "statistic": "not_applicable",
       "status": "assumed",
-      "source": "Sprint 1 illustrative scenario"
+      "source": "Synthetic route or assumed observation spacing"
     }
   },
   "uwbEnabled": true,
   "mapEnabled": false,
   "terrainOcclusion": true,
   "mapAvailable": true,
+  "landerFromMap": true,
   "assumptions": {
     "status": "assumed",
-    "source": "Sprint 1 illustrative inputs; no flight performance claim",
+    "source": "User-set planning inputs; no flight performance claim",
     "statistic": "one standard deviation; horizontal values per axis",
     "growth": "Independent motion increments: variance = sigma100^2 * distance_walked / 100 m",
     "attitude": "Gravity-aligned roll and pitch; first-order initial yaw error",
-    "control": "Lander position and orbital map control priors are independent; each is shared across the route",
+    "control": "Lander horizontal sigma includes shared map control when landerFromMap is true; otherwise priors are independent",
     "availability": "UWB blocked behind the synthetic ravine bend; enabled available map matches succeed",
     "height": "Geometric up from the synthetic local tangent plane; no lunar terrain or frame transform applied",
     "landing": "Lander position knowledge describes the achieved position, not landing dispersion"
